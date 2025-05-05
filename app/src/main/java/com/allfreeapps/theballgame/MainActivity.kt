@@ -7,17 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
@@ -53,39 +47,52 @@ fun GameBoard(modifier: Modifier, ballList: Map<Coordinate, Color>) {
     val screenWidthDp = configuration.screenWidthDp.dp
     val screenHeightDp = configuration.screenHeightDp.dp
     val squareSize = min(screenHeightDp, screenWidthDp) / 9
-    var boarderColor = Color.Black
-    var backGroundColor = Color.Gray
 
-    Column(
-        modifier = modifier.height(squareSize*9),
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        for (row in 0..9) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                for (column in 0..9) {
-
-                    val coordinate = Coordinate(row, column)
-//                    if (ballList.containsKey(coordinate)) {
-//                        backGroundColor = ballList[coordinate]?: Color.Gray
-//                    }
+    Layout(
+        content = {
+            for (row in 0 until 9) {
+                for (column in 0 until 9) {
+                    var color = Color.Black
+                    var backGroundColor = Color.Gray
+                    if (ballList.containsKey(Coordinate(row, column))) {
+                        color = ballList[Coordinate(row, column)] ?: Color.Gray
+                        backGroundColor = color.copy()
+                    }
                     Box(
                         modifier = Modifier
                             .background(backGroundColor)
-                            .height(squareSize)
-                            .width(squareSize)
                             .border(
                                 BorderStroke(
-                                    width = 1.dp,
-                                    boarderColor
+                                    width = 0.5.dp,
+                                    color
                                 )
                             )
-                    ) {
+                    )
+                }
+            }
+        },
+        modifier = modifier.padding(1.dp)
+    ) { measurables, constraints ->
+        val cellSize = squareSize.roundToPx()
+        val cellConstraints = constraints.copy(
+            minWidth = cellSize,
+            minHeight = cellSize,
+            maxWidth = cellSize,
+            maxHeight = cellSize
+        )
+        val placeables = measurables.map { measurable ->
+            measurable.measure(cellConstraints)
+        }
 
-                    }
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            var x = 0
+            var y = 0
+            placeables.forEachIndexed { index, placeable ->
+                placeable.placeRelative(x, y)
+                x += cellSize
+                if ((index + 1) % 9 == 0) {
+                    x = 0
+                    y += cellSize
                 }
             }
         }
