@@ -9,11 +9,17 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,7 +31,6 @@ import androidx.compose.ui.unit.min
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.res.booleanResource
 import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 import kotlin.math.sqrt
@@ -54,74 +59,91 @@ class MainActivity : ComponentActivity() {
 fun GameBoard(modifier: Modifier, viewModel: BallGameViewModel) {
     val ballList by viewModel.ballList.collectAsState()
     val selectedBallIndex by viewModel.selectedBall.collectAsState()
+    val totalBallCount by viewModel.totalBallCount.collectAsState()
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp.dp
     val screenHeightDp = configuration.screenHeightDp.dp
-    val squareSize = min(screenHeightDp, screenWidthDp) / 9
+    val minSizeOfMainSq = min(screenWidthDp, screenHeightDp)
+    val squareSize = minSizeOfMainSq / 9
 
-    Layout(
-        modifier = modifier,
-        content = {
-            ballList.forEachIndexed { indice, ball ->
-                var backGroundColor = Color.White
-                var boarderColor = Color.DarkGray
-                if (ball != NO_BALL) {
-                    backGroundColor = colorOf(ball)
-                    boarderColor =
-                        if (viewModel.isSelectedBall(indice)) colorOf(ball) else Color.DarkGray
-                }
-                Box(modifier = Modifier
-                    .background(backGroundColor)
-                    .border(
-                        BorderStroke(
-                            width = 0.5.dp,
-                            color = boarderColor
-                        )
-                    )
-                    .clickable {
-                        if (ball != NO_BALL) {
-                            if (indice != selectedBallIndex) {
-                                viewModel.selectTheBall(indice)
-                            }
-                        } else {
-                            if (selectedBallIndex != null)
-                                viewModel.checkIfSelectedBallCanMove(indice)
-                        }
+    Column(modifier,
+        verticalArrangement = Arrangement.SpaceEvenly) {
+        Layout(
+            modifier = Modifier.height(minSizeOfMainSq),
+            content = {
+                ballList.forEachIndexed { indice, ball ->
+                    var backGroundColor = Color.White
+                    var boarderColor = Color.DarkGray
+                    if (ball != NO_BALL) {
+                        backGroundColor = colorOf(ball)
+                        boarderColor =
+                            if (viewModel.isSelectedBall(indice)) colorOf(ball) else Color.DarkGray
                     }
-                )
-            }
-        }
-    ) { measurables, constraints ->
-        val cellSize = squareSize.roundToPx()
-        val cellConstraints = constraints.copy(
-            minWidth = cellSize,
-            minHeight = cellSize,
-            maxWidth = cellSize,
-            maxHeight = cellSize
-        )
-        val placeables = measurables.map { measurable ->
-            measurable.measure(cellConstraints)
-        }
-
-        val sizeOfTheRow = sqrt(ballList.size.toDouble()).toInt()
-
-        layout(constraints.maxWidth, constraints.maxHeight) {
-            var x = 0
-            var y = 0
-            placeables.forEachIndexed { index, placeable ->
-                placeable.placeRelative(x, y)
-                x += cellSize
-                if (((index + 1) % sizeOfTheRow) == 0) {
-                    x = 0
-                    y += cellSize
+                    Box(modifier = Modifier
+                        .background(backGroundColor)
+                        .border(
+                            BorderStroke(
+                                width = 0.5.dp,
+                                color = boarderColor
+                            )
+                        )
+                        .clickable {
+                            if (ball != NO_BALL) {// no ball is already selected
+                                if (indice != selectedBallIndex) {// if an unselected ball clicked
+                                    viewModel.selectTheBall(indice)
+                                }
+                            } else {//if a ball clicked
+                                if (selectedBallIndex != null) { // if a ball is selected
+                                    val path = viewModel.checkIfSelectedBallCanMove(indice)
+                                }
+                            }
+                        }
+                    )
                 }
             }
+        ) { measurables, constraints ->
+            val cellSize = squareSize.roundToPx()
+            val cellConstraints = constraints.copy(
+                minWidth = cellSize,
+                minHeight = cellSize,
+                maxWidth = cellSize,
+                maxHeight = cellSize
+            )
+            val placeables = measurables.map { measurable ->
+                measurable.measure(cellConstraints)
+            }
+
+            val sizeOfTheRow = sqrt(ballList.size.toDouble()).toInt()
+
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                var x = 0
+                var y = 0
+                placeables.forEachIndexed { index, placeable ->
+                    placeable.placeRelative(x, y)
+                    x += cellSize
+                    if (((index + 1) % sizeOfTheRow) == 0) {
+                        x = 0
+                        y += cellSize
+                    }
+                }
+            }
+        }
+
+        Button(
+            modifier = Modifier.padding(16.dp),
+            onClick = { if ( totalBallCount == 0) viewModel.startGame() else viewModel.restartGame()}
+        ) {
+            Text(
+                text = if( totalBallCount == 0) "Start Game" else "Restart Game",
+                style = MaterialTheme.typography.labelMedium
+            )
         }
     }
 }
 
 fun colorOf(ball: Int): Color {
     return when (ball) {
+        0-> Color.White
         1 -> Color.Red
         2 -> Color.Blue
         3 -> Color.Green
