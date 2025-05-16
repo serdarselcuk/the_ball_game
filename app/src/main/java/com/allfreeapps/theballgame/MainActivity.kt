@@ -33,6 +33,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Brush
 import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlin.math.sqrt
 
 class MainActivity : ComponentActivity() {
@@ -88,13 +92,25 @@ fun GameBoard(modifier: Modifier, viewModel: BallGameViewModel) {
                             )
                         )
                         .clickable {
-                            if (ball != NO_BALL) {// no ball is already selected
-                                if (indice != selectedBallIndex) {// if an unselected ball clicked
-                                    viewModel.selectTheBall(indice)
-                                }
-                            } else {//if a ball clicked
+                            if (ball == NO_BALL) {//empty cell
                                 if (selectedBallIndex != null) { // if a ball is selected
                                     val path = viewModel.checkIfSelectedBallCanMove(indice)
+                                    if (path != null) {
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            async { viewModel.moveTheBall(path) }.await()
+                                            val seriesFound= async { viewModel.findColorSeries() }
+                                            if(seriesFound.await()){
+                                                viewModel.removeAllSeries()
+                                            }else{
+                                                viewModel.add3Ball()
+                                            }
+                                            viewModel.selectTheBall(null)
+                                        }
+                                    }
+                                }
+                            } else {
+                                if (indice != selectedBallIndex) {// if an unselected ball clicked
+                                    viewModel.selectTheBall(indice)
                                 }
                             }
                         }
