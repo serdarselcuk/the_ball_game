@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.allfreeapps.theballgame.ui.model.Direction
 import com.allfreeapps.theballgame.ui.model.GameState
+import com.allfreeapps.theballgame.utils.Constants.Companion.ballLimitToRemove
+import com.allfreeapps.theballgame.utils.Constants.Companion.gridSize
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -58,9 +60,7 @@ class BallGameViewModel : ViewModel() {
     }
 
     companion object {
-        const val gridSize = 9
         const val lastGridIndex = gridSize -1
-        const val ballLimitToRemove = 5
         const val serieLengthOnIndexedBoard = ballLimitToRemove - 1
 
 
