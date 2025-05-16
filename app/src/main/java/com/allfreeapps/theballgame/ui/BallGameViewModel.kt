@@ -59,7 +59,10 @@ class BallGameViewModel : ViewModel() {
 
     companion object {
         const val gridSize = 9
+        const val lastGridIndex = gridSize -1
         const val ballLimitToRemove = 5
+        const val serieLengthOnIndexedBoard = ballLimitToRemove - 1
+
 
         // Define possible movements (row_offset, column_offset)
         val movements = listOf(
@@ -201,26 +204,29 @@ class BallGameViewModel : ViewModel() {
         coroutineScope {
             _state.value = GameState.SearchingForSeries
             // Iterate through each potential starting cell using row and column
-            for (r in 0 until gridSize) {
-                for (c in 0 until gridSize) {
-                    val startColor = ballList.value[positionToIndex(r, c)]
+            for (row in 0 until gridSize) {
+                for (column in 0 until gridSize) {
+                    val startColor = ballList.value[positionToIndex(row, column)]
 
                     // Skip empty cells or invalid colors as starting points
                     if (startColor <= 0) continue
 
-                    for (dir in directionsToSearchSets) {
+                    for (currentDirection in directionsToSearchSets) {
 //                         if down-left is the direction there should be enough space for the series
-                        if (dir == Direction.DOWN_LEFT && ((c + r < 3) || (r + c > 12))) continue
-//                         if down-right is the direction there should be enough space for the series
-                        if (dir == Direction.DOWN_RIGHT && ((c - r > 5) || (r - c < 5))) continue
+                        when(currentDirection){
+//                          if diagonal direction, there should be enough space for the series (5 ball not fitting to corners)
+                            Direction.DOWN_LEFT -> if (((column + row) < serieLengthOnIndexedBoard ) || ((row + column) > ((2 * lastGridIndex)-serieLengthOnIndexedBoard))) continue
+                            Direction.DOWN_RIGHT -> if (((column - row) > serieLengthOnIndexedBoard ) || ((row - column) > serieLengthOnIndexedBoard)) continue
+                            else -> {}
+                        }
 
                         val currentSeries = mutableListOf<Int>()
-                        currentSeries.add(positionToIndex(r, c)) // Start with the current cell
+                        currentSeries.add(positionToIndex(row, column)) // Start with the current cell
 
                         // Explore in the current direction
                         for (k in 1 until gridSize) { // Max possible extension length
-                            val nextR = r + k * dir.rowOffset
-                            val nextC = c + k * dir.colOffset
+                            val nextR = row + k * currentDirection.rowOffset
+                            val nextC = column + k * currentDirection.colOffset
                             if (nextR > gridSize - 1
                                 || nextC > gridSize - 1
                                 || nextR < 0
