@@ -64,12 +64,13 @@ class BallGameViewModel : ViewModel() {
     val upcomingBalls: StateFlow<Array<Int>> = _upcomingBalls
 
     private val _state = MutableStateFlow<GameState>(GameState.GameNotStarted)
-    private val state: StateFlow<GameState> = _state
+    val state: StateFlow<GameState> = _state
 
     fun startGame() {
         if (totalBallCount.value == 0) {
             add3Ball()
             populateUpcommingBalls()
+            _state.value = GameState.UserTurn
         }
     }
 

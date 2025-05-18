@@ -23,7 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,10 +47,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.sqrt
 
 class Board(
-    val viewModel: BallGameViewModel = BallGameViewModel()
+    val viewModel: BallGameViewModel = BallGameViewModel(),
 ) {
-    private val color = ColorMap()
-
     companion object {
         const val NO_BALL = 0
         val JUMP_HEIGHT = (-5).dp
@@ -62,17 +63,17 @@ class Board(
         val screenWidthDp = configuration.screenWidthDp.dp
         val screenHeightDp = configuration.screenHeightDp.dp
         val minSizeOfMainSq = minOf(screenWidthDp, screenHeightDp)
-
+        val cellSize = (minSizeOfMainSq / gridSize)
         Layout(
-            content = { get() },
+            content = { ball(cellSize) },
             modifier = Modifier.height(minSizeOfMainSq),
             measurePolicy = { measurables, constraints ->
-                val cellSize = (minSizeOfMainSq / gridSize).roundToPx()
+                val roundedCellSize = cellSize.roundToPx()
                 val cellConstraints = constraints.copy(
-                    minWidth = cellSize,
-                    minHeight = cellSize,
-                    maxWidth = cellSize,
-                    maxHeight = cellSize
+                    minWidth = roundedCellSize,
+                    minHeight = roundedCellSize,
+                    maxWidth = roundedCellSize,
+                    maxHeight = roundedCellSize
                 )
 
                 val placeables = measurables.map { measurable ->
@@ -86,10 +87,10 @@ class Board(
                     var y = 0
                     placeables.forEachIndexed { index, placeable ->
                         placeable.placeRelative(x, y)
-                        x += cellSize
-                        if (((index + 1) % sizeOfTheRow) == 0) {
+                        x += roundedCellSize
+                        if (((index + 1) % sizeOfTheRow ) == 0) {
                             x = 0
-                            y += cellSize
+                            y += roundedCellSize
                         }
                     }
                 }
@@ -98,14 +99,15 @@ class Board(
     }
 
     @Composable
-    fun get() {
+    fun ball(cellSize: Dp) { // Assuming this is where you draw individual balls
         val ballList by viewModel.ballList.collectAsState()
         val selectedBallIndex by viewModel.selectedBall.collectAsState()
 
-        ballList.forEachIndexed { indice, ball ->
+        ballList.forEachIndexed { indice, ballColorInt -> // Renamed 'ball' to 'ballColorInt' for clarity
 
-            Box(
+            Box( // This is the cell Box
                 modifier = Modifier
+                    // .size(cellSize) // Ensure the cell has a defined size
                     .background(BackgroundColor)
                     .border(
                         BorderStroke(
@@ -114,7 +116,7 @@ class Board(
                         )
                     )
                     .clickable {
-                        if (ball == NO_BALL) {
+                        if (ballColorInt == NO_BALL) {
                             if (selectedBallIndex != null) {
                                 val path = viewModel.checkIfSelectedBallCanMove(indice)
                                 if (path != null) {
@@ -126,7 +128,7 @@ class Board(
                                         } else {
                                             viewModel.populateUpcommingBalls()
                                         }
-                                        viewModel.deselectTheBall() // Deselect after move
+                                        viewModel.deselectTheBall()
                                     }
                                 }
                             }
@@ -140,24 +142,52 @@ class Board(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                if (ball != NO_BALL) {
-                    val currentJumpOffsetDp: Dp = JUMP_HEIGHT * getAnimation(selectedBallIndex == indice).value
+                if (ballColorInt != NO_BALL) {
+                    val isSelected = indice == selectedBallIndex
+                    val currentJumpOffsetDp: Dp = JUMP_HEIGHT * getAnimation(isSelected).value
+                    val ballActualColor = ballColorInt.convertToColor()
+                    val ballSize = (cellSize * 0.8f) // Convert to pixels
+                    val radialGradientBrush = getRadialGradientBrush(ballSize.value, ballActualColor)
+
                     Box(
                         modifier = Modifier
-                            .offset(y = currentJumpOffsetDp) // Apply the jump offset here
-                            .size(35.dp)
+                            .offset(y = currentJumpOffsetDp)
+                            .size(cellSize * 0.8f) // The actual visible ball
                             .shadow(
-                                elevation = if (indice == selectedBallIndex) 8.dp else 4.dp, // More shadow when selected
+                                elevation = if (isSelected) 10.dp else 8.dp,
                                 shape = CircleShape
                             )
                             .clip(CircleShape)
-                            .background(ball.convertToColor())
+                            .background(brush = radialGradientBrush) // Use the brush here
                     )
                 }
             }
         }
     }
 
+    private fun getRadialGradientBrush(ballSize:Float, color: Color): Brush {
+
+        // Create a slightly lighter color for the gradient center (highlight)
+        // and a slightly darker for the edges.
+        val centerColor = color.copy(
+            red = (color.red * 1.2f).coerceAtMost(1f),
+            green = (color.green * 1.2f).coerceAtMost(1f),
+            blue = (color.blue * 1.2f).coerceAtMost(1f)
+        )
+        val edgeColor = color.copy(
+            red = color.red * 0.8f,
+            green = color.green * 0.8f,
+            blue = color.blue * 0.8f
+        )
+
+        return Brush.radialGradient(
+            colors = listOf(centerColor, color, edgeColor),
+            // You can adjust the center and radius for different effects
+            center = Offset(x = ballSize * 2f, y = ballSize * 0.8f), // Example: offset highlight
+            radius = ballSize * 0.9f, // Example: control gradient spread
+            tileMode = TileMode.Clamp
+        )
+    }
 
     @Composable
     private fun getAnimation(isBallSelected:Boolean): Animatable<Float, *> {
@@ -182,7 +212,10 @@ class Board(
 }
 
 @Composable
-@Preview(showBackground = true)
+@Preview(showBackground = true,
+    name = "board preview",
+    device = "spec:width=3800dp,height=1800dp,dpi=240,orientation=portrait"
+    )
 fun BoardPreview() {
     val mockViewModel = BallGameViewModel().apply {
         addBall(57, 5) // Add some balls for preview
@@ -190,12 +223,12 @@ fun BoardPreview() {
         addBall(35, 2)
         addBall(10, 1)
         addBall(45, 4)
-        // selectTheBall(21) // Optionally pre-select a ball for previewing the jump
+         selectTheBall(21) // Optionally pre-select a ball for previewing the jump
     }
     // It's good practice to wrap previews that use animations or complex state
     // in a way that allows interaction or showcases the state.
     // For a simple preview of the board:
-    Board(mockViewModel).get()
+    Board(mockViewModel).layout()
 
     // For a more interactive preview, you might need a local state
     // to simulate selection if your ViewModel isn't easily manipulated in Preview.
