@@ -20,3 +20,9 @@ val Blue = Color(0xFF0000FF)
 val Yellow = Color(0xFFFFFF00)
 val Magenta = Color(0xFFFF00FF)
 val Cyan = Color(0xFF00FFFF)
+
+val HeaderTextColor = PurpleGrey40
+val HeaderBackGround = Purple80
+val ScoreTextColor = PurpleGrey40
+val ScoreLine = arrayOf(Green, Red, Blue, Yellow, Magenta, Cyan)
+val BackgroundColor = White

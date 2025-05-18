@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.allfreeapps.theballgame.ui.model.Direction
 import com.allfreeapps.theballgame.ui.model.GameState
+import com.allfreeapps.theballgame.ui.model.Scores
 import com.allfreeapps.theballgame.utils.Constants.Companion.ballLimitToRemove
 import com.allfreeapps.theballgame.utils.Constants.Companion.gridSize
 import kotlinx.coroutines.CoroutineScope
@@ -14,55 +15,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.LinkedList
+import java.util.PriorityQueue
 import java.util.Queue
 
 class BallGameViewModel : ViewModel() {
-    private val _ballList = MutableStateFlow(Array(gridSize * gridSize) { 0 })
-    val ballList: StateFlow<Array<Int>> = _ballList
-
-    private val _totalBallCount = MutableStateFlow(0)
-    val totalBallCount: StateFlow<Int> = _totalBallCount
-
-    private val _selectedBall = MutableStateFlow<Int?>(null)
-    val selectedBall: StateFlow<Int?> = _selectedBall
-
-    private val _setToRemove = MutableStateFlow<MutableSet<Int>>(mutableSetOf())
-    val setToRemove: StateFlow<Set<Int>> = _setToRemove
-
-    private val _state = MutableStateFlow<GameState>(GameState.GameNotStarted)
-    private val state: StateFlow<GameState> = _state
-
-    fun startGame() {
-        if (totalBallCount.value == 0) add3Ball()
-    }
-
-    fun restartGame() {
-        _state.value = GameState.GameNotStarted
-        _ballList.value = Array(81) { 0 }
-        _totalBallCount.value = 0
-        setEmptyBoard()
-        resetRemovalSet()
-        selectTheBall(null)
-        startGame()
-    }
-
-    fun setEmptyBoard() {
-        _state.value = GameState.GameNotStarted
-        _ballList.value = Array(81) { 0 }
-        _totalBallCount.value = 0
-        setEmptyBoard()
-        resetRemovalSet()
-        selectTheBall(null)
-    }
-
-    fun resetRemovalSet(){
-        _setToRemove.value = mutableSetOf()
-    }
 
     companion object {
         const val lastGridIndex = gridSize -1
-        const val serieLengthOnIndexedBoard = ballLimitToRemove - 1
-
+        const val serieLengthOnIndexedBoard = ballLimitToRemove - 1 //since starting with 0
 
         // Define possible movements (row_offset, column_offset)
         val movements = listOf(
@@ -78,6 +38,71 @@ class BallGameViewModel : ViewModel() {
             Direction.DOWN_RIGHT,
             Direction.DOWN_LEFT
         )
+    }
+
+    private val _oldScores= MutableStateFlow( PriorityQueue<Scores>())
+    val oldScores: StateFlow<PriorityQueue<Scores>> = _oldScores
+
+    private val _score = MutableStateFlow(0)
+    val score: StateFlow<Int> = _score
+
+    private val _ballList = MutableStateFlow(Array(gridSize * gridSize) { 0 })
+    val ballList: StateFlow<Array<Int>> = _ballList
+
+    private val _totalBallCount = MutableStateFlow(0)
+    val totalBallCount: StateFlow<Int> = _totalBallCount
+
+    private val _selectedBall = MutableStateFlow<Int?>(null)
+    val selectedBall: StateFlow<Int?> = _selectedBall
+
+    private val _setToRemove = MutableStateFlow<MutableList<MutableSet<Int>>>(mutableListOf())
+    val setToRemove: StateFlow<List<Set<Int>>> = _setToRemove
+
+    private val _state = MutableStateFlow<GameState>(GameState.GameNotStarted)
+    private val state: StateFlow<GameState> = _state
+
+    fun startGame() {
+        if (totalBallCount.value == 0) add3Ball()
+    }
+
+    fun restartGame() {
+        setEmptyBoard()
+        startGame()
+    }
+
+    fun addOldScores( score: Scores ){
+        val scores = _oldScores.value
+        scores.add(score)
+        _oldScores.value = scores
+    }
+
+    private fun setEmptyBoard() {
+        _state.value = GameState.GameNotStarted
+        _ballList.value = Array(81) { 0 }
+        _totalBallCount.value = 0
+        resetScore()
+        resetRemovalSet()
+        selectTheBall(null)
+        restartGame()
+    }
+
+    fun increaseScoreFor(ballCount: Int){
+        if(ballCount < 5) return
+        val score = 5
+        val additionalScore = ( 2 * (ballCount - 5) )
+        _score.value +=( score + additionalScore )
+    }
+
+    fun combinedScore(){
+        _score.value += setToRemove.value.size
+    }
+
+    fun resetScore(){
+        _score.value = 0
+    }
+
+    fun resetRemovalSet(){
+        _setToRemove.value = mutableListOf()
     }
 
     fun addBall(index: Int, colorCode: Int): Boolean {
@@ -211,7 +236,7 @@ class BallGameViewModel : ViewModel() {
                     // Skip empty cells or invalid colors as starting points
                     if (startColor <= 0) continue
 
-                    for (currentDirection in directionsToSearchSets) {
+                    for ( currentDirection in directionsToSearchSets ) {
 //                         if down-left is the direction there should be enough space for the series
                         when(currentDirection){
 //                          if diagonal direction, there should be enough space for the series (5 ball not fitting to corners)
@@ -220,7 +245,7 @@ class BallGameViewModel : ViewModel() {
                             else -> {}
                         }
 
-                        val currentSeries = mutableListOf<Int>()
+                        val currentSeries = mutableSetOf<Int>()
                         currentSeries.add(positionToIndex(row, column)) // Start with the current cell
 
                         // Explore in the current direction
@@ -249,7 +274,7 @@ class BallGameViewModel : ViewModel() {
 
                         // If the series is long enough, add all its cells to the result set
                         if (currentSeries.size >= ballLimitToRemove) {
-                            _setToRemove.value.addAll(currentSeries)
+                            _setToRemove.value.add(currentSeries)
                             result = true
                         }
                     }
@@ -347,14 +372,17 @@ class BallGameViewModel : ViewModel() {
     }
 
     fun removeAllSeries() {
-        setToRemove.value.forEach {
-            removeBall(it)
+
+        getRemovables().forEach { set->
+            set.forEach {
+                removeBall(it)
+            }
+            increaseScoreFor(set.size)
         }
         resetRemovalSet()
     }
 
-    fun getRemovables(): Set<Int> {
+    fun getRemovables(): List<Set<Int>> {
         return setToRemove.value
     }
-
 }

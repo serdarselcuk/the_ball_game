@@ -21,7 +21,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
-class Board {
+class Board(
+    val viewModel: BallGameViewModel = BallGameViewModel()
+) {
     private val color = ColorMap()
 
     companion object{
@@ -29,10 +31,9 @@ class Board {
     }
 
     @Composable
-    fun get(viewModel: BallGameViewModel){
+    fun get(){
         val ballList by viewModel.ballList.collectAsState()
         val selectedBallIndex by viewModel.selectedBall.collectAsState()
-        val totalBallCount by viewModel.totalBallCount.collectAsState()
 
         ballList.forEachIndexed { indice, ball ->
             var backGroundColor = Color.White
@@ -87,7 +88,5 @@ fun BoardPreview(){
         addBall(21, 3)
         addBall(35, 2)
     }
-    Board().get(
-        mockViewModel
-    )
+    Board(mockViewModel).get()
 }
