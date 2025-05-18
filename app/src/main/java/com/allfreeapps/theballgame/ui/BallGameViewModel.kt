@@ -2,6 +2,7 @@ package com.allfreeapps.theballgame.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.allfreeapps.theballgame.ui.model.Ball
 import com.allfreeapps.theballgame.ui.model.Direction
 import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.model.Scores
@@ -46,6 +47,7 @@ class BallGameViewModel : ViewModel() {
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score
 
+    // order represents the position in the board and the value stands for the color
     private val _ballList = MutableStateFlow(Array(gridSize * gridSize) { 0 })
     val ballList: StateFlow<Array<Int>> = _ballList
 
@@ -58,11 +60,17 @@ class BallGameViewModel : ViewModel() {
     private val _setToRemove = MutableStateFlow<MutableList<MutableSet<Int>>>(mutableListOf())
     val setToRemove: StateFlow<List<Set<Int>>> = _setToRemove
 
+    private var _upcomingBalls = MutableStateFlow((arrayOf<Int>()))
+    val upcomingBalls: StateFlow<Array<Int>> = _upcomingBalls
+
     private val _state = MutableStateFlow<GameState>(GameState.GameNotStarted)
     private val state: StateFlow<GameState> = _state
 
     fun startGame() {
-        if (totalBallCount.value == 0) add3Ball()
+        if (totalBallCount.value == 0) {
+            add3Ball()
+            populateUpcommingBalls()
+        }
     }
 
     fun restartGame() {
@@ -82,8 +90,7 @@ class BallGameViewModel : ViewModel() {
         _totalBallCount.value = 0
         resetScore()
         resetRemovalSet()
-        selectTheBall(null)
-        restartGame()
+        deselectTheBall()
     }
 
     fun increaseScoreFor(ballCount: Int){
@@ -130,8 +137,12 @@ class BallGameViewModel : ViewModel() {
         return arrayOf(row, column)
     }
 
-    fun selectTheBall(index: Int?) {
-        _selectedBall.value = index
+    fun selectTheBall(position: Int) {
+        _selectedBall.value = position
+    }
+
+    fun deselectTheBall() {
+        _selectedBall.value = null
     }
 
     fun getSelectedBall(): Int? {
@@ -153,8 +164,6 @@ class BallGameViewModel : ViewModel() {
 
     fun isSelectedBall(index: Int): Boolean {
         return selectedBall.value == index
-        Log.d("isSelectedBall", "index: $index")
-
     }
 
     fun checkIfSelectedBallCanMove(destinationIndex: Int): List<Int>? {
@@ -213,16 +222,6 @@ class BallGameViewModel : ViewModel() {
         // If the queue is empty and the target was not reached, no path exists.
         return null
     }
-//
-//    private fun removeTheSeriesIfThereAre(): Boolean {
-//        val ballsToRemove = findColorSeries(ballList.value.toList())
-//        if (ballsToRemove.isEmpty()) return false
-//
-//        ballsToRemove.forEach { ballIndex ->
-//            removeBall(ballIndex)
-//        }
-//        return true
-//    }
 
     suspend fun findColorSeries(): Boolean {
         var result = false
@@ -299,7 +298,7 @@ class BallGameViewModel : ViewModel() {
                     delay(50)
                 }
             }
-            selectTheBall(null)
+            deselectTheBall()
         }.join()
         return false
     }
@@ -350,9 +349,11 @@ class BallGameViewModel : ViewModel() {
     }
 
     fun add3Ball() {
+        val ballArray = Array(3){0}
         for (i in 0 until 3) {
-            addBall(randomBall(), randomColor())
+            ballArray[i] =  randomColor()
         }
+        _upcomingBalls.value = ballArray
     }
 
     private fun randomColor(): Int {
@@ -384,5 +385,13 @@ class BallGameViewModel : ViewModel() {
 
     fun getRemovables(): List<Set<Int>> {
         return setToRemove.value
+    }
+
+    fun populateUpcommingBalls() {
+        val upcomingBalls = upcomingBalls.value
+        for (color in upcomingBalls) {
+            addBall(randomBall(), color)
+        }
+        add3Ball()
     }
 }

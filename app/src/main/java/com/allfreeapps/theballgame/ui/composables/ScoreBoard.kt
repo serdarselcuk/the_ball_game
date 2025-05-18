@@ -32,7 +32,7 @@ import com.allfreeapps.theballgame.ui.theme.ScoreLine
 import com.allfreeapps.theballgame.ui.theme.ScoreTextColor
 import java.util.PriorityQueue
 
-class ScoreBoard(val viewModel: BallGameViewModel) {
+class ScoreBoard(private val viewModel: BallGameViewModel) {
 
     @Composable
     fun get() {
@@ -193,7 +193,7 @@ fun previewScoreBoard() {
                 "2023-01-02"
             )
         )
-        increaseScoreFor(8)
+        increaseScoreFor(80)
     }
     val score = ScoreBoard(mockViewModel)
     score.get()

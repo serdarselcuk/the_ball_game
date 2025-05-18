@@ -5,45 +5,59 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.composables.Board
 import com.allfreeapps.theballgame.ui.composables.Buttons
+import com.allfreeapps.theballgame.ui.composables.FutureBalls
+import com.allfreeapps.theballgame.ui.composables.Header
 import com.allfreeapps.theballgame.ui.composables.ScoreBoard
-import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
+import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 import com.allfreeapps.theballgame.utils.Constants.Companion.gridSize
+import com.allfreeapps.theballgame.utils.convertToColor
 import kotlin.math.sqrt
 
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<BallGameViewModel>()
     private lateinit var board: Board
     private lateinit var buttons: Buttons
+    private lateinit var header: Header
     private lateinit var scoreBoard: ScoreBoard
+    private lateinit var futureBalls: FutureBalls
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         board = Board(viewModel)
         buttons = Buttons()
+        header = Header(viewModel, buttons)
         scoreBoard = ScoreBoard(viewModel)
+        futureBalls = FutureBalls(viewModel)
 
         enableEdgeToEdge()
         setContent {
@@ -51,9 +65,9 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     MainLayOut(
                         Modifier.padding(innerPadding),
-                        viewModel = viewModel,
                         board =  board ,
-                        button =  buttons,
+                        futureBalls = futureBalls,
+                        header =  header,
                         scoreBoard = scoreBoard
                     )
                 }
@@ -65,94 +79,36 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainLayOut(
     modifier: Modifier,
-    viewModel: BallGameViewModel,
     board: Board,
-    button: Buttons,
+    futureBalls: FutureBalls,
+    header: Header,
     scoreBoard: ScoreBoard
 ) {
-    val cellCount = gridSize * gridSize
-    val configuration = LocalConfiguration.current
-    val screenWidthDp = configuration.screenWidthDp.dp
-    val screenHeightDp = configuration.screenHeightDp.dp
-    val minSizeOfMainSq = min(screenWidthDp, screenHeightDp)
-
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.SpaceEvenly
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally
     )
     {
-        Row(
-            modifier = Modifier.height(50.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ){
-            Text(
-                modifier = Modifier.padding(
-                    start = 32.dp,
-                    top = 12.dp,
-                    bottom = 12.dp,
-                ),
-                fontStyle = FontStyle.Italic,
-                fontFamily = FontFamily.Cursive,
-                fontWeight = FontWeight.ExtraBold,
-                color = HeaderTextColor,
-                text = "THE COLOR GAME"
-            )
-
-            Spacer(
-                Modifier.weight(1f)
-            )
-
-            button.restartButton(viewModel)
-
-        }
-
-        // Layout(() → Unit, Modifier = ..., MeasurePolicy) defined in androidx. compose. ui. layout
-        Layout(
-            content = { board.get() },
-            modifier = Modifier.height(minSizeOfMainSq),
-            measurePolicy = { measurables, constraints ->
-                val cellSize = (minSizeOfMainSq / gridSize).roundToPx()
-                val cellConstraints = constraints.copy(
-                    minWidth = cellSize,
-                    minHeight = cellSize,
-                    maxWidth = cellSize,
-                    maxHeight = cellSize
-                )
-
-                val placeables = measurables.map { measurable ->
-                    measurable.measure(cellConstraints)
-                }
-
-                val sizeOfTheRow = sqrt(cellCount.toDouble()).toInt()
-
-                layout(constraints.maxWidth, constraints.maxHeight) {
-                    var x = 0
-                    var y = 0
-                    placeables.forEachIndexed { index, placeable ->
-                        placeable.placeRelative(x, y)
-                        x += cellSize
-                        if (((index + 1) % sizeOfTheRow) == 0) {
-                            x = 0
-                            y += cellSize
-                        }
-                    }
-                }
-            }
-        )
-
+        header.build()
+        board.layout()
+        Spacer(Modifier.height(5.dp))
+        futureBalls.Build()
+        Spacer(Modifier.height(5.dp))
         scoreBoard.get()
     }
-
 }
-
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     val mockViewModel = BallGameViewModel().apply {
-        addBall(57, 5)
-        addBall(21, 3)
-        addBall(35, 2)
+        addBall(57, 1)
+        addBall(21, 2)
+        addBall(35, 3)
+        addBall(36, 4)
+        addBall(37, 5)
+        addBall(39, 6)
         addOldScores(
             com.allfreeapps.theballgame.ui.model.Scores(
                 123,
@@ -161,6 +117,23 @@ fun GreetingPreview() {
                 "2023-01-01"
             )
         )
+        addOldScores(
+            com.allfreeapps.theballgame.ui.model.Scores(
+                124,
+                "player_2",
+                1230,
+                "2023-01-01"
+            )
+        )
+        addOldScores(
+            com.allfreeapps.theballgame.ui.model.Scores(
+                125,
+                "player_3",
+                1236,
+                "2023-01-01"
+            )
+        )
+        selectTheBall(37)
     }
 
     TheBallGameTheme {
@@ -168,8 +141,8 @@ fun GreetingPreview() {
             MainLayOut(
                 Modifier.padding(innerPadding),
                 board =  Board(mockViewModel),
-                button = Buttons() ,
-                viewModel = mockViewModel,
+                header = Header(mockViewModel, Buttons()),
+                futureBalls = FutureBalls(mockViewModel),
                 scoreBoard = ScoreBoard(mockViewModel)
             )
         }
