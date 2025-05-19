@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,11 +35,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
-import com.allfreeapps.theballgame.ui.composables.Board.Companion.JUMP_DURATION
-import com.allfreeapps.theballgame.ui.composables.Board.Companion.NO_BALL
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
-import com.allfreeapps.theballgame.utils.ColorMap
 import com.allfreeapps.theballgame.utils.Constants.Companion.gridSize
 import com.allfreeapps.theballgame.utils.convertToColor
 import kotlinx.coroutines.CoroutineScope
@@ -57,16 +56,17 @@ class Board(
     }
 
     @Composable
-    fun layout(){
+    fun Layout(modifier: Modifier = Modifier){
         val cellCount = gridSize * gridSize
         val configuration = LocalConfiguration.current
+        val orientationIsPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
         val screenWidthDp = configuration.screenWidthDp.dp
         val screenHeightDp = configuration.screenHeightDp.dp
-        val minSizeOfMainSq = minOf(screenWidthDp, screenHeightDp)
+        val minSizeOfMainSq = if(orientationIsPortrait )screenWidthDp else screenHeightDp - 40.dp
         val cellSize = (minSizeOfMainSq / gridSize)
         Layout(
-            content = { ball(cellSize) },
-            modifier = Modifier.height(minSizeOfMainSq),
+            content = { Ball(cellSize) },
+            modifier = modifier.height(minSizeOfMainSq).width(minSizeOfMainSq),
             measurePolicy = { measurables, constraints ->
                 val roundedCellSize = cellSize.roundToPx()
                 val cellConstraints = constraints.copy(
@@ -99,7 +99,7 @@ class Board(
     }
 
     @Composable
-    fun ball(cellSize: Dp) { // Assuming this is where you draw individual balls
+    fun Ball(cellSize: Dp) { // Assuming this is where you draw individual balls
         val ballList by viewModel.ballList.collectAsState()
         val selectedBallIndex by viewModel.selectedBall.collectAsState()
 
@@ -154,7 +154,7 @@ class Board(
                             .offset(y = currentJumpOffsetDp)
                             .size(cellSize * 0.8f) // The actual visible ball
                             .shadow(
-                                elevation = if (isSelected) 10.dp else 8.dp,
+                                elevation = if (isSelected) 30.dp else 18.dp,
                                 shape = CircleShape
                             )
                             .clip(CircleShape)
@@ -228,7 +228,7 @@ fun BoardPreview() {
     // It's good practice to wrap previews that use animations or complex state
     // in a way that allows interaction or showcases the state.
     // For a simple preview of the board:
-    Board(mockViewModel).layout()
+    Board(mockViewModel).Layout()
 
     // For a more interactive preview, you might need a local state
     // to simulate selection if your ViewModel isn't easily manipulated in Preview.

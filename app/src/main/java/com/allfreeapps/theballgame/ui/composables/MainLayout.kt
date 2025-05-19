@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,7 +24,7 @@ import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 
 class MainLayout (
     val viewModel: BallGameViewModel
-){
+) {
     private lateinit var board: Board
     private lateinit var buttons: Buttons
     private lateinit var header: Header
@@ -34,86 +37,107 @@ class MainLayout (
         modifier: Modifier,
     ) {
         board = Board(viewModel)
-        buttons = Buttons()
+        buttons = Buttons() // Assuming Buttons are used within Header or elsewhere
         header = Header(viewModel, buttons)
         scoreBoard = ScoreBoard(viewModel)
         futureBalls = FutureBalls(viewModel)
         val orientation = LocalConfiguration.current.orientation
 
-        when(orientation) {
+        when (orientation) {
             Configuration.ORIENTATION_PORTRAIT -> {
                 Column(
-                    modifier = modifier,
+                    modifier = modifier.fillMaxSize(), // Ensure the main Column fills available space
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalAlignment = Alignment.CenterHorizontally
                 )
                 {
                     header.build()
-                    board.layout()
+                    board.Layout() // Make sure this is board.Layout() not board.layout() if that's the correct function name
                     Spacer(Modifier.height(5.dp))
                     futureBalls.Build()
                     Spacer(Modifier.height(5.dp))
-                    scoreBoard.get()
+                    scoreBoard.Table(scoreLine = ScoreLine(viewModel))
                 }
-            } else -> {
-            Column(
-                modifier = modifier,
-                verticalArrangement = Arrangement.SpaceEvenly,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                header.build()
 
-                Row(
-                    modifier = modifier,
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceEvenly
+            }
+
+            else -> { // Landscape Mode
+                val scoreLine = ScoreLine(viewModel)
+                Column(
+                    modifier = modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.Start, // Align the whole block (header and row) to the start
                 ) {
+                    header.build(Modifier.fillMaxWidth())
 
-                    board.layout()
-                    Spacer(Modifier.height(5.dp))
-                    futureBalls.Build()
-                    Spacer(Modifier.height(5.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        verticalAlignment = Alignment.Top,
+                        // Arrangement.Start is good, but the Spacer will handle the main distribution
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        // Group these items to the left
+                        scoreLine.Build() // Takes its intrinsic width
+                        Spacer(modifier = Modifier.width(8.dp)) // Optional: space after scoreLine
+
+                        board.Layout() // Takes its intrinsic width
+
+                        // This Spacer will take up all the remaining space in the Row
+                        // pushing scoreBoard.Table to the far right.
+                        Spacer(modifier = Modifier.weight(1f))
+                        Row(
+                            Modifier.fillMaxHeight(),
+                            verticalAlignment = Alignment.Bottom,
+                        ) {
+                            futureBalls.Build() // Takes its intrinsic width
+                        }
+                        Spacer(modifier = Modifier.width(8.dp)) // Optional: space after futureBalls
+
+                        // This will be on the far right
+                        scoreBoard.Table(scoreLine = null) // Takes its intrinsic width
+                    }
                 }
             }
-        }
         }
     }
 
 }
 
-private val mockViewModel = BallGameViewModel().apply {
-    addBall(57, 1)
-    addBall(21, 2)
-    addBall(35, 3)
-    addBall(36, 4)
-    addBall(37, 5)
-    addBall(39, 6)
-    addOldScores(
-        com.allfreeapps.theballgame.ui.model.Scores(
-            123,
-            "player_1",
-            1234,
-            "2023-01-01"
+    private val mockViewModel = BallGameViewModel().apply {
+        startGame()
+        addBall(57, 1)
+        addBall(21, 2)
+        addBall(35, 3)
+        addBall(36, 4)
+        addBall(37, 5)
+        addBall(39, 6)
+        addOldScores(
+            com.allfreeapps.theballgame.ui.model.Scores(
+                123,
+                "player_1",
+                1234,
+                "2023-01-01"
+            )
         )
-    )
-    addOldScores(
-        com.allfreeapps.theballgame.ui.model.Scores(
-            124,
-            "player_2",
-            1230,
-            "2023-01-01"
+        addOldScores(
+            com.allfreeapps.theballgame.ui.model.Scores(
+                124,
+                "player_2",
+                1230,
+                "2023-01-01"
+            )
         )
-    )
-    addOldScores(
-        com.allfreeapps.theballgame.ui.model.Scores(
-            125,
-            "player_3",
-            1236,
-            "2023-01-01"
+        addOldScores(
+            com.allfreeapps.theballgame.ui.model.Scores(
+                125,
+                "player_3",
+                1236,
+                "2023-01-01"
+            )
         )
-    )
-    selectTheBall(37)
-}
+        selectTheBall(37)
+    }
 
 @Preview(
     showBackground = true,

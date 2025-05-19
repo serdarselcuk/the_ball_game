@@ -29,13 +29,13 @@ class Header(
 ) {
 
     @Composable
-    fun build():Header {
+    fun build(modifier: Modifier = Modifier):Header {
         val orientation = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
         val headerHeight = if (orientation) 50.dp else 40.dp
         val startPadding = if(orientation) 20.dp else 50.dp
 
         Row(
-            modifier = Modifier
+            modifier = modifier
                 .height(headerHeight)
                 .background(HeaderBackGround),
             horizontalArrangement = Arrangement.SpaceEvenly,
