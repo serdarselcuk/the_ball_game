@@ -1,7 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
 import android.content.res.Configuration
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,14 +46,19 @@ class MainLayout (
             Configuration.ORIENTATION_PORTRAIT -> {
                 Column(
                     modifier = modifier.fillMaxSize(), // Ensure the main Column fills available space
-                    verticalArrangement = Arrangement.SpaceEvenly,
+                    verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 )
                 {
                     header.build()
                     board.Layout() // Make sure this is board.Layout() not board.layout() if that's the correct function name
                     Spacer(Modifier.height(5.dp))
-                    futureBalls.Build()
+                    Column(
+                        Modifier.fillMaxWidth(),
+                       horizontalAlignment = Alignment.End,
+                    ) {
+                        futureBalls.Build()
+                    }
                     Spacer(Modifier.height(5.dp))
                     scoreBoard.Table(scoreLine = ScoreLine(viewModel))
                 }

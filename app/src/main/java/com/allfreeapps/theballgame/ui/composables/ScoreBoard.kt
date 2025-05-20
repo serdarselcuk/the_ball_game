@@ -115,7 +115,7 @@ class ScoreBoard(private val viewModel: BallGameViewModel) {
 
 @Preview(showBackground = true)
 @Composable
-fun previewScoreBoard() {
+fun PreviewScoreBoard() {
     val mockViewModel = BallGameViewModel().apply {
         increaseScoreFor(9)
         increaseScoreFor(9)
