@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 
-class MainLayout (
+class MainLayout(
     val viewModel: BallGameViewModel
 ) {
     private lateinit var board: Board
@@ -47,7 +47,7 @@ class MainLayout (
                 Column(
                     modifier = modifier.fillMaxSize(), // Ensure the main Column fills available space
                     verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 )
                 {
                     header.build()
@@ -55,7 +55,7 @@ class MainLayout (
                     Spacer(Modifier.height(5.dp))
                     Column(
                         Modifier.fillMaxWidth(),
-                       horizontalAlignment = Alignment.End,
+                        horizontalAlignment = Alignment.End,
                     ) {
                         futureBalls.Build()
                     }
@@ -89,7 +89,7 @@ class MainLayout (
 
                         // This Spacer will take up all the remaining space in the Row
                         // pushing scoreBoard.Table to the far right.
-                        Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Row(
                             Modifier.fillMaxHeight(),
                             verticalAlignment = Alignment.Bottom,
@@ -108,40 +108,40 @@ class MainLayout (
 
 }
 
-    private val mockViewModel = BallGameViewModel().apply {
-        startGame()
-        addBall(57, 1)
-        addBall(21, 2)
-        addBall(35, 3)
-        addBall(36, 4)
-        addBall(37, 5)
-        addBall(39, 6)
-        addOldScores(
-            com.allfreeapps.theballgame.ui.model.Scores(
-                123,
-                "player_1",
-                1234,
-                "2023-01-01"
-            )
+private val mockViewModel = BallGameViewModel().apply {
+    startGame()
+    addBall(57, 1)
+    addBall(21, 2)
+    addBall(35, 3)
+    addBall(36, 4)
+    addBall(37, 5)
+    addBall(39, 6)
+    addOldScores(
+        com.allfreeapps.theballgame.ui.model.Scores(
+            123,
+            "player_1",
+            1234,
+            "2023-01-01"
         )
-        addOldScores(
-            com.allfreeapps.theballgame.ui.model.Scores(
-                124,
-                "player_2",
-                1230,
-                "2023-01-01"
-            )
+    )
+    addOldScores(
+        com.allfreeapps.theballgame.ui.model.Scores(
+            124,
+            "player_2",
+            1230,
+            "2023-01-01"
         )
-        addOldScores(
-            com.allfreeapps.theballgame.ui.model.Scores(
-                125,
-                "player_3",
-                1236,
-                "2023-01-01"
-            )
+    )
+    addOldScores(
+        com.allfreeapps.theballgame.ui.model.Scores(
+            125,
+            "player_3",
+            1236,
+            "2023-01-01"
         )
-        selectTheBall(37)
-    }
+    )
+    selectTheBall(37)
+}
 
 @Preview(
     showBackground = true,
@@ -153,7 +153,7 @@ fun portraitPreview() {
     val mainLayOut = MainLayout(mockViewModel)
     TheBallGameTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            mainLayOut.Build( Modifier.padding(innerPadding))
+            mainLayOut.Build(Modifier.padding(innerPadding))
         }
     }
 }
@@ -168,7 +168,7 @@ private fun landscapePreview() {
     val mainLayOut = MainLayout(mockViewModel)
     TheBallGameTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            mainLayOut.Build( Modifier.padding(innerPadding))
+            mainLayOut.Build(Modifier.padding(innerPadding))
         }
     }
 }

@@ -8,16 +8,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer // Import Spacer
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding // Optional: for spacing
-import androidx.compose.foundation.layout.size // Import size
-import androidx.compose.foundation.layout.width // Import width for Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment // Optional: for centering if needed
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
@@ -33,11 +32,11 @@ class FutureBalls(
 ) {
 
     @Composable
-    fun Build( modifier: Modifier = Modifier) {
+    fun Build(modifier: Modifier = Modifier) {
         val upcomingBalls by viewModel.upcomingBalls.collectAsState()
         val configuration = LocalConfiguration.current
         val orientation = configuration.orientation
-        when(orientation){
+        when (orientation) {
             Configuration.ORIENTATION_PORTRAIT -> {
                 Row(
                     modifier.height(25.dp),
@@ -47,6 +46,7 @@ class FutureBalls(
                     createFutureBalls(upcomingBalls)
                 }
             }
+
             Configuration.ORIENTATION_LANDSCAPE -> {
                 Column(
                     modifier.width(25.dp),
@@ -56,12 +56,13 @@ class FutureBalls(
                     createFutureBalls(upcomingBalls)
                 }
             }
+
             else -> {}//nothing
         }
     }
 
     @Composable
-    private fun createFutureBalls(upcomingBalls: Array<Int>){
+    private fun createFutureBalls(upcomingBalls: Array<Int>) {
         upcomingBalls.forEachIndexed { index, ballColorInt -> // Use forEachIndexed for keying Spacer
             Box(
                 Modifier
@@ -92,14 +93,13 @@ class FutureBalls(
 @Composable
 fun FutureBallsPreview() {
     val mockViewModel = BallGameViewModel().apply {
-      add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
+        add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
     }
 
     TheBallGameTheme {
         FutureBalls(mockViewModel).Build()
     }
 }
-
 
 
 @Preview(

@@ -5,12 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.composables.MainLayout
+import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 
 class MainActivity : ComponentActivity() {
@@ -25,7 +27,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             TheBallGameTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    mainLayOut.Build(Modifier.padding(innerPadding))
+                    mainLayOut.Build(Modifier
+                        .padding(innerPadding)
+                        .background(BackgroundColor))
                 }
             }
         }
