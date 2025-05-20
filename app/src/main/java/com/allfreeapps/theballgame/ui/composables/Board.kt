@@ -56,17 +56,19 @@ class Board(
     }
 
     @Composable
-    fun Layout(modifier: Modifier = Modifier){
+    fun Layout(modifier: Modifier = Modifier) {
         val cellCount = gridSize * gridSize
         val configuration = LocalConfiguration.current
         val orientationIsPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
         val screenWidthDp = configuration.screenWidthDp.dp
         val screenHeightDp = configuration.screenHeightDp.dp
-        val minSizeOfMainSq = if(orientationIsPortrait )screenWidthDp else screenHeightDp - 40.dp
+        val minSizeOfMainSq = if (orientationIsPortrait) screenWidthDp else screenHeightDp - 40.dp
         val cellSize = (minSizeOfMainSq / gridSize)
         Layout(
             content = { Ball(cellSize) },
-            modifier = modifier.height(minSizeOfMainSq).width(minSizeOfMainSq),
+            modifier = modifier
+                .height(minSizeOfMainSq)
+                .width(minSizeOfMainSq),
             measurePolicy = { measurables, constraints ->
                 val roundedCellSize = cellSize.roundToPx()
                 val cellConstraints = constraints.copy(
@@ -88,7 +90,7 @@ class Board(
                     placeables.forEachIndexed { index, placeable ->
                         placeable.placeRelative(x, y)
                         x += roundedCellSize
-                        if (((index + 1) % sizeOfTheRow ) == 0) {
+                        if (((index + 1) % sizeOfTheRow) == 0) {
                             x = 0
                             y += roundedCellSize
                         }
@@ -103,7 +105,7 @@ class Board(
         val ballList by viewModel.ballList.collectAsState()
         val selectedBallIndex by viewModel.selectedBall.collectAsState()
 
-        ballList.forEachIndexed { indice, ballColorInt -> // Renamed 'ball' to 'ballColorInt' for clarity
+        ballList.forEachIndexed { index, ballColorInt -> // Renamed 'ball' to 'ballColorInt' for clarity
 
             Box( // This is the cell Box
                 modifier = Modifier
@@ -117,24 +119,31 @@ class Board(
                     )
                     .clickable {
                         if (ballColorInt == NO_BALL) {
+
                             if (selectedBallIndex != null) {
-                                val path = viewModel.checkIfSelectedBallCanMove(indice)
+
+                                val path = viewModel.checkIfSelectedBallCanMove(index)
                                 if (path != null) {
                                     CoroutineScope(Dispatchers.IO).launch {
-                                        async { viewModel.moveTheBall(path) }.await()
-                                        val seriesFound = async { viewModel.findColorSeries() }
+                                        viewModel.moveTheBall(path)
+                                        val seriesFound = async {
+                                            viewModel.findColorSeries(
+                                                listOf(index)
+                                            )
+                                        }
                                         if (seriesFound.await()) {
                                             viewModel.removeAllSeries()
                                         } else {
-                                            viewModel.populateUpcommingBalls()
+                                            viewModel.populateUpcomingBalls()
                                         }
                                         viewModel.deselectTheBall()
                                     }
                                 }
+
                             }
                         } else {
-                            if (indice != selectedBallIndex) {
-                                viewModel.selectTheBall(indice)
+                            if (index != selectedBallIndex) {
+                                viewModel.selectTheBall(index)
                             } else {
                                 viewModel.deselectTheBall()
                             }
@@ -143,11 +152,12 @@ class Board(
                 contentAlignment = Alignment.Center
             ) {
                 if (ballColorInt != NO_BALL) {
-                    val isSelected = indice == selectedBallIndex
+                    val isSelected = index == selectedBallIndex
                     val currentJumpOffsetDp: Dp = JUMP_HEIGHT * getAnimation(isSelected).value
                     val ballActualColor = ballColorInt.convertToColor()
                     val ballSize = (cellSize * 0.8f) // Convert to pixels
-                    val radialGradientBrush = getRadialGradientBrush(ballSize.value, ballActualColor)
+                    val radialGradientBrush =
+                        getRadialGradientBrush(ballSize.value, ballActualColor)
 
                     Box(
                         modifier = Modifier
@@ -165,7 +175,7 @@ class Board(
         }
     }
 
-    private fun getRadialGradientBrush(ballSize:Float, color: Color): Brush {
+    private fun getRadialGradientBrush(ballSize: Float, color: Color): Brush {
 
         // Create a slightly lighter color for the gradient center (highlight)
         // and a slightly darker for the edges.
@@ -190,7 +200,7 @@ class Board(
     }
 
     @Composable
-    private fun getAnimation(isBallSelected:Boolean): Animatable<Float, *> {
+    private fun getAnimation(isBallSelected: Boolean): Animatable<Float, *> {
         val animatedJumpOffset = remember { Animatable(0f) }
         LaunchedEffect(key1 = isBallSelected) {
             if (isBallSelected) {
@@ -212,10 +222,11 @@ class Board(
 }
 
 @Composable
-@Preview(showBackground = true,
+@Preview(
+    showBackground = true,
     name = "board preview",
     device = "spec:width=3800dp,height=1800dp,dpi=240,orientation=portrait"
-    )
+)
 fun BoardPreview() {
     val mockViewModel = BallGameViewModel().apply {
         addBall(57, 5) // Add some balls for preview
@@ -223,7 +234,7 @@ fun BoardPreview() {
         addBall(35, 2)
         addBall(10, 1)
         addBall(45, 4)
-         selectTheBall(21) // Optionally pre-select a ball for previewing the jump
+        selectTheBall(21) // Optionally pre-select a ball for previewing the jump
     }
     // It's good practice to wrap previews that use animations or complex state
     // in a way that allows interaction or showcases the state.

@@ -2,7 +2,6 @@ package com.allfreeapps.theballgame.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.allfreeapps.theballgame.ui.model.Ball
 import com.allfreeapps.theballgame.ui.model.Direction
 import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.model.Scores
@@ -22,8 +21,9 @@ import java.util.Queue
 class BallGameViewModel : ViewModel() {
 
     companion object {
-        const val lastGridIndex = gridSize -1
+        const val lastGridIndex = gridSize - 1
         const val serieLengthOnIndexedBoard = ballLimitToRemove - 1 //since starting with 0
+        private const val TAG = "GameLogic" // Or your class name
 
         // Define possible movements (row_offset, column_offset)
         val movements = listOf(
@@ -33,15 +33,15 @@ class BallGameViewModel : ViewModel() {
             Direction.RIGHT
         )
 
-        val directionsToSearchSets = listOf(
-            Direction.RIGHT,
-            Direction.DOWN,
-            Direction.DOWN_RIGHT,
-            Direction.DOWN_LEFT
+        val directionPairsToSearch = listOf(
+            Pair(Direction.UP, Direction.DOWN),
+            Pair(Direction.LEFT, Direction.RIGHT),
+            Pair(Direction.UP_LEFT, Direction.DOWN_RIGHT),
+            Pair(Direction.UP_RIGHT, Direction.DOWN_LEFT)
         )
     }
 
-    private val _oldScores= MutableStateFlow( PriorityQueue<Scores>())
+    private val _oldScores = MutableStateFlow(PriorityQueue<Scores>())
     val oldScores: StateFlow<PriorityQueue<Scores>> = _oldScores
 
     private val _score = MutableStateFlow(0)
@@ -69,7 +69,7 @@ class BallGameViewModel : ViewModel() {
     fun startGame() {
         if (totalBallCount.value == 0) {
             add3Ball()
-            populateUpcommingBalls()
+            populateUpcomingBalls()
             _state.value = GameState.UserTurn
         }
     }
@@ -79,7 +79,7 @@ class BallGameViewModel : ViewModel() {
         startGame()
     }
 
-    fun addOldScores( score: Scores ){
+    fun addOldScores(score: Scores) {
         val scores = _oldScores.value
         scores.add(score)
         _oldScores.value = scores
@@ -94,22 +94,22 @@ class BallGameViewModel : ViewModel() {
         deselectTheBall()
     }
 
-    fun increaseScoreFor(ballCount: Int){
-        if(ballCount < 5) return
+    fun increaseScoreFor(ballCount: Int) {
+        if (ballCount < 5) return
         val score = 5
-        val additionalScore = ( 2 * (ballCount - 5) )
-        _score.value +=( score + additionalScore )
+        val additionalScore = (2 * (ballCount - 5))
+        _score.value += (score + additionalScore)
     }
 
-    fun combinedScore(){
+    fun combinedScore() {
         _score.value += setToRemove.value.size
     }
 
-    fun resetScore(){
+    fun resetScore() {
         _score.value = 0
     }
 
-    fun resetRemovalSet(){
+    fun resetRemovalSet() {
         _setToRemove.value = mutableListOf()
     }
 
@@ -146,7 +146,7 @@ class BallGameViewModel : ViewModel() {
         _selectedBall.value = null
     }
 
-    fun getSelectedBall(): Int? {
+    private fun getSelectedBall(): Int? {
         val ball = selectedBall.value?.let { ballList.value[it] }
         return if (ball == 0) null else ball
     }
@@ -169,25 +169,8 @@ class BallGameViewModel : ViewModel() {
 
     fun checkIfSelectedBallCanMove(destinationIndex: Int): List<Int>? {
         val selectedBallIndex = selectedBall.value
-        val targetIndex = destinationIndex
 
-        if (selectedBallIndex == null) {
-            Log.d("checkIfSelectedBallCanMove", "SelectedBall index is null")
-            return null
-        }
-
-        if (selectedBallIndex == targetIndex) {
-            Log.d(
-                "checkIfSelectedBallCanMove",
-                "Ball is already on the target \nselectedBallIndex: $selectedBallIndex, targetIndex: $targetIndex"
-            )
-            return null
-        }
-
-        if (_ballList.value[targetIndex] != 0) {
-            Log.d("checkIfSelectedBallCanMove", "no ball on the index $targetIndex")
-            return null
-        }
+        if (isMoveInvalid(selectedBallIndex, destinationIndex)) return null
 
         // Perform Breadth-First Search (BFS) to find a path
         val queue: Queue<Int> = LinkedList()
@@ -195,23 +178,23 @@ class BallGameViewModel : ViewModel() {
         val parentMap = mutableMapOf<Int, Int>() // To reconstruct the path
 
         queue.add(selectedBallIndex)
-        visited[selectedBallIndex] = true
+        selectedBallIndex?.let { visited[selectedBallIndex] = true }
 
         while (queue.isNotEmpty()) {
             val currentIndex = queue.poll()
 
 
             // If we reached the target, reconstruct and return the path
-            if (currentIndex == targetIndex) {
-                return reconstructPath(parentMap, selectedBallIndex, targetIndex)
+            if (currentIndex == destinationIndex) {
+                return selectedBallIndex?.let { reconstructPath(parentMap, it, destinationIndex) }
             }
 
             // Get valid neighbors (horizontal, vertical, diagonal)
-            val neighbors = getNeighbors(currentIndex)
+            val neighbors = getNeighbors(currentIndex!!)
 
             for (neighborIndex in neighbors) {
                 // Check if the neighbor is within bounds, not visited, and is an empty square
-                if (neighborIndex >= 0 && neighborIndex < 81 && !visited[neighborIndex] && _ballList.value[neighborIndex] == 0) {
+                if (neighborIndex in 0..80 && !visited[neighborIndex] && _ballList.value[neighborIndex] == 0) {
                     visited[neighborIndex] = true
                     parentMap[neighborIndex] =
                         currentIndex // Store the parent for path reconstruction
@@ -219,58 +202,73 @@ class BallGameViewModel : ViewModel() {
                 }
             }
         }
-
         // If the queue is empty and the target was not reached, no path exists.
         return null
     }
 
-    suspend fun findColorSeries(): Boolean {
+
+    private fun isMoveInvalid(selectedBallIndex: Int?, destinationIndex: Int): Boolean {
+        // 1. No ball selected
+        if (selectedBallIndex == null) {
+            Log.d(TAG, "Move invalid: No ball selected.")
+            return true
+        }
+
+        // 2. Attempting to move to the same spot
+        if (isSelectedBall(destinationIndex)) {
+            Log.d(
+                TAG,
+                "Move invalid: Ball is already on the target. selectedBallIndex: $selectedBallIndex, destinationIndex: $destinationIndex"
+            )
+            return true
+        }
+
+        // 3. Destination is occupied by another ball
+        // Assuming _ballList.value is safe to access and 0 means empty
+        if (_ballList.value.getOrNull(destinationIndex) != 0) { // Added getOrNull for safety
+            Log.d(
+                TAG,
+                "Move invalid: Destination index $destinationIndex is occupied."
+            )
+            return true
+        }
+
+        // If none of the above conditions are met, the move is valid (so isMoveInvalid is false)
+        return false
+    }
+
+    suspend fun findColorSeries(listOfChanges: List<Int>): Boolean {
         var result = false
         coroutineScope {
             _state.value = GameState.SearchingForSeries
-            // Iterate through each potential starting cell using row and column
-            for (row in 0 until gridSize) {
-                for (column in 0 until gridSize) {
-                    val startColor = ballList.value[positionToIndex(row, column)]
 
-                    // Skip empty cells or invalid colors as starting points
-                    if (startColor <= 0) continue
+            listOfChanges.forEach { ballPosition ->
+                val startColor = ballList.value[ballPosition]
 
-                    for ( currentDirection in directionsToSearchSets ) {
-//                         if down-left is the direction there should be enough space for the series
-                        when(currentDirection){
-//                          if diagonal direction, there should be enough space for the series (5 ball not fitting to corners)
-                            Direction.DOWN_LEFT -> if (((column + row) < serieLengthOnIndexedBoard ) || ((row + column) > ((2 * lastGridIndex)-serieLengthOnIndexedBoard))) continue
-                            Direction.DOWN_RIGHT -> if (((column - row) > serieLengthOnIndexedBoard ) || ((row - column) > serieLengthOnIndexedBoard)) continue
+                // Skip empty cells or invalid colors as starting points
+                if (startColor > 0) {
+                    val (row, column) = indexToPosition(ballPosition)
+
+                    for ((direction1, direction2) in directionPairsToSearch) {
+                        //                  if down-left is the direction there should be enough space for the series
+                        when (direction1) {
+                            //                      if diagonal direction, there should be enough space for the series (5 ball not fitting to corners)
+                            Direction.UP_RIGHT, Direction.DOWN_LEFT -> if (((column + row) < serieLengthOnIndexedBoard) || ((row + column) > ((2 * lastGridIndex) - serieLengthOnIndexedBoard))) continue
+                            Direction.DOWN_RIGHT, Direction.UP_LEFT -> if (((column - row) > serieLengthOnIndexedBoard) || ((row - column) > serieLengthOnIndexedBoard)) continue
                             else -> {}
                         }
 
                         val currentSeries = mutableSetOf<Int>()
-                        currentSeries.add(positionToIndex(row, column)) // Start with the current cell
-
-                        // Explore in the current direction
-                        for (k in 1 until gridSize) { // Max possible extension length
-                            val nextR = row + k * currentDirection.rowOffset
-                            val nextC = column + k * currentDirection.colOffset
-                            if (nextR > gridSize - 1
-                                || nextC > gridSize - 1
-                                || nextR < 0
-                                || nextC < 0
+                        currentSeries.add(
+                            positionToIndex(
+                                row,
+                                column
                             )
-                                continue
+                        ) // Start with the current cell
 
-                            // Get the color at the next coordinates (includes bounds check)
-                            val nextColor = ballList.value[positionToIndex(nextR, nextC)]
-
-                            // Stop if out of bounds (getColor returns <= 0) or color mismatch
-                            if (nextColor == startColor) {
-                                // Coordinates are valid and color matches
-                                currentSeries.add(positionToIndex(nextR, nextC))
-                            } else {
-                                // Out of bounds OR color mismatch
-                                break
-                            }
-                        }
+                        // Explore in each direction
+                        exploreTheDirection(startColor, currentSeries, row, column, direction1)
+                        exploreTheDirection(startColor, currentSeries, row, column, direction2)
 
                         // If the series is long enough, add all its cells to the result set
                         if (currentSeries.size >= ballLimitToRemove) {
@@ -284,24 +282,56 @@ class BallGameViewModel : ViewModel() {
         return result
     }
 
-    suspend fun moveTheBall(path: List<Int>): Boolean {
+    private fun exploreTheDirection(
+        startColor: Int,
+        currentSeries: MutableSet<Int>,
+        row: Int,
+        column: Int,
+        currentDirection: Direction
+    ) {
+        for (k in 1 until gridSize) { // Max possible extension length
+            val nextR = row + k * currentDirection.rowOffset
+            val nextC = column + k * currentDirection.colOffset
+            if (positionIsOutOfBoard(nextR, nextC)) {
+                continue
+            }
+            // Get the color at the next coordinates (includes bounds check)
+            val nextColor = ballList.value[positionToIndex(nextR, nextC)]
+
+            // Stop if out of bounds (getColor returns <= 0) or color mismatch
+            if (nextColor == startColor) {
+                // Coordinates are valid and color matches
+                currentSeries.add(positionToIndex(nextR, nextC))
+            } else {
+                // Out of bounds OR color mismatch
+                break
+            }
+        }
+
+    }
+
+    private fun positionIsOutOfBoard(nextR: Int, nextC: Int): Boolean {
+        return nextR > gridSize - 1
+                || nextC > gridSize - 1
+                || nextR < 0
+                || nextC < 0
+    }
+
+    suspend fun moveTheBall(path: List<Int>) {
 //        todo throw error when color is 0 or null
-        val color = getSelectedBall() ?: return false
-        CoroutineScope(Dispatchers.IO).launch {
+        val color = getSelectedBall() ?: 0
+        if (color != 0) {
             path.forEach { index ->
                 val selectedBallIndex = selectedBall.value
-                if (index != selectedBallIndex) {
-                    selectedBallIndex?.let {
-                        addBall(index, color)
-                        removeBall(it)
-                    }
+                if (selectedBallIndex != null && !isSelectedBall(index)) {
+                    addBall(index, color)
+                    removeBall(selectedBallIndex)
                     selectTheBall(index)
                     delay(50)
                 }
             }
-            deselectTheBall()
-        }.join()
-        return false
+        }
+        deselectTheBall()
     }
 
     /**
@@ -350,9 +380,9 @@ class BallGameViewModel : ViewModel() {
     }
 
     fun add3Ball() {
-        val ballArray = Array(3){0}
+        val ballArray = Array(3) { 0 }
         for (i in 0 until 3) {
-            ballArray[i] =  randomColor()
+            ballArray[i] = randomColor()
         }
         _upcomingBalls.value = ballArray
     }
@@ -375,7 +405,7 @@ class BallGameViewModel : ViewModel() {
 
     fun removeAllSeries() {
 
-        getRemovables().forEach { set->
+        getRemovables().forEach { set ->
             set.forEach {
                 removeBall(it)
             }
@@ -388,11 +418,19 @@ class BallGameViewModel : ViewModel() {
         return setToRemove.value
     }
 
-    fun populateUpcommingBalls() {
+    fun populateUpcomingBalls() {
         val upcomingBalls = upcomingBalls.value
+        val ballPositions = mutableListOf<Int>()
         for (color in upcomingBalls) {
-            addBall(randomBall(), color)
+            val ballPosition = randomBall()
+            addBall(ballPosition, color)
+            ballPositions.add(ballPosition)
         }
+
         add3Ball()
+        CoroutineScope(Dispatchers.IO).launch {
+            findColorSeries(ballPositions)
+            removeAllSeries()
+        }
     }
 }
