@@ -1,10 +1,12 @@
 package com.allfreeapps.theballgame.ui
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.allfreeapps.theballgame.ui.model.Direction
 import com.allfreeapps.theballgame.ui.model.GameState
-import com.allfreeapps.theballgame.ui.model.Scores
+import com.allfreeapps.theballgame.ui.model.entities.Score
+import com.allfreeapps.theballgame.ui.service.ScoreDB
 import com.allfreeapps.theballgame.utils.Constants.Companion.ballLimitToRemove
 import com.allfreeapps.theballgame.utils.Constants.Companion.gridSize
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +20,7 @@ import java.util.LinkedList
 import java.util.PriorityQueue
 import java.util.Queue
 
-class BallGameViewModel : ViewModel() {
+class BallGameViewModel(val applicationContext: Context) : ViewModel() {
 
     companion object {
         const val lastGridIndex = gridSize - 1
@@ -41,8 +43,8 @@ class BallGameViewModel : ViewModel() {
         )
     }
 
-    private val _oldScores = MutableStateFlow(PriorityQueue<Scores>())
-    val oldScores: StateFlow<PriorityQueue<Scores>> = _oldScores
+    private val _oldScores = MutableStateFlow(PriorityQueue<Score>())
+    val oldScores: StateFlow<PriorityQueue<Score>> = _oldScores
 
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score
@@ -67,6 +69,7 @@ class BallGameViewModel : ViewModel() {
     val state: StateFlow<GameState> = _state
 
     fun startGame() {
+        getScores()
         if (totalBallCount.value == 0) {
             add3Ball()
             populateUpcomingBalls()
@@ -79,7 +82,7 @@ class BallGameViewModel : ViewModel() {
         startGame()
     }
 
-    fun addOldScores(score: Scores) {
+    fun addOldScores(score: Score) {
         val scores = _oldScores.value
         scores.add(score)
         _oldScores.value = scores
@@ -432,5 +435,37 @@ class BallGameViewModel : ViewModel() {
             findColorSeries(ballPositions)
             removeAllSeries()
         }
+    }
+
+    fun resetGame() {
+        setEmptyBoard()
+    }
+
+    private fun getScores(){
+        val connection= ScoreDB(applicationContext)
+        val scores = connection
+            .connect()
+            .getAll()
+        for (score in scores) {
+            addOldScores(score)
+        }
+        connection.close()
+    }
+
+    fun saveScore() {
+
+        val connection= ScoreDB(applicationContext)
+        connection
+            .connect()
+            .insertAll(
+                Score(
+                    id = null,
+                    firstName = "user name",
+                    lastName = "user last name",
+                    score = score.value,
+                    date = null
+                )
+        )
+        connection.close()
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
@@ -124,7 +125,7 @@ class ScoreLine(
 )
 @Composable
 fun PreviewOnPortrait(){
-    ScoreLine(BallGameViewModel()).Build()
+    ScoreLine(BallGameViewModel(LocalContext.current)).Build()
 }
 
 @Preview(
@@ -134,5 +135,5 @@ fun PreviewOnPortrait(){
 )
 @Composable
 fun PreviewOnLandscape(){
-    ScoreLine(BallGameViewModel()).Build()
+    ScoreLine(BallGameViewModel(LocalContext.current)).Build()
 }

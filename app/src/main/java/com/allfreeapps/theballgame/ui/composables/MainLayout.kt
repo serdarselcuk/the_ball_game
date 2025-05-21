@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,9 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
+import com.allfreeapps.theballgame.ui.model.entities.Score
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 
 class MainLayout(
@@ -105,42 +108,48 @@ class MainLayout(
             }
         }
     }
-
 }
 
-private val mockViewModel = BallGameViewModel().apply {
-    startGame()
-    addBall(57, 1)
-    addBall(21, 2)
-    addBall(35, 3)
-    addBall(36, 4)
-    addBall(37, 5)
-    addBall(39, 6)
-    addOldScores(
-        com.allfreeapps.theballgame.ui.model.Scores(
-            123,
-            "player_1",
-            1234,
-            "2023-01-01"
+
+private fun mockViewModel(applicationContext: Context): BallGameViewModel
+{
+    return BallGameViewModel(applicationContext).apply {
+        startGame()
+        addBall(57, 1)
+        addBall(21, 2)
+        addBall(35, 3)
+        addBall(36, 4)
+        addBall(37, 5)
+        addBall(39, 6)
+
+        val scores = listOf(
+            Score(
+                null,
+                "player_1",
+                "1234",
+                1234,
+                null
+            ),
+            Score(
+                null,
+                "player_2",
+                "1235",
+                1234,
+                null
+            ),
+            Score(
+                null,
+                "player_3",
+                "1236",
+                1234,
+                null
+            )
         )
-    )
-    addOldScores(
-        com.allfreeapps.theballgame.ui.model.Scores(
-            124,
-            "player_2",
-            1230,
-            "2023-01-01"
-        )
-    )
-    addOldScores(
-        com.allfreeapps.theballgame.ui.model.Scores(
-            125,
-            "player_3",
-            1236,
-            "2023-01-01"
-        )
-    )
-    selectTheBall(37)
+        scores.forEach {
+            addOldScores(it)
+        }
+        selectTheBall(37)
+    }
 }
 
 @Preview(
@@ -149,8 +158,8 @@ private val mockViewModel = BallGameViewModel().apply {
     device = "spec:width=1800dp,height=800dp,dpi=240,orientation=portrait"
 )
 @Composable
-fun portraitPreview() {
-    val mainLayOut = MainLayout(mockViewModel)
+fun PortraitPreview() {
+    val mainLayOut = MainLayout(mockViewModel(LocalContext.current))
     TheBallGameTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             mainLayOut.Build(Modifier.padding(innerPadding))
@@ -164,8 +173,8 @@ fun portraitPreview() {
     device = "spec:width=1800dp,height=800dp,dpi=240,orientation=landscape"
 )
 @Composable
-private fun landscapePreview() {
-    val mainLayOut = MainLayout(mockViewModel)
+private fun LandscapePreview() {
+    val mainLayOut = MainLayout(mockViewModel(LocalContext.current))
     TheBallGameTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             mainLayOut.Build(Modifier.padding(innerPadding))

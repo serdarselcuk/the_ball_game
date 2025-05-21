@@ -14,12 +14,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.model.Scores
+import com.allfreeapps.theballgame.ui.model.entities.Score
+import java.util.Date
+import java.util.PriorityQueue
 
 class ScoreBoard(private val viewModel: BallGameViewModel) {
 
@@ -36,7 +40,7 @@ class ScoreBoard(private val viewModel: BallGameViewModel) {
 
     @Composable
     fun ScoresTable() {
-        val scores by viewModel.oldScores.collectAsState()
+        val scores:PriorityQueue<Score> by viewModel.oldScores.collectAsState()
         if (scores.isEmpty()) {
             Text("No old scores yet!", modifier = Modifier.padding(16.dp))
             return
@@ -54,20 +58,20 @@ class ScoreBoard(private val viewModel: BallGameViewModel) {
 
                 // Table Content (Scrollable if many scores)
                 LazyColumn {
-                    items(scores.toArray()) { scoreItem ->
-                        if (scoreItem as Scores != null) {
-                            ScoreRow(
-                                playerName = scoreItem.playerName,
-                                score = scoreItem.score.toString(),
-                                date = scoreItem.date
-                            )
-                        }
+                    items(scores.toArray()) { item ->
+                        val scoreItem = item as Score
+                        ScoreRow(
+                            playerName = scoreItem.firstName,
+                            score = scoreItem.score.toString(),
+                            date = scoreItem.date.toString()
+                        )
                         HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
                     }
                 }
             }
         }
     }
+
 
     @Composable
     fun ScoreRow(
@@ -116,25 +120,33 @@ class ScoreBoard(private val viewModel: BallGameViewModel) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewScoreBoard() {
-    val mockViewModel = BallGameViewModel().apply {
+    val mockViewModel = BallGameViewModel(LocalContext.current).apply {
         increaseScoreFor(9)
         increaseScoreFor(9)
 
-        addOldScores(
-            Scores(
-                123,
+    val scores = listOf(
+            Score(
+                null,
                 "player_1",
+                "last name",
+                1224,
+                null
+            ),
+            Score(
+                null,
+                "player_1",
+                "last name",
                 1234,
-                "2023-01-01"
-            )
-        )
-        addOldScores(
-            Scores(
-                124,
-                "player_2",
-                1235,
-                "2023-01-02"
-            )
+                null
+            ),
+            Score(
+                null,
+                "player_3",
+                "last name",
+                1244,
+                null
+            ),
+
         )
         increaseScoreFor(80)
     }

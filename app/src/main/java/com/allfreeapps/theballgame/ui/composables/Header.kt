@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -69,9 +70,9 @@ class Header(
     device = "spec:width=1800dp,height=800dp,dpi=240,orientation=landscape"
 )
 @Composable
-fun preview(){
+fun Preview(){
     Header(
-        BallGameViewModel(),
+        BallGameViewModel(LocalContext.current),
         Buttons()
     ).build()
 }

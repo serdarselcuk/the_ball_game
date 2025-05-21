@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
@@ -43,7 +44,7 @@ class FutureBalls(
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically // Optional: vertically center balls in the Row
                 ) {
-                    createFutureBalls(upcomingBalls)
+                    CreateFutureBalls(upcomingBalls)
                 }
             }
 
@@ -53,7 +54,7 @@ class FutureBalls(
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.Start // Optional: horizontally start balls in the Column
                 ) {
-                    createFutureBalls(upcomingBalls)
+                    CreateFutureBalls(upcomingBalls)
                 }
             }
 
@@ -62,7 +63,7 @@ class FutureBalls(
     }
 
     @Composable
-    private fun createFutureBalls(upcomingBalls: Array<Int>) {
+    private fun CreateFutureBalls(upcomingBalls: Array<Int>) {
         upcomingBalls.forEachIndexed { index, ballColorInt -> // Use forEachIndexed for keying Spacer
             Box(
                 Modifier
@@ -92,7 +93,7 @@ class FutureBalls(
 )
 @Composable
 fun FutureBallsPreview() {
-    val mockViewModel = BallGameViewModel().apply {
+    val mockViewModel = BallGameViewModel(LocalContext.current).apply {
         add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
     }
 
@@ -109,7 +110,7 @@ fun FutureBallsPreview() {
 )
 @Composable
 fun FutureBallsPreviewLandscape() {
-    val mockViewModel = BallGameViewModel().apply {
+    val mockViewModel = BallGameViewModel(LocalContext.current).apply {
         add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
     }
 

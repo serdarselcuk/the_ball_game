@@ -1,6 +1,8 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import android.content.Context
 import android.content.res.Configuration
+import android.os.Vibrator
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -46,13 +48,12 @@ import kotlinx.coroutines.launch
 import kotlin.math.sqrt
 
 class Board(
-    val viewModel: BallGameViewModel = BallGameViewModel(),
+    val viewModel: BallGameViewModel,
 ) {
     companion object {
         const val NO_BALL = 0
         val JUMP_HEIGHT = (-5).dp
         val JUMP_DURATION = 200
-
     }
 
     @Composable
@@ -220,27 +221,28 @@ class Board(
         return animatedJumpOffset
     }
 }
-
-@Composable
-@Preview(
-    showBackground = true,
-    name = "board preview",
-    device = "spec:width=3800dp,height=1800dp,dpi=240,orientation=portrait"
-)
-fun BoardPreview() {
-    val mockViewModel = BallGameViewModel().apply {
-        addBall(57, 5) // Add some balls for preview
-        addBall(21, 3)
-        addBall(35, 2)
-        addBall(10, 1)
-        addBall(45, 4)
-        selectTheBall(21) // Optionally pre-select a ball for previewing the jump
-    }
-    // It's good practice to wrap previews that use animations or complex state
-    // in a way that allows interaction or showcases the state.
-    // For a simple preview of the board:
-    Board(mockViewModel).Layout()
-
-    // For a more interactive preview, you might need a local state
-    // to simulate selection if your ViewModel isn't easily manipulated in Preview.
-}
+//
+//@Composable
+//@Preview(
+//    showBackground = true,
+//    name = "board preview",
+//    device = "spec:width=3800dp,height=1800dp,dpi=240,orientation=portrait"
+//)
+//
+//fun BoardPreview() {
+//    val mockViewModel = BallGameViewModel().apply {
+//        addBall(57, 5) // Add some balls for preview
+//        addBall(21, 3)
+//        addBall(35, 2)
+//        addBall(10, 1)
+//        addBall(45, 4)
+//        selectTheBall(21) // Optionally pre-select a ball for previewing the jump
+//    }
+//    // It's good practice to wrap previews that use animations or complex state
+//    // in a way that allows interaction or showcases the state.
+//    // For a simple preview of the board:
+//    Board(mockViewModel).Layout()
+//
+//    // For a more interactive preview, you might need a local state
+//    // to simulate selection if your ViewModel isn't easily manipulated in Preview.
+//}
