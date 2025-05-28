@@ -28,12 +28,9 @@ import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 import com.allfreeapps.theballgame.utils.toBallColor
 
-class FutureBalls(
-    val viewModel: BallGameViewModel
-) {
 
     @Composable
-    fun Build(modifier: Modifier = Modifier) {
+    fun FutureBalls(viewModel: BallGameViewModel, modifier: Modifier = Modifier) {
         val upcomingBalls by viewModel.upcomingBalls.collectAsState()
         val configuration = LocalConfiguration.current
         val orientation = configuration.orientation
@@ -84,7 +81,6 @@ class FutureBalls(
             }
         }
     }
-}
 
 @Preview(
     showBackground = true,
@@ -98,7 +94,7 @@ fun FutureBallsPreview() {
     }
 
     TheBallGameTheme {
-        FutureBalls(mockViewModel).Build()
+        FutureBalls(mockViewModel)
     }
 }
 
@@ -115,6 +111,6 @@ fun FutureBallsPreviewLandscape() {
     }
 
     TheBallGameTheme {
-        FutureBalls(mockViewModel).Build()
+        FutureBalls(mockViewModel)
     }
 }

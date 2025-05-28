@@ -23,7 +23,6 @@ import com.allfreeapps.theballgame.ui.theme.DisabledColor
 import com.allfreeapps.theballgame.ui.theme.StartButtonBackgroundColor
 import com.allfreeapps.theballgame.ui.theme.StartButtonTextColor
 
-class Buttons {
 
     @Composable
     fun RestartButton(viewModel: BallGameViewModel){
@@ -58,7 +57,7 @@ class Buttons {
             }
         )
     }
-}
+
 
 @Composable
 @Preview(showBackground = true)
@@ -67,7 +66,7 @@ fun PreviewButtons(){
     val mockViewModel = BallGameViewModel(Application()).apply {
         startGame()
 }
-    Buttons().RestartButton(mockViewModel)
+    RestartButton(mockViewModel)
 }
 
 
@@ -76,5 +75,5 @@ fun PreviewButtons(){
 fun PreviewRestartButton(){
     val mockViewModel = BallGameViewModel(Application()).apply {
     }
-    Buttons().RestartButton(mockViewModel)
+    RestartButton(mockViewModel)
 }

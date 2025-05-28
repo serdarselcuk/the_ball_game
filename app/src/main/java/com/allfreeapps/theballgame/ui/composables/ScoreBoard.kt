@@ -24,21 +24,20 @@ import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.model.entities.Score
 import java.util.PriorityQueue
 
-class ScoreBoard(private val viewModel: BallGameViewModel) {
 
     @Composable
-    fun Table(modifier: Modifier = Modifier, scoreLine: ScoreLine?) {
+    fun Table(viewModel: BallGameViewModel, modifier: Modifier = Modifier, scoreLine: ScoreLine?) {
         Column(
             modifier = modifier
 
         ) {
             scoreLine?.Build()
-            ScoresTable()
+            ScoresTable(viewModel)
         }
     }
 
     @Composable
-    fun ScoresTable() {
+    fun ScoresTable(viewModel: BallGameViewModel) {
         val scores by viewModel.allScores.collectAsState()
         if (scores.isEmpty()) {
             Text("No old scores yet!", modifier = Modifier.padding(16.dp))
@@ -113,7 +112,6 @@ class ScoreBoard(private val viewModel: BallGameViewModel) {
             )
         }
     }
-}
 
 
 @Preview(showBackground = true)
@@ -149,6 +147,5 @@ fun PreviewScoreBoard() {
         )
         increaseScoreFor(80)
     }
-    val score = ScoreBoard(mockViewModel)
-    score.Table(modifier = Modifier, null)
+    Table(viewModel = mockViewModel, scoreLine = null)
 }

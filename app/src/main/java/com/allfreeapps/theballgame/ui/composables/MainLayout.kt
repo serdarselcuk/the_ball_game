@@ -31,20 +31,11 @@ class MainLayout(
     val viewModel: BallGameViewModel
 ) {
 
-    private lateinit var buttons: Buttons
-    private lateinit var header: Header
-    private lateinit var scoreBoard: ScoreBoard
-    private lateinit var futureBalls: FutureBalls
-
-
     @Composable
     fun Build(
         modifier: Modifier,
     ) {
-        buttons = Buttons() // Assuming Buttons are used within Header or elsewhere
-        header = Header(viewModel, buttons)
-        scoreBoard = ScoreBoard(viewModel)
-        futureBalls = FutureBalls(viewModel)
+
         val configuration = LocalConfiguration.current
 
         when (configuration.orientation) {
@@ -56,7 +47,7 @@ class MainLayout(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 )
                 {
-                    header.build(
+                    Header(viewModel,
                         Modifier.fillMaxWidth()
                             .height((sizeOfScreenWidth * 0.12).dp)
                             .background(HeaderBackGround)
@@ -71,10 +62,10 @@ class MainLayout(
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.End,
                     ) {
-                        futureBalls.Build()
+                        FutureBalls(viewModel)
                     }
                     Spacer(Modifier.height(5.dp))
-                    scoreBoard.Table(scoreLine = ScoreLine(viewModel))
+                    Table(viewModel, scoreLine = ScoreLine(viewModel))
                 }
 
             }
@@ -86,7 +77,7 @@ class MainLayout(
                     modifier = modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.Start,
                 ) {
-                    header.build(Modifier
+                    Header(viewModel, Modifier
                         .fillMaxWidth()
                         . height((sizeOfHeight * 0.1).dp)
                         .background(HeaderBackGround))
@@ -112,12 +103,12 @@ class MainLayout(
                             Modifier.fillMaxHeight(),
                             verticalAlignment = Alignment.Bottom,
                         ) {
-                            futureBalls.Build() // Takes its intrinsic width
+                            FutureBalls(viewModel) // Takes its intrinsic width
                         }
                         Spacer(modifier = Modifier.width(8.dp)) // Optional: space after futureBalls
 
                         // This will be on the far right
-                        scoreBoard.Table(scoreLine = null) // Takes its intrinsic width
+                        Table(viewModel, scoreLine= null) // Takes its intrinsic width
                     }
                 }
             }

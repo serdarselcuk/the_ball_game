@@ -25,13 +25,8 @@ import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 
-class Header(
-    val viewModel: BallGameViewModel,
-    val button: Buttons
-) {
-
     @Composable
-    fun build(modifier: Modifier = Modifier):Header {
+    fun Header(viewModel: BallGameViewModel, modifier: Modifier = Modifier) {
         val orientation = LocalConfiguration.current.orientation
 
         Row(
@@ -58,13 +53,9 @@ class Header(
             Spacer(
                 Modifier.weight(1f)
             )
-            button.RestartButton(viewModel)
+            RestartButton(viewModel)
         }
-
-        return this
-
     }
-}
 
 @Preview(
     showBackground = true,
@@ -74,7 +65,6 @@ class Header(
 @Composable
 fun Preview(){
     Header(
-        BallGameViewModel(Application()),
-        Buttons()
-    ).build()
+        BallGameViewModel(Application())
+    )
 }
