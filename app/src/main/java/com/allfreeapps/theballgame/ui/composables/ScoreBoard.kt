@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import android.app.Application
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,9 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
-import com.allfreeapps.theballgame.ui.model.Scores
-import com.allfreeapps.theballgame.ui.model.entities.Score
-import java.util.Date
+import com.allfreeapps.theballgame.model.entities.Score
 import java.util.PriorityQueue
 
 class ScoreBoard(private val viewModel: BallGameViewModel) {
@@ -40,7 +39,7 @@ class ScoreBoard(private val viewModel: BallGameViewModel) {
 
     @Composable
     fun ScoresTable() {
-        val scores:PriorityQueue<Score> by viewModel.oldScores.collectAsState()
+        val scores by viewModel.allScores.collectAsState()
         if (scores.isEmpty()) {
             Text("No old scores yet!", modifier = Modifier.padding(16.dp))
             return
@@ -58,7 +57,7 @@ class ScoreBoard(private val viewModel: BallGameViewModel) {
 
                 // Table Content (Scrollable if many scores)
                 LazyColumn {
-                    items(scores.toArray()) { item ->
+                    items(scores) { item ->
                         val scoreItem = item as Score
                         ScoreRow(
                             playerName = scoreItem.firstName,
@@ -120,7 +119,7 @@ class ScoreBoard(private val viewModel: BallGameViewModel) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewScoreBoard() {
-    val mockViewModel = BallGameViewModel(LocalContext.current).apply {
+    val mockViewModel = BallGameViewModel(Application()).apply {
         increaseScoreFor(9)
         increaseScoreFor(9)
 

@@ -1,9 +1,7 @@
 package com.allfreeapps.theballgame.ui.composables
 
-import android.content.Context
-import android.content.res.Configuration
-import android.os.Vibrator
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
@@ -32,195 +30,214 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
+import com.allfreeapps.theballgame.ui.theme.ScoreLine // Assuming ScoreLine is a List<Color>
+// It's better to import these directly if they are top-level constants in your theme package
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
-import com.allfreeapps.theballgame.utils.Constants.Companion.gridSize
-import com.allfreeapps.theballgame.utils.convertToColor
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlin.math.sqrt
+import com.allfreeapps.theballgame.utils.Constants
+import com.allfreeapps.theballgame.utils.toBallColor
 
-class Board(
-    val viewModel: BallGameViewModel,
+
+private const val BALL_SIZE_RATIO = 0.8f // Ratio of ball size to cell size
+private val DEFAULT_SHADOW_ELEVATION = 18.dp
+private val SELECTED_SHADOW_ELEVATION = 50.dp
+private val BALL_JUMP_HEIGHT = (-5).dp
+private val JUMP_DURATION: Int = 200
+
+/**
+ * Converts an integer value (presumably an index or type) to a specific ball color.
+ * Relies on the `ScoreLine` list of colors.
+ */
+
+
+@Composable
+fun Board(
+    viewModel: BallGameViewModel,
+    modifier: Modifier = Modifier,
+    maxSizeOfBoard: Dp,
 ) {
-    companion object {
-        const val NO_BALL = 0
-        val JUMP_HEIGHT = (-5).dp
-        val JUMP_DURATION = 200
-    }
+    // State collection hoisted to the top-level composable for the board
+    val ballList by viewModel.ballList.collectAsState()
+    val selectedBallIndex by viewModel.selectedBall.collectAsState()
 
-    @Composable
-    fun Layout(modifier: Modifier = Modifier) {
-        val cellCount = gridSize * gridSize
-        val configuration = LocalConfiguration.current
-        val orientationIsPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-        val screenWidthDp = configuration.screenWidthDp.dp
-        val screenHeightDp = configuration.screenHeightDp.dp
-        val minSizeOfMainSq = if (orientationIsPortrait) screenWidthDp else screenHeightDp - 40.dp
-        val cellSize = (minSizeOfMainSq / gridSize)
-        Layout(
-            content = { Ball(cellSize) },
-            modifier = modifier
-                .height(minSizeOfMainSq)
-                .width(minSizeOfMainSq),
-            measurePolicy = { measurables, constraints ->
-                val roundedCellSize = cellSize.roundToPx()
-                val cellConstraints = constraints.copy(
-                    minWidth = roundedCellSize,
-                    minHeight = roundedCellSize,
-                    maxWidth = roundedCellSize,
-                    maxHeight = roundedCellSize
-                )
+    val smallBoxSize = maxSizeOfBoard / Constants.GRID_SIZE
 
-                val placeables = measurables.map { measurable ->
-                    measurable.measure(cellConstraints)
-                }
-
-                val sizeOfTheRow = sqrt(cellCount.toDouble()).toInt()
-
-                layout(constraints.maxWidth, constraints.maxHeight) {
-                    var x = 0
-                    var y = 0
-                    placeables.forEachIndexed { index, placeable ->
-                        placeable.placeRelative(x, y)
-                        x += roundedCellSize
-                        if (((index + 1) % sizeOfTheRow) == 0) {
-                            x = 0
-                            y += roundedCellSize
+    Layout(
+        modifier = modifier
+            .height(maxSizeOfBoard)
+            .width(maxSizeOfBoard),
+        content = {
+            // Generate a Cell composable for each item in the ballList
+            ballList.forEachIndexed { index, ballColorValue ->
+                Cell(
+                    ballColorValue = ballColorValue,
+                    cellSize = smallBoxSize,
+                    isSelected = selectedBallIndex == index,
+                    onCellClick = {
+                        when (ballColorValue) {
+                            Constants.NO_BALL -> viewModel.processEmptyCellClick(index)
+                            else -> viewModel.processOnBallCellClick(index)
                         }
+                    }
+                )
+            }
+        },
+        measurePolicy = { measurables, constraints ->
+            // Calculate cell size in pixels once
+            val roundedCellSizePx = smallBoxSize.roundToPx()
+
+            // Define constraints for each cell
+            val cellConstraints = constraints.copy(
+                minWidth = roundedCellSizePx,
+                minHeight = roundedCellSizePx,
+                maxWidth = roundedCellSizePx,
+                maxHeight = roundedCellSizePx
+            )
+
+            // Measure each cell (measurable)
+            val placeables = measurables.map { measurable ->
+                measurable.measure(cellConstraints)
+            }
+
+            // Define the layout size for the entire board
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                var currentX = 0
+                var currentY = 0
+                placeables.forEachIndexed { index, placeable ->
+                    placeable.placeRelative(currentX, currentY)
+                    currentX += roundedCellSizePx
+                    // Move to the next row if the end of a row is reached
+                    if (((index + 1) % Constants.GRID_SIZE) == 0) {
+                        currentX = 0
+                        currentY += roundedCellSizePx
                     }
                 }
             }
-        )
-    }
-
-    @Composable
-    fun Ball(cellSize: Dp) { // Assuming this is where you draw individual balls
-        val ballList by viewModel.ballList.collectAsState()
-        val selectedBallIndex by viewModel.selectedBall.collectAsState()
-
-        ballList.forEachIndexed { index, ballColorInt -> // Renamed 'ball' to 'ballColorInt' for clarity
-
-            Box( // This is the cell Box
-                modifier = Modifier
-                    // .size(cellSize) // Ensure the cell has a defined size
-                    .background(BackgroundColor)
-                    .border(
-                        BorderStroke(
-                            width = 0.5.dp,
-                            color = CellBoarderColor
-                        )
-                    )
-                    .clickable {
-                        if (ballColorInt == NO_BALL) {
-
-                            if (selectedBallIndex != null) {
-
-                                val path = viewModel.checkIfSelectedBallCanMove(index)
-                                if (path != null) {
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        viewModel.moveTheBall(path)
-                                        val seriesFound = async {
-                                            viewModel.findColorSeries(
-                                                listOf(index)
-                                            )
-                                        }
-                                        if (seriesFound.await()) {
-                                            viewModel.removeAllSeries()
-                                        } else {
-                                            viewModel.populateUpcomingBalls()
-                                        }
-                                        viewModel.deselectTheBall()
-                                    }
-                                }
-
-                            }
-                        } else {
-                            if (index != selectedBallIndex) {
-                                viewModel.selectTheBall(index)
-                            } else {
-                                viewModel.deselectTheBall()
-                            }
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                if (ballColorInt != NO_BALL) {
-                    val isSelected = index == selectedBallIndex
-                    val currentJumpOffsetDp: Dp = JUMP_HEIGHT * getAnimation(isSelected).value
-                    val ballActualColor = ballColorInt.convertToColor()
-                    val ballSize = (cellSize * 0.8f) // Convert to pixels
-                    val radialGradientBrush =
-                        getRadialGradientBrush(ballSize.value, ballActualColor)
-
-                    Box(
-                        modifier = Modifier
-                            .offset(y = currentJumpOffsetDp)
-                            .size(cellSize * 0.8f) // The actual visible ball
-                            .shadow(
-                                elevation = if (isSelected) 30.dp else 18.dp,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
-                            .background(brush = radialGradientBrush) // Use the brush here
-                    )
-                }
-            }
         }
-    }
+    )
+}
 
-    private fun getRadialGradientBrush(ballSize: Float, color: Color): Brush {
-
-        // Create a slightly lighter color for the gradient center (highlight)
-        // and a slightly darker for the edges.
-        val centerColor = color.copy(
-            red = (color.red * 1.2f).coerceAtMost(1f),
-            green = (color.green * 1.2f).coerceAtMost(1f),
-            blue = (color.blue * 1.2f).coerceAtMost(1f)
-        )
-        val edgeColor = color.copy(
-            red = color.red * 0.8f,
-            green = color.green * 0.8f,
-            blue = color.blue * 0.8f
-        )
-
-        return Brush.radialGradient(
-            colors = listOf(centerColor, color, edgeColor),
-            // You can adjust the center and radius for different effects
-            center = Offset(x = ballSize * 2f, y = ballSize * 0.8f), // Example: offset highlight
-            radius = ballSize * 0.9f, // Example: control gradient spread
-            tileMode = TileMode.Clamp
-        )
-    }
-
-    @Composable
-    private fun getAnimation(isBallSelected: Boolean): Animatable<Float, *> {
-        val animatedJumpOffset = remember { Animatable(0f) }
-        LaunchedEffect(key1 = isBallSelected) {
-            if (isBallSelected) {
-                // Start the infinite jumping animation
-                animatedJumpOffset.animateTo(
-                    targetValue = 1f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(durationMillis = JUMP_DURATION, easing = LinearEasing),
-                        repeatMode = RepeatMode.Reverse
-                    )
+@Composable
+private fun Cell(
+    ballColorValue: Int,
+    cellSize: Dp,
+    isSelected: Boolean,
+    onCellClick: () -> Unit,
+    modifier: Modifier = Modifier // Allow passing external modifiers
+) {
+    Box(
+        modifier = modifier // Apply external modifiers first
+            .size(cellSize) // Ensure the Box takes up the full cell size
+            .background(BackgroundColor) // Use imported theme color
+            .border(
+                BorderStroke(
+                    width = 0.5.dp,
+                    color = CellBoarderColor // Use imported theme color
                 )
-            } else {
-                // If not selected, or no ball, snap back to 0 offset
-                animatedJumpOffset.snapTo(0f)
-            }
-        }
-        return animatedJumpOffset
+            )
+            .clickable(onClick = onCellClick), // More idiomatic clickable
+        contentAlignment = Alignment.Center
+    ) {
+        Ball(
+            colorValue = ballColorValue,
+            ballDisplaySize = cellSize * BALL_SIZE_RATIO, // Use constant for ratio
+            isBallSelected = isSelected
+        )
     }
 }
+
+@Composable
+private fun Ball(
+    colorValue: Int,
+    ballDisplaySize: Dp,
+    isBallSelected: Boolean
+) {
+    if (colorValue != Constants.NO_BALL) {
+        val jumpAnimationState = rememberBallJumpAnimationState(isBallSelected = isBallSelected)
+        val currentJumpOffsetDp: Dp = BALL_JUMP_HEIGHT * jumpAnimationState.value
+
+        // Consider remembering the brush if ballDisplaySize.value or colorValue doesn't change frequently
+        // However, getRadialGradientBrush is not a composable, so direct remember isn't applicable here
+        // unless you make it one or pass remembered inputs. For now, it's recalculated on recomposition.
+        val radialGradientBrush =  remember(ballDisplaySize.value, colorValue) {
+            getRadialGradientBrush(ballDisplaySize.value, colorValue.toBallColor())
+        }
+        Box(
+            modifier = Modifier
+                .offset(y = currentJumpOffsetDp)
+                .size(ballDisplaySize)
+                .shadow(
+                    elevation = if (isBallSelected) SELECTED_SHADOW_ELEVATION else DEFAULT_SHADOW_ELEVATION,
+                    shape = CircleShape
+                )
+                .clip(CircleShape)
+                .background(brush = radialGradientBrush)
+        )
+    }
+}
+
+/**
+ * Creates a radial gradient brush for the ball's appearance.
+ * This is a utility function, not a composable.
+ */
+private fun getRadialGradientBrush(ballSizePx: Float, baseColor: Color): Brush {
+    // Create a slightly lighter color for the gradient center (highlight)
+    // and a slightly darker for the edges.
+    val centerColor = baseColor.copy(
+        red = (baseColor.red * 1.2f).coerceAtMost(1f),
+        green = (baseColor.green * 1.2f).coerceAtMost(1f),
+        blue = (baseColor.blue * 1.2f).coerceAtMost(1f)
+    )
+    val edgeColor = baseColor.copy(
+        red = baseColor.red * 0.8f,
+        green = baseColor.green * 0.8f,
+        blue = baseColor.blue * 0.8f
+    )
+
+    return Brush.radialGradient(
+        colors = listOf(centerColor, baseColor, edgeColor),
+        center = Offset(
+            x = ballSizePx * 0.3f,
+            y = ballSizePx * 0.3f
+        ), // Adjusted for a more centered highlight
+        radius = ballSizePx * 0.8f, // Adjusted for gradient spread
+        tileMode = TileMode.Clamp
+    )
+}
+
+
+
+@Composable
+private fun rememberBallJumpAnimationState(isBallSelected: Boolean): Animatable<Float, AnimationVector1D> {
+    val animatedJumpOffset = remember { Animatable(0f) }
+
+    // Use LaunchedEffect to react to changes in isBallSelected
+    // This coroutine will (re)launch whenever isBallSelected changes.
+    LaunchedEffect(key1 = isBallSelected) {
+        if (isBallSelected) {
+            // Start the infinite jumping animation
+            // The animation will run until this LaunchedEffect is cancelled
+            // (e.g., isBallSelected becomes false, or the composable leaves the composition)
+            animatedJumpOffset.animateTo(
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = JUMP_DURATION, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                )
+            )
+        } else {
+            // If not selected, or if the selection changes from true to false,
+            // snap the ball back to its original position (0f offset).
+            // This also cancels any ongoing animation from the 'if (isBallSelected)' block.
+            animatedJumpOffset.snapTo(0f)
+        }
+    }
+    return animatedJumpOffset
+}
+
 //
 //@Composable
 //@Preview(

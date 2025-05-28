@@ -1,31 +1,38 @@
 package com.allfreeapps.theballgame.ui
 
-import android.content.Context
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
-import com.allfreeapps.theballgame.ui.model.Direction
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.allfreeapps.theballgame.model.Direction
+import com.allfreeapps.theballgame.model.entities.Score
+import com.allfreeapps.theballgame.repository.ScoreRepository
 import com.allfreeapps.theballgame.ui.model.GameState
-import com.allfreeapps.theballgame.ui.model.entities.Score
-import com.allfreeapps.theballgame.ui.service.ScoreDB
-import com.allfreeapps.theballgame.utils.Constants.Companion.ballLimitToRemove
-import com.allfreeapps.theballgame.utils.Constants.Companion.gridSize
-import kotlinx.coroutines.CoroutineScope
+import com.allfreeapps.theballgame.utils.Constants
+import com.allfreeapps.theballgame.utils.Constants.Companion.BALL_LIMIT_TO_REMOVE
+import com.allfreeapps.theballgame.utils.Constants.Companion.GRID_SIZE
+import com.allfreeapps.theballgame.utils.Constants.Companion.MAX_BALL_COUNT
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.LinkedList
 import java.util.PriorityQueue
 import java.util.Queue
 
-class BallGameViewModel(val applicationContext: Context) : ViewModel() {
+class BallGameViewModel( application: Application ) : AndroidViewModel(application)  {
+
+    private val repository: ScoreRepository = ScoreRepository(application.applicationContext)
 
     companion object {
-        const val lastGridIndex = gridSize - 1
-        const val serieLengthOnIndexedBoard = ballLimitToRemove - 1 //since starting with 0
-        private const val TAG = "GameLogic" // Or your class name
+        const val TAG = "ViewModel"
+        const val LAST_GRID_INDEX = GRID_SIZE - 1
+        const val SERIE_LENGTH_ON_INDEXED_BOARD = BALL_LIMIT_TO_REMOVE - 1 //since starting with 0
 
         // Define possible movements (row_offset, column_offset)
         val movements = listOf(
@@ -43,6 +50,16 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
         )
     }
 
+    val allScores: StateFlow<List<Score>> = repository.getAllScoresFlow()
+        .stateIn(
+            scope = viewModelScope, // The coroutine scope for collection
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = emptyList()
+        )
+
+    private val _errorState: MutableStateFlow<String?> = MutableStateFlow(null)
+    val errorState: StateFlow<String?> = _errorState
+
     private val _oldScores = MutableStateFlow(PriorityQueue<Score>())
     val oldScores: StateFlow<PriorityQueue<Score>> = _oldScores
 
@@ -50,7 +67,7 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
     val score: StateFlow<Int> = _score
 
     // order represents the position in the board and the value stands for the color
-    private val _ballList = MutableStateFlow(Array(gridSize * gridSize) { 0 })
+    private val _ballList = MutableStateFlow(Array(MAX_BALL_COUNT) { 0 })
     val ballList: StateFlow<Array<Int>> = _ballList
 
     private val _totalBallCount = MutableStateFlow(0)
@@ -69,7 +86,7 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
     val state: StateFlow<GameState> = _state
 
     fun startGame() {
-        getScores()
+//        getScores()
         if (totalBallCount.value == 0) {
             add3Ball()
             populateUpcomingBalls()
@@ -116,28 +133,31 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
         _setToRemove.value = mutableListOf()
     }
 
-    fun addBall(index: Int, colorCode: Int): Boolean {
-        if (totalBallCount.value == (gridSize * gridSize)) return false
-        // Create a new array by copying the current one
-        val newBallList = _ballList.value.copyOf()
-        // Update the value in the new array
-        newBallList[index] = colorCode
-        // Emit the new array to the StateFlow
-        _ballList.value = newBallList
-        _totalBallCount.value += 1
-        return true
+    fun addBall(index: Int, colorCode: Int) {
+        viewModelScope.launch {
+            if (totalBallCount.value == (MAX_BALL_COUNT)) return@launch
+
+            // Create a new array by copying the current one
+            val newBallList = _ballList.value.copyOf()
+            // Update the value in the new array
+            newBallList[index] = colorCode
+            // Emit the new array to the StateFlow
+            _ballList.value = newBallList
+            _totalBallCount.value += 1
+
+        }
     }
 
     private fun positionToIndex(row: Int, column: Int): Int {
-        val index = (row * gridSize) + column
-        Log.d("positionToIndex", "row: $row, column: $column to index: ${index}")
+        val index = (row * GRID_SIZE) + column
+        Log.d(TAG, "row: $row, column: $column to index: ${index}")
         return index
     }
 
     private fun indexToPosition(index: Int): Array<Int> {
-        val column = (index) % gridSize
-        val row = (index - column) / gridSize
-        Log.d("indexToPosition", "index: $index to row: $row, column: $column")
+        val column = (index) % GRID_SIZE
+        val row = (index - column) / GRID_SIZE
+        Log.d(TAG, "index: $index to row: $row, column: $column")
         return arrayOf(row, column)
     }
 
@@ -149,65 +169,112 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
         _selectedBall.value = null
     }
 
-    private fun getSelectedBall(): Int? {
-        val ball = selectedBall.value?.let { ballList.value[it] }
-        return if (ball == 0) null else ball
+    private fun getSelectedBallColor(): Int? {
+        return selectedBall.value?.let { ballList.value[it] }
     }
 
     private fun removeBall(index: Int) {
 //        TODO you can throw error if ball is not exists
+        viewModelScope.launch {
+            val noBallInTheBoard = totalBallCount.value == 0
+            val ballIsAlreadyRemoved = ballList.value[index] == 0
+            if (noBallInTheBoard || ballIsAlreadyRemoved) return@launch
 
-        if (totalBallCount.value == 0) return
-        if (ballList.value[index] == 0) return
-        val copyOfBallList = _ballList.value.copyOf()
-        copyOfBallList[index] = 0
-        _ballList.value = copyOfBallList
-        _totalBallCount.value -= 1
-        Log.d("removeBall", "index: $index")
+            val copyOfBallList = _ballList.value.copyOf()
+            copyOfBallList[index] = 0
+            _ballList.value = copyOfBallList
+            _totalBallCount.value -= 1
+            Log.d(TAG, "index: $index")
+        }
     }
 
-    fun isSelectedBall(index: Int): Boolean {
+    private fun isSelectedBall(index: Int): Boolean {
         return selectedBall.value == index
     }
 
-    fun checkIfSelectedBallCanMove(destinationIndex: Int): List<Int>? {
-        val selectedBallIndex = selectedBall.value
 
-        if (isMoveInvalid(selectedBallIndex, destinationIndex)) return null
+    fun processEmptyCellClick(destinationIndex: Int ) {
+        if (selectedBall.value == null) {
+            Log.d(TAG,"No ball is selected at the moment")
+        } //TODO Or handle as an error/log
+        // This method now orchestrates the logic
+        // It can launch a single coroutine to manage the sequence
+        viewModelScope.launch { // This launch block uses Dispatchers.Main.immediate by default
+            try {
+                val path =
+                    createThePathToMoveTheBall(destinationIndex) // Assuming this is quick or also a suspend fun managing its context
 
-        // Perform Breadth-First Search (BFS) to find a path
-        val queue: Queue<Int> = LinkedList()
-        val visited = BooleanArray(81) { false }
-        val parentMap = mutableMapOf<Int, Int>() // To reconstruct the path
+                if (path != null) {
 
-        queue.add(selectedBallIndex)
-        selectedBallIndex?.let { visited[selectedBallIndex] = true }
+                    moveTheBall(path)
 
-        while (queue.isNotEmpty()) {
-            val currentIndex = queue.poll()
+                    val seriesFound = findColorSeries(listOf(destinationIndex))
 
-
-            // If we reached the target, reconstruct and return the path
-            if (currentIndex == destinationIndex) {
-                return selectedBallIndex?.let { reconstructPath(parentMap, it, destinationIndex) }
-            }
-
-            // Get valid neighbors (horizontal, vertical, diagonal)
-            val neighbors = getNeighbors(currentIndex!!)
-
-            for (neighborIndex in neighbors) {
-                // Check if the neighbor is within bounds, not visited, and is an empty square
-                if (neighborIndex in 0..80 && !visited[neighborIndex] && _ballList.value[neighborIndex] == 0) {
-                    visited[neighborIndex] = true
-                    parentMap[neighborIndex] =
-                        currentIndex // Store the parent for path reconstruction
-                    queue.add(neighborIndex)
+                    if (seriesFound) {
+                        removeAllSeries()
+                    } else {
+                        populateUpcomingBalls()
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing empty cell click: ${e.message}")
+                _errorState.value = "Failed to move ball: ${e.message}"
+            } finally {
+                deselectTheBall() // This might be a simple state update, not needing a specific dispatcher
             }
         }
-        // If the queue is empty and the target was not reached, no path exists.
-        return null
+
     }
+
+
+    suspend fun createThePathToMoveTheBall(destinationIndex: Int): List<Int>? =
+        withContext(Dispatchers.Default) {
+            val selectedBallIndex = selectedBall.value
+
+            if (isMoveInvalid(selectedBallIndex, destinationIndex)) return@withContext null
+
+            // Perform Breadth-First Search (BFS) to find a path
+            val queue: Queue<Int> = LinkedList()
+            val visited = BooleanArray(GRID_SIZE * GRID_SIZE) { false }
+            val parentMap = mutableMapOf<Int, Int>() // To reconstruct the path
+
+            selectedBallIndex?.let {
+                queue.add(it)
+                visited[it] = true
+            } ?: return@withContext null // If selectedBallIndex is null, no path can be found
+
+
+            while (queue.isNotEmpty()) {
+                val currentIndex = queue.poll()
+
+                // If we reached the target, reconstruct and return the path
+                if (currentIndex == destinationIndex) {
+                    return@withContext reconstructPath(
+                        parentMap = parentMap,
+                        startIndex = selectedBallIndex,
+                        targetIndex = destinationIndex
+                    )
+                }
+
+                // Get valid neighbors (horizontal, vertical, diagonal)
+                val neighbors =
+                    currentIndex?.let { getNeighbors(it) } // currentIndex is non-null here
+
+                neighbors?.let {
+                    for (neighborIndex in neighbors) {
+                        // Check if the neighbor is within bounds, not visited, and is an empty square
+                        if (neighborIndex in 0..80 && !visited[neighborIndex] && _ballList.value[neighborIndex] == 0) {
+                            visited[neighborIndex] = true
+                            parentMap[neighborIndex] =
+                                currentIndex // Store the parent for path reconstruction
+                            queue.add(neighborIndex)
+                        }
+                    }
+                }
+            }
+            // If the queue is empty and the target was not reached, no path exists.
+            return@withContext null
+        }
 
 
     private fun isMoveInvalid(selectedBallIndex: Int?, destinationIndex: Int): Boolean {
@@ -240,59 +307,66 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
         return false
     }
 
-    suspend fun findColorSeries(listOfChanges: List<Int>): Boolean {
+    private suspend fun findColorSeries(listOfChanges: List<Int>): Boolean = withContext(Dispatchers.Default) {
         var result = false
-        coroutineScope {
-            _state.value = GameState.SearchingForSeries
+        _state.value = GameState.SearchingForSeries
 
-            listOfChanges.forEach { ballPosition ->
-                val startColor = ballList.value[ballPosition]
+        listOfChanges.forEach { ballPosition ->
+            val startColor = ballList.value[ballPosition]
 
-                // Skip empty cells or invalid colors as starting points
-                if (startColor > 0) {
-                    val (row, column) = indexToPosition(ballPosition)
+            // Skip empty cells or invalid colors as starting points
+            if (startColor > 0) {
+                val (row, column) = indexToPosition(ballPosition)
 
-                    for ((direction1, direction2) in directionPairsToSearch) {
-                        //                  if down-left is the direction there should be enough space for the series
-                        when (direction1) {
-                            //                      if diagonal direction, there should be enough space for the series (5 ball not fitting to corners)
-                            Direction.UP_RIGHT, Direction.DOWN_LEFT -> if (((column + row) < serieLengthOnIndexedBoard) || ((row + column) > ((2 * lastGridIndex) - serieLengthOnIndexedBoard))) continue
-                            Direction.DOWN_RIGHT, Direction.UP_LEFT -> if (((column - row) > serieLengthOnIndexedBoard) || ((row - column) > serieLengthOnIndexedBoard)) continue
-                            else -> {}
-                        }
+                for ((direction1, direction2) in directionPairsToSearch) {
+                    //                  if down-left is the direction there should be enough space for the series
+                    when (direction1) {
+                        //                      if diagonal direction, there should be enough space for the series (5 ball not fitting to corners)
+                        Direction.UP_RIGHT, Direction.DOWN_LEFT -> if (((column + row) < SERIE_LENGTH_ON_INDEXED_BOARD) || ((row + column) > ((2 * LAST_GRID_INDEX) - SERIE_LENGTH_ON_INDEXED_BOARD))) continue
+                        Direction.DOWN_RIGHT, Direction.UP_LEFT -> if (((column - row) > SERIE_LENGTH_ON_INDEXED_BOARD) || ((row - column) > SERIE_LENGTH_ON_INDEXED_BOARD)) continue
+                        else -> {}
+                    }
 
-                        val currentSeries = mutableSetOf<Int>()
-                        currentSeries.add(
-                            positionToIndex(
-                                row,
-                                column
-                            )
-                        ) // Start with the current cell
+                    val currentSeries = mutableSetOf<Int>()
+                    currentSeries.add(
+                        positionToIndex(
+                            row, column
+                        )
+                    ) // Start with the current cell
 
-                        // Explore in each direction
-                        exploreTheDirection(startColor, currentSeries, row, column, direction1)
-                        exploreTheDirection(startColor, currentSeries, row, column, direction2)
+                    // Explore in each direction
+                    val direction1Series = async {
+                        exploreTheDirection(startColor, row, column, direction1)
+                    }
 
-                        // If the series is long enough, add all its cells to the result set
-                        if (currentSeries.size >= ballLimitToRemove) {
-                            _setToRemove.value.add(currentSeries)
-                            result = true
-                        }
+                    val direction2Series = async {
+                        exploreTheDirection(startColor, row, column, direction2)
+                    }
+
+                    currentSeries.addAll(direction1Series.await())
+                    currentSeries.addAll(direction2Series.await())
+
+                    // If the series is long enough, add all its cells to the result set
+                    if (currentSeries.size >= BALL_LIMIT_TO_REMOVE) {
+                        _setToRemove.value.add(currentSeries)
+                        result = true
                     }
                 }
             }
         }
-        return result
+
+        return@withContext result
     }
 
-    private fun exploreTheDirection(
+
+    private suspend fun exploreTheDirection(
         startColor: Int,
-        currentSeries: MutableSet<Int>,
         row: Int,
         column: Int,
         currentDirection: Direction
-    ) {
-        for (k in 1 until gridSize) { // Max possible extension length
+    ): Set<Int> = withContext(Dispatchers.Default) {
+        val currentSeries = mutableSetOf<Int>()
+        for (k in 1 until GRID_SIZE) { // Max possible extension length
             val nextR = row + k * currentDirection.rowOffset
             val nextC = column + k * currentDirection.colOffset
             if (positionIsOutOfBoard(nextR, nextC)) {
@@ -310,37 +384,40 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
                 break
             }
         }
+        return@withContext currentSeries
 
     }
 
     private fun positionIsOutOfBoard(nextR: Int, nextC: Int): Boolean {
-        return nextR > gridSize - 1
-                || nextC > gridSize - 1
+        return nextR > GRID_SIZE - 1
+                || nextC > GRID_SIZE - 1
                 || nextR < 0
                 || nextC < 0
     }
 
     suspend fun moveTheBall(path: List<Int>) {
 //        todo throw error when color is 0 or null
-        val color = getSelectedBall() ?: 0
-        if (color != 0) {
-            path.forEach { index ->
-                val selectedBallIndex = selectedBall.value
-                if (selectedBallIndex != null && !isSelectedBall(index)) {
-                    addBall(index, color)
-                    removeBall(selectedBallIndex)
-                    selectTheBall(index)
-                    delay(50)
+        withContext(Dispatchers.IO) {
+            val color = getSelectedBallColor() ?: 0
+            if (color != 0) {
+                path.forEach { ball ->
+                    val selectedBallIndex = selectedBall.value
+                    if (selectedBallIndex != null && !isSelectedBall(ball)) {
+                        addBall(ball, color)
+                        removeBall(selectedBallIndex)
+                        selectTheBall(ball)
+                        delay(Constants.BALL_MOVEMENT_LATENCY)
+                    }
                 }
             }
+            deselectTheBall()
         }
-        deselectTheBall()
     }
 
     /**
      * Gets the indices of the valid neighbors (horizontal, vertical, diagonal) for a given index.
      */
-    private fun getNeighbors(index: Int): List<Int> {
+    private suspend fun getNeighbors(index: Int): List<Int> = withContext(Dispatchers.Default) {
         val neighbors = mutableListOf<Int>()
         val (row, column) = indexToPosition(index)
         for (direction in movements) {
@@ -349,26 +426,26 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
 
             // Check if the neighbor is within the 9x9 grid bounds
             if (
-                (neighborRow in 0..<gridSize)
+                (neighborRow in 0..<GRID_SIZE)
                 &&
-                (neighborColumn in 0..<gridSize)
+                (neighborColumn in 0..<GRID_SIZE)
             ) {
                 neighbors.add(positionToIndex(neighborRow, neighborColumn))
             }
         }
 
-        return neighbors
+        return@withContext neighbors
     }
 
 
     /**
      * Reconstructs the path from the start index to the target index using the parent map.
      */
-    private fun reconstructPath(
+    private suspend fun reconstructPath(
         parentMap: Map<Int, Int>,
         startIndex: Int,
         targetIndex: Int
-    ): List<Int> {
+    ): List<Int> = withContext(Dispatchers.Default) {
         val path = mutableListOf<Int>()
         var currentIndex = targetIndex
 
@@ -379,31 +456,33 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
         }
         path.add(0, startIndex) // Add the start index
 
-        return path
+        return@withContext path
     }
 
     fun add3Ball() {
-        val ballArray = Array(3) { 0 }
-        for (i in 0 until 3) {
-            ballArray[i] = randomColor()
+        viewModelScope.launch {
+            val ballArray = Array(3) { 0 }
+            for (i in 0 until 3) {
+                ballArray[i] = randomColor()
+            }
+            _upcomingBalls.value = ballArray
         }
-        _upcomingBalls.value = ballArray
     }
 
     private fun randomColor(): Int {
         return (1..6).random()
     }
 
-    private fun randomBall(): Int {
-        if (_totalBallCount.value == 81) return -1
+    private suspend fun randomBall(): Int = withContext(Dispatchers.Default) {
+        if (_totalBallCount.value == 81) return@withContext -1
         var randomNumber = (0..(81 - totalBallCount.value)).random()
         for ((index, each) in ballList.value.withIndex()) {
             if (each != 0) continue
             if (--randomNumber == 0) {
-                return index
+                return@withContext index
             }
         }
-        return randomBall()
+        return@withContext randomBall()
     }
 
     fun removeAllSeries() {
@@ -417,23 +496,35 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
         resetRemovalSet()
     }
 
-    fun getRemovables(): List<Set<Int>> {
+    private fun getRemovables(): List<Set<Int>> {
         return setToRemove.value
     }
 
-    fun populateUpcomingBalls() {
-        val upcomingBalls = upcomingBalls.value
-        val ballPositions = mutableListOf<Int>()
-        for (color in upcomingBalls) {
-            val ballPosition = randomBall()
-            addBall(ballPosition, color)
-            ballPositions.add(ballPosition)
-        }
+    private fun populateUpcomingBalls() {
+        viewModelScope.launch {
+            val upcomingBalls = upcomingBalls.value
+            val ballPositions = mutableListOf<Int>()
+            for (color in upcomingBalls) {
+                val ballPosition = randomBall()
+                if (ballPosition == -1){
+                    finishTheGame()
+                    break
+                }
+                addBall(ballPosition, color)
+                ballPositions.add(ballPosition)
+            }
 
-        add3Ball()
-        CoroutineScope(Dispatchers.IO).launch {
+            add3Ball()
+
             findColorSeries(ballPositions)
             removeAllSeries()
+        }
+    }
+
+    private fun finishTheGame() {
+        if(totalBallCount.value == 0) return
+        if(totalBallCount.value == 81){
+            _state.value = GameState.GameOver
         }
     }
 
@@ -441,23 +532,10 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
         setEmptyBoard()
     }
 
-    private fun getScores(){
-        val connection= ScoreDB(applicationContext)
-        val scores = connection
-            .connect()
-            .getAll()
-        for (score in scores) {
-            addOldScores(score)
-        }
-        connection.close()
-    }
 
     fun saveScore() {
-
-        val connection= ScoreDB(applicationContext)
-        connection
-            .connect()
-            .insertAll(
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.insertScore(
                 Score(
                     id = null,
                     firstName = "user name",
@@ -465,7 +543,12 @@ class BallGameViewModel(val applicationContext: Context) : ViewModel() {
                     score = score.value,
                     date = null
                 )
-        )
-        connection.close()
+            )
+        }
+    }
+
+    fun processOnBallCellClick(index: Int) {
+        if(isSelectedBall(index))  deselectTheBall()
+        else  selectTheBall(index)
     }
 }

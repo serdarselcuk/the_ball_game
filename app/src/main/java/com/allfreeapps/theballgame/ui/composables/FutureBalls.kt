@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import android.app.Application
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -20,13 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
-import com.allfreeapps.theballgame.utils.convertToColor
+import com.allfreeapps.theballgame.utils.toBallColor
 
 class FutureBalls(
     val viewModel: BallGameViewModel
@@ -69,7 +69,7 @@ class FutureBalls(
                 Modifier
                     .size(24.dp)
                     .clip(CircleShape) // Clip first
-                    .background(ballColorInt.convertToColor()) // Then background
+                    .background(ballColorInt.toBallColor()) // Then background
                     .border(
                         BorderStroke(
                             width = 1.dp, // Increased width slightly for visibility
@@ -93,7 +93,7 @@ class FutureBalls(
 )
 @Composable
 fun FutureBallsPreview() {
-    val mockViewModel = BallGameViewModel(LocalContext.current).apply {
+    val mockViewModel = BallGameViewModel(Application()).apply {
         add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
     }
 
@@ -110,7 +110,7 @@ fun FutureBallsPreview() {
 )
 @Composable
 fun FutureBallsPreviewLandscape() {
-    val mockViewModel = BallGameViewModel(LocalContext.current).apply {
+    val mockViewModel = BallGameViewModel(Application()).apply {
         add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
     }
 

@@ -1,4 +1,4 @@
-package com.allfreeapps.theballgame.ui.model
+package com.allfreeapps.theballgame.model
 
 enum class Direction(val rowOffset: Int, val colOffset: Int) {
     UP(-1, 0),

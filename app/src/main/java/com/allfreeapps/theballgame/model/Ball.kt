@@ -1,4 +1,4 @@
-package com.allfreeapps.theballgame.ui.model
+package com.allfreeapps.theballgame.model
 
 data class Ball(
     val position: Int,

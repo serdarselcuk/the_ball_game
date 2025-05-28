@@ -1,12 +1,10 @@
 package com.allfreeapps.theballgame.ui.composables
 
-import android.graphics.drawable.shapes.OvalShape
-import androidx.compose.foundation.background
+import android.app.Application
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.MaterialTheme
@@ -14,14 +12,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.ui.BallGameViewModel
@@ -33,8 +26,7 @@ import com.allfreeapps.theballgame.ui.theme.StartButtonTextColor
 class Buttons {
 
     @Composable
-    fun restartButton(viewModel: BallGameViewModel){
-        val totalBallCount by viewModel.totalBallCount.collectAsState()
+    fun RestartButton(viewModel: BallGameViewModel){
         val gameStatus by viewModel.state.collectAsState()
 
         Button(
@@ -72,17 +64,17 @@ class Buttons {
 @Preview(showBackground = true)
 fun PreviewButtons(){
 
-    val mockViewModel = BallGameViewModel(LocalContext.current).apply {
+    val mockViewModel = BallGameViewModel(Application()).apply {
         startGame()
 }
-    Buttons().restartButton(mockViewModel)
+    Buttons().RestartButton(mockViewModel)
 }
 
 
 @Composable
 @Preview(showBackground = true)
 fun PreviewRestartButton(){
-    val mockViewModel = BallGameViewModel(LocalContext.current).apply {
+    val mockViewModel = BallGameViewModel(Application()).apply {
     }
-    Buttons().restartButton(mockViewModel)
+    Buttons().RestartButton(mockViewModel)
 }

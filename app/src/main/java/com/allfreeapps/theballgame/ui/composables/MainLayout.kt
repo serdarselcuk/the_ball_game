@@ -2,6 +2,7 @@ package com.allfreeapps.theballgame.ui.composables
 
 import android.content.Context
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,14 +21,16 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.allfreeapps.theballgame.MyApplication
 import com.allfreeapps.theballgame.ui.BallGameViewModel
-import com.allfreeapps.theballgame.ui.model.entities.Score
+import com.allfreeapps.theballgame.model.entities.Score
+import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 
 class MainLayout(
     val viewModel: BallGameViewModel
 ) {
-    private lateinit var board: Board
+
     private lateinit var buttons: Buttons
     private lateinit var header: Header
     private lateinit var scoreBoard: ScoreBoard
@@ -38,23 +41,31 @@ class MainLayout(
     fun Build(
         modifier: Modifier,
     ) {
-        board = Board(viewModel)
         buttons = Buttons() // Assuming Buttons are used within Header or elsewhere
         header = Header(viewModel, buttons)
         scoreBoard = ScoreBoard(viewModel)
         futureBalls = FutureBalls(viewModel)
-        val orientation = LocalConfiguration.current.orientation
+        val configuration = LocalConfiguration.current
 
-        when (orientation) {
+        when (configuration.orientation) {
             Configuration.ORIENTATION_PORTRAIT -> {
+                val sizeOfScreenWidth = configuration.screenWidthDp
                 Column(
                     modifier = modifier.fillMaxSize(), // Ensure the main Column fills available space
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 )
                 {
-                    header.build()
-                    board.Layout() // Make sure this is board.Layout() not board.layout() if that's the correct function name
+                    header.build(
+                        Modifier.fillMaxWidth()
+                            .height((sizeOfScreenWidth * 0.12).dp)
+                            .background(HeaderBackGround)
+                    )
+                    Board(
+                        viewModel,
+                        Modifier,
+                        sizeOfScreenWidth.dp
+                    )
                     Spacer(Modifier.height(5.dp))
                     Column(
                         Modifier.fillMaxWidth(),
@@ -70,28 +81,32 @@ class MainLayout(
 
             else -> { // Landscape Mode
                 val scoreLine = ScoreLine(viewModel)
+                val sizeOfHeight= configuration.screenHeightDp
                 Column(
                     modifier = modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.Start, // Align the whole block (header and row) to the start
+                    horizontalAlignment = Alignment.Start,
                 ) {
-                    header.build(Modifier.fillMaxWidth())
+                    header.build(Modifier
+                        .fillMaxWidth()
+                        . height((sizeOfHeight * 0.1).dp)
+                        .background(HeaderBackGround))
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f),
                         verticalAlignment = Alignment.Top,
-                        // Arrangement.Start is good, but the Spacer will handle the main distribution
                         horizontalArrangement = Arrangement.Start
                     ) {
                         // Group these items to the left
                         scoreLine.Build() // Takes its intrinsic width
-                        Spacer(modifier = Modifier.width(8.dp)) // Optional: space after scoreLine
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                        board.Layout() // Takes its intrinsic width
-
-                        // This Spacer will take up all the remaining space in the Row
-                        // pushing scoreBoard.Table to the far right.
+                        Board(
+                            viewModel,
+                            Modifier,
+                            (sizeOfHeight * 0.9).dp
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Row(
                             Modifier.fillMaxHeight(),
@@ -113,7 +128,7 @@ class MainLayout(
 
 private fun mockViewModel(applicationContext: Context): BallGameViewModel
 {
-    return BallGameViewModel(applicationContext).apply {
+    return BallGameViewModel(applicationContext.applicationContext as MyApplication).apply {
         startGame()
         addBall(57, 1)
         addBall(21, 2)

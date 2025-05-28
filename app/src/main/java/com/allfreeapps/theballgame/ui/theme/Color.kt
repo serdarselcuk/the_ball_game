@@ -7,7 +7,7 @@ val PurpleGrey80 = Color(0x2ADCCEFF)
 val Pink80 = Color(0xFFEFB8C8)
 
 val Purple40 = Color(0x9F6650A4)
-val PurpleGrey40 = Color(0xFF625b71)
+val PurpleGrey40 = Color(0xFF27272F)
 val Pink40 = Color(0xFF7D5260)
 
 val Black = Color(0xFF000000)
@@ -24,7 +24,7 @@ val Purple = Color(0xFF9052FF)
 val HeaderTextColor = PurpleGrey40
 val HeaderBackGround = Purple80
 val ScoreTextColor = PurpleGrey40
-val ScoreLine = arrayOf(Green, Red, Blue, Yellow, Brown, Purple)
+val ScoreLine = arrayOf(White, Green, Red, Blue, Yellow, Brown, Purple)
 val BackgroundColor = PurpleGrey80
 val CellBoarderColor = Gray
 val StartButtonBackgroundColor = Purple40

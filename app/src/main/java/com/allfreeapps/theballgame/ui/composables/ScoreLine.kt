@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import android.app.Application
 import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.foundation.background
@@ -19,12 +20,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.BallGameViewModel
+import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
+import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 import com.allfreeapps.theballgame.ui.theme.ScoreTextColor
 
 class ScoreLine(
@@ -34,7 +38,6 @@ class ScoreLine(
     fun Build(modifier: Modifier = Modifier) {
         val currentConfiguration = LocalConfiguration.current
         val orientation = currentConfiguration.orientation
-//        val widthOfTheComponent = currentConfiguration.screenWidthDp
         val score by viewModel.score.collectAsState()
         when (orientation) {
             Configuration.ORIENTATION_LANDSCAPE -> {
@@ -72,15 +75,16 @@ class ScoreLine(
     @Composable
     fun ScorePresenter(score: Int) {
         Box(
-            Modifier
+            Modifier.
+                background(HeaderBackGround)
                 .border(
-                    width = 1.dp,
-                    color = ScoreTextColor,
+                    width = 2.dp,
+                    color = HeaderTextColor,
                 )
                 .padding(
                     horizontal = 3.dp,
                     vertical = 1.dp
-                )
+                ).shadow(elevation = 5.dp)
         ) {
             Text(
                 text = "Score: $score",
@@ -125,7 +129,7 @@ class ScoreLine(
 )
 @Composable
 fun PreviewOnPortrait(){
-    ScoreLine(BallGameViewModel(LocalContext.current)).Build()
+    ScoreLine(BallGameViewModel(Application())).Build()
 }
 
 @Preview(
@@ -135,5 +139,5 @@ fun PreviewOnPortrait(){
 )
 @Composable
 fun PreviewOnLandscape(){
-    ScoreLine(BallGameViewModel(LocalContext.current)).Build()
+    ScoreLine(BallGameViewModel(Application())).Build()
 }

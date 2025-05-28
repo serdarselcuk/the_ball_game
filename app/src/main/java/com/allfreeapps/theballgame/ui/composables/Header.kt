@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import android.app.Application
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,20 +32,21 @@ class Header(
 
     @Composable
     fun build(modifier: Modifier = Modifier):Header {
-        val orientation = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
-        val headerHeight = if (orientation) 50.dp else 40.dp
-        val startPadding = if(orientation) 20.dp else 50.dp
+        val orientation = LocalConfiguration.current.orientation
 
         Row(
-            modifier = modifier
-                .height(headerHeight)
-                .background(HeaderBackGround),
+            modifier = modifier,
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 modifier = Modifier.padding(
-                    start = startPadding
+                    start = when (orientation) {
+                            Configuration.ORIENTATION_PORTRAIT -> 20.dp
+                            Configuration.ORIENTATION_LANDSCAPE -> 50.dp
+                            else -> 0.dp
+                        }
+
                 ),
                 fontStyle = FontStyle.Italic,
                 fontFamily = FontFamily.Cursive,
@@ -56,7 +58,7 @@ class Header(
             Spacer(
                 Modifier.weight(1f)
             )
-            button.restartButton(viewModel)
+            button.RestartButton(viewModel)
         }
 
         return this
@@ -72,7 +74,7 @@ class Header(
 @Composable
 fun Preview(){
     Header(
-        BallGameViewModel(LocalContext.current),
+        BallGameViewModel(Application()),
         Buttons()
     ).build()
 }

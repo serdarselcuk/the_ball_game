@@ -1,12 +1,12 @@
-package com.allfreeapps.theballgame.ui.model.entities
+package com.allfreeapps.theballgame.model.entities
 
-import androidx.annotation.Nullable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 import java.util.Date
 
-@Entity
+@Entity(tableName = "scores")
 data class Score (
     @PrimaryKey(autoGenerate = true)
     val id: Int?,
@@ -18,5 +18,10 @@ data class Score (
     val score: Int,
     @ColumnInfo(name = "date")
     val date: Date?
-)
+):Comparable<Score>, Serializable {
+    override fun compareTo(other: Score): Int {
+        return score.compareTo(other.score)
+    }
+}
+
 
