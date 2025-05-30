@@ -25,15 +25,13 @@ import com.allfreeapps.theballgame.ui.theme.StartButtonTextColor
 
 
     @Composable
-    fun RestartButton(viewModel: BallGameViewModel){
-        val gameStatus by viewModel.state.collectAsState()
-
+    fun RestartButton(
+        gameStatus: GameState,
+        onclick: () -> Unit
+    ){
         Button(
             modifier = Modifier.padding(2.dp).width(90.dp).height(35.dp),
-            onClick = {
-                if ( gameStatus == GameState.GameNotStarted) viewModel.startGame()
-                else viewModel.restartGame()
-                      },
+            onClick = { onclick() },
             contentPadding = PaddingValues(
                 horizontal = 6.dp,
                 vertical = 2.dp
@@ -59,21 +57,21 @@ import com.allfreeapps.theballgame.ui.theme.StartButtonTextColor
     }
 
 
-@Composable
-@Preview(showBackground = true)
-fun PreviewButtons(){
-
-    val mockViewModel = BallGameViewModel(Application()).apply {
-        startGame()
-}
-    RestartButton(mockViewModel)
-}
-
-
-@Composable
-@Preview(showBackground = true)
-fun PreviewRestartButton(){
-    val mockViewModel = BallGameViewModel(Application()).apply {
-    }
-    RestartButton(mockViewModel)
-}
+//@Composable
+//@Preview(showBackground = true)
+//fun PreviewButtons(){
+//
+//    val mockViewModel = BallGameViewModel(Application()).apply {
+//        startGame()
+//}
+//    RestartButton()
+//}
+//
+//
+//@Composable
+//@Preview(showBackground = true)
+//fun PreviewRestartButton(){
+//    val mockViewModel = BallGameViewModel(Application()).apply {
+//    }
+//    RestartButton()
+//}

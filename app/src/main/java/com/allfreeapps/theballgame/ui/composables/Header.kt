@@ -1,19 +1,15 @@
 package com.allfreeapps.theballgame.ui.composables
 
-import android.app.Application
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -21,12 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.R
-import com.allfreeapps.theballgame.ui.BallGameViewModel
-import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
+import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 
-    @Composable
-    fun Header(viewModel: BallGameViewModel, modifier: Modifier = Modifier) {
+@Composable
+    fun Header(modifier: Modifier = Modifier, buttonContent: @Composable () -> Unit) {
         val orientation = LocalConfiguration.current.orientation
 
         Row(
@@ -53,7 +48,8 @@ import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
             Spacer(
                 Modifier.weight(1f)
             )
-            RestartButton(viewModel)
+
+            buttonContent()
         }
     }
 
@@ -65,6 +61,7 @@ import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 @Composable
 fun Preview(){
     Header(
-        BallGameViewModel(Application())
+        Modifier,
+        buttonContent = { RestartButton(GameState.GameNotStarted, {}) }
     )
 }

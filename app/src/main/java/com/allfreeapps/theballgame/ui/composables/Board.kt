@@ -55,13 +55,15 @@ private val JUMP_DURATION: Int = 200
 
 @Composable
 fun Board(
-    viewModel: BallGameViewModel,
     modifier: Modifier = Modifier,
     maxSizeOfBoard: Dp,
+    ballList: Array<Int>,
+    selectedBallIndex: Int? = -1,
+    onEmptyCellClick: (Int) -> Unit,
+    onBallCellClick: (Int) -> Unit
 ) {
     // State collection hoisted to the top-level composable for the board
-    val ballList by viewModel.ballList.collectAsState()
-    val selectedBallIndex by viewModel.selectedBall.collectAsState()
+
 
     val smallBoxSize = maxSizeOfBoard / Constants.GRID_SIZE
 
@@ -78,8 +80,8 @@ fun Board(
                     isSelected = selectedBallIndex == index,
                     onCellClick = {
                         when (ballColorValue) {
-                            Constants.NO_BALL -> viewModel.processEmptyCellClick(index)
-                            else -> viewModel.processOnBallCellClick(index)
+                            Constants.NO_BALL -> onEmptyCellClick(index)
+                            else -> onBallCellClick(index)
                         }
                     }
                 )

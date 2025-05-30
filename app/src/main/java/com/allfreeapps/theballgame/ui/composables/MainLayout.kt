@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -22,8 +24,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.MyApplication
-import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.model.entities.Score
+import com.allfreeapps.theballgame.ui.BallGameViewModel
+import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 
@@ -37,6 +40,13 @@ class MainLayout(
     ) {
 
         val configuration = LocalConfiguration.current
+        val gameStatus by viewModel.state.collectAsState()
+        val ballList by viewModel.ballList.collectAsState()
+        val selectedBallIndex by viewModel.selectedBall.collectAsState()
+        val score by viewModel.score.collectAsState()
+        val upcomingBalls by viewModel.upcomingBalls.collectAsState()
+        val allScores by viewModel.allScores.collectAsState()
+        val topScore = if(allScores.isNotEmpty()) allScores[0].score else 1
 
         when (configuration.orientation) {
             Configuration.ORIENTATION_PORTRAIT -> {
@@ -47,41 +57,64 @@ class MainLayout(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 )
                 {
-                    Header(viewModel,
-                        Modifier.fillMaxWidth()
+                    Header(
+                        Modifier
+                            .fillMaxWidth()
                             .height((sizeOfScreenWidth * 0.12).dp)
-                            .background(HeaderBackGround)
+                            .background(HeaderBackGround),
+                        buttonContent = {
+                            RestartButton(
+                                gameStatus,
+                                onclick = {
+                                    if (gameStatus == GameState.GameNotStarted) viewModel.startGame()
+                                    else viewModel.restartGame()
+                                }
+                            )
+                        }
                     )
                     Board(
-                        viewModel,
                         Modifier,
-                        sizeOfScreenWidth.dp
+                        sizeOfScreenWidth.dp,
+                        ballList,
+                        selectedBallIndex,
+                        onEmptyCellClick = { index -> viewModel.processEmptyCellClick(index) },
+                        onBallCellClick = { index -> viewModel.processOnBallCellClick(index) }
                     )
                     Spacer(Modifier.height(5.dp))
                     Column(
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.End,
                     ) {
-                        FutureBalls(viewModel)
+                        FutureBalls(upcomingBalls)
                     }
                     Spacer(Modifier.height(5.dp))
-                    Table(viewModel, scoreLine = ScoreLine(viewModel))
+                    Table( Modifier,
+                        allScores,
+                        scoreLine = { ScoreLine(modifier, score, topScore) }
+                    )
                 }
 
             }
 
             else -> { // Landscape Mode
-                val scoreLine = ScoreLine(viewModel)
-                val sizeOfHeight= configuration.screenHeightDp
+                val sizeOfHeight = configuration.screenHeightDp
                 Column(
                     modifier = modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.Start,
                 ) {
-                    Header(viewModel, Modifier
-                        .fillMaxWidth()
-                        . height((sizeOfHeight * 0.1).dp)
-                        .background(HeaderBackGround))
 
+                    Header(Modifier
+                        .fillMaxWidth()
+                        .height((sizeOfHeight * 0.1).dp)
+                        .background(HeaderBackGround),
+                        buttonContent = {
+                            RestartButton(gameStatus,
+                                onclick = {
+                                    if (gameStatus == GameState.GameNotStarted) viewModel.startGame()
+                                    else viewModel.restartGame()
+                                })
+                        }
+                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -90,25 +123,29 @@ class MainLayout(
                         horizontalArrangement = Arrangement.Start
                     ) {
                         // Group these items to the left
-                        scoreLine.Build() // Takes its intrinsic width
+                        ScoreLine(modifier, score, topScore)// Takes its intrinsic width
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Board(
-                            viewModel,
                             Modifier,
-                            (sizeOfHeight * 0.9).dp
+                            (sizeOfHeight * 0.9).dp,
+                            ballList,
+                            selectedBallIndex,
+                            onEmptyCellClick = { index -> viewModel.processEmptyCellClick(index) },
+                            onBallCellClick = { index -> viewModel.processOnBallCellClick(index) }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Row(
                             Modifier.fillMaxHeight(),
                             verticalAlignment = Alignment.Bottom,
                         ) {
-                            FutureBalls(viewModel) // Takes its intrinsic width
+                            FutureBalls(upcomingBalls) // Takes its intrinsic width
                         }
+
                         Spacer(modifier = Modifier.width(8.dp)) // Optional: space after futureBalls
 
                         // This will be on the far right
-                        Table(viewModel, scoreLine= null) // Takes its intrinsic width
+                        Table(Modifier, allScores, scoreLine = {}) // Takes its intrinsic width
                     }
                 }
             }
@@ -117,8 +154,7 @@ class MainLayout(
 }
 
 
-private fun mockViewModel(applicationContext: Context): BallGameViewModel
-{
+private fun mockViewModel(applicationContext: Context): BallGameViewModel {
     return BallGameViewModel(applicationContext.applicationContext as MyApplication).apply {
         startGame()
         addBall(57, 1)

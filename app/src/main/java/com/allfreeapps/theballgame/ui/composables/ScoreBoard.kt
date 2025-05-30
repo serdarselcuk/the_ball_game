@@ -26,19 +26,19 @@ import java.util.PriorityQueue
 
 
     @Composable
-    fun Table(viewModel: BallGameViewModel, modifier: Modifier = Modifier, scoreLine: ScoreLine?) {
+    fun Table( modifier: Modifier = Modifier, allScores: List<Score>, scoreLine: @Composable ()-> Unit ) {
         Column(
             modifier = modifier
 
         ) {
-            scoreLine?.Build()
-            ScoresTable(viewModel)
+            scoreLine()
+            ScoresTable(allScores)
         }
     }
 
     @Composable
-    fun ScoresTable(viewModel: BallGameViewModel) {
-        val scores by viewModel.allScores.collectAsState()
+    fun ScoresTable(scores: List<Score>) {
+
         if (scores.isEmpty()) {
             Text("No old scores yet!", modifier = Modifier.padding(16.dp))
             return
@@ -117,9 +117,6 @@ import java.util.PriorityQueue
 @Preview(showBackground = true)
 @Composable
 fun PreviewScoreBoard() {
-    val mockViewModel = BallGameViewModel(Application()).apply {
-        increaseScoreFor(9)
-        increaseScoreFor(9)
 
     val scores = listOf(
             Score(
@@ -145,7 +142,6 @@ fun PreviewScoreBoard() {
             ),
 
         )
-        increaseScoreFor(80)
-    }
-    Table(viewModel = mockViewModel, scoreLine = null)
+
+    Table(Modifier, scores, scoreLine = {})
 }

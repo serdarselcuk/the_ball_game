@@ -1,6 +1,5 @@
 package com.allfreeapps.theballgame.ui.composables
 
-import android.app.Application
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -15,25 +14,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 import com.allfreeapps.theballgame.utils.toBallColor
 
 
-    @Composable
-    fun FutureBalls(viewModel: BallGameViewModel, modifier: Modifier = Modifier) {
-        val upcomingBalls by viewModel.upcomingBalls.collectAsState()
+@Composable
+    fun FutureBalls(
+        upcomingBalls: Array<Int>,
+        modifier: Modifier = Modifier
+    ) {
+
         val configuration = LocalConfiguration.current
         val orientation = configuration.orientation
+
         when (orientation) {
             Configuration.ORIENTATION_PORTRAIT -> {
                 Row(
@@ -89,12 +89,10 @@ import com.allfreeapps.theballgame.utils.toBallColor
 )
 @Composable
 fun FutureBallsPreview() {
-    val mockViewModel = BallGameViewModel(Application()).apply {
-        add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
-    }
 
+    val score = arrayOf(687)
     TheBallGameTheme {
-        FutureBalls(mockViewModel)
+        FutureBalls(score)
     }
 }
 
@@ -106,11 +104,9 @@ fun FutureBallsPreview() {
 )
 @Composable
 fun FutureBallsPreviewLandscape() {
-    val mockViewModel = BallGameViewModel(Application()).apply {
-        add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
-    }
 
+    val score = arrayOf(687)
     TheBallGameTheme {
-        FutureBalls(mockViewModel)
+        FutureBalls(score)
     }
 }
