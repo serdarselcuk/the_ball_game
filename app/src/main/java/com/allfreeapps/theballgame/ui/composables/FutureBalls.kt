@@ -14,28 +14,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
-import com.allfreeapps.theballgame.utils.convertToColor
+import com.allfreeapps.theballgame.utils.toBallColor
 
-class FutureBalls(
-    val viewModel: BallGameViewModel
-) {
 
-    @Composable
-    fun Build(modifier: Modifier = Modifier) {
-        val upcomingBalls by viewModel.upcomingBalls.collectAsState()
+@Composable
+    fun FutureBalls(
+        upcomingBalls: Array<Int>,
+        modifier: Modifier = Modifier
+    ) {
+
         val configuration = LocalConfiguration.current
         val orientation = configuration.orientation
+
         when (orientation) {
             Configuration.ORIENTATION_PORTRAIT -> {
                 Row(
@@ -43,7 +41,7 @@ class FutureBalls(
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically // Optional: vertically center balls in the Row
                 ) {
-                    createFutureBalls(upcomingBalls)
+                    CreateFutureBalls(upcomingBalls)
                 }
             }
 
@@ -53,7 +51,7 @@ class FutureBalls(
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.Start // Optional: horizontally start balls in the Column
                 ) {
-                    createFutureBalls(upcomingBalls)
+                    CreateFutureBalls(upcomingBalls)
                 }
             }
 
@@ -62,13 +60,13 @@ class FutureBalls(
     }
 
     @Composable
-    private fun createFutureBalls(upcomingBalls: Array<Int>) {
+    private fun CreateFutureBalls(upcomingBalls: Array<Int>) {
         upcomingBalls.forEachIndexed { index, ballColorInt -> // Use forEachIndexed for keying Spacer
             Box(
                 Modifier
                     .size(24.dp)
                     .clip(CircleShape) // Clip first
-                    .background(ballColorInt.convertToColor()) // Then background
+                    .background(ballColorInt.toBallColor()) // Then background
                     .border(
                         BorderStroke(
                             width = 1.dp, // Increased width slightly for visibility
@@ -83,7 +81,6 @@ class FutureBalls(
             }
         }
     }
-}
 
 @Preview(
     showBackground = true,
@@ -92,12 +89,10 @@ class FutureBalls(
 )
 @Composable
 fun FutureBallsPreview() {
-    val mockViewModel = BallGameViewModel().apply {
-        add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
-    }
 
+    val score = arrayOf(687)
     TheBallGameTheme {
-        FutureBalls(mockViewModel).Build()
+        FutureBalls(score)
     }
 }
 
@@ -109,11 +104,9 @@ fun FutureBallsPreview() {
 )
 @Composable
 fun FutureBallsPreviewLandscape() {
-    val mockViewModel = BallGameViewModel().apply {
-        add3Ball() // Make sure this function correctly updates `upcomingBalls` StateFlow
-    }
 
+    val score = arrayOf(687)
     TheBallGameTheme {
-        FutureBalls(mockViewModel).Build()
+        FutureBalls(score)
     }
 }

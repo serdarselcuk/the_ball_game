@@ -1,11 +1,9 @@
 package com.allfreeapps.theballgame.ui.composables
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,31 +17,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.R
-import com.allfreeapps.theballgame.ui.BallGameViewModel
-import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
+import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 
-class Header(
-    val viewModel: BallGameViewModel,
-    val button: Buttons
-) {
-
-    @Composable
-    fun build(modifier: Modifier = Modifier):Header {
-        val orientation = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
-        val headerHeight = if (orientation) 50.dp else 40.dp
-        val startPadding = if(orientation) 20.dp else 50.dp
+@Composable
+    fun Header(modifier: Modifier = Modifier, buttonContent: @Composable () -> Unit) {
+        val orientation = LocalConfiguration.current.orientation
 
         Row(
-            modifier = modifier
-                .height(headerHeight)
-                .background(HeaderBackGround),
+            modifier = modifier,
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 modifier = Modifier.padding(
-                    start = startPadding
+                    start = when (orientation) {
+                            Configuration.ORIENTATION_PORTRAIT -> 20.dp
+                            Configuration.ORIENTATION_LANDSCAPE -> 50.dp
+                            else -> 0.dp
+                        }
+
                 ),
                 fontStyle = FontStyle.Italic,
                 fontFamily = FontFamily.Cursive,
@@ -55,13 +48,10 @@ class Header(
             Spacer(
                 Modifier.weight(1f)
             )
-            button.restartButton(viewModel)
+
+            buttonContent()
         }
-
-        return this
-
     }
-}
 
 @Preview(
     showBackground = true,
@@ -69,9 +59,9 @@ class Header(
     device = "spec:width=1800dp,height=800dp,dpi=240,orientation=landscape"
 )
 @Composable
-fun preview(){
+fun Preview(){
     Header(
-        BallGameViewModel(),
-        Buttons()
-    ).build()
+        Modifier,
+        buttonContent = { RestartButton(GameState.GameNotStarted, {}) }
+    )
 }
