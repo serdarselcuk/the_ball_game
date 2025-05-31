@@ -13,7 +13,7 @@ data class Score (
     @ColumnInfo(name = "fist_name")
     val firstName: String,
     @ColumnInfo(name = "last_name")
-    val lastName: String,
+    val lastName: String?,
     @ColumnInfo(name = "score")
     val score: Int,
     @ColumnInfo(name = "date")

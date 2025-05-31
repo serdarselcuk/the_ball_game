@@ -46,7 +46,7 @@ class MainLayout(
         val score by viewModel.score.collectAsState()
         val upcomingBalls by viewModel.upcomingBalls.collectAsState()
         val allScores by viewModel.allScores.collectAsState()
-        val topScore = if(allScores.isNotEmpty()) allScores[0].score else 1
+        val topScore = if (allScores.isNotEmpty()) allScores[0].score else 1
 
         when (configuration.orientation) {
             Configuration.ORIENTATION_PORTRAIT -> {
@@ -63,13 +63,15 @@ class MainLayout(
                             .height((sizeOfScreenWidth * 0.12).dp)
                             .background(HeaderBackGround),
                         buttonContent = {
-                            RestartButton(
-                                gameStatus,
-                                onclick = {
-                                    if (gameStatus == GameState.GameNotStarted) viewModel.startGame()
-                                    else viewModel.restartGame()
-                                }
-                            )
+                            gameStatus?.let {
+                                RestartButton(
+                                    it,
+                                    onclick = {
+                                        if (gameStatus == GameState.GameNotStarted) viewModel.startGame()
+                                        else viewModel.restartGame()
+                                    }
+                                )
+                            }
                         }
                     )
                     Board(
@@ -80,15 +82,13 @@ class MainLayout(
                         onEmptyCellClick = { index -> viewModel.processEmptyCellClick(index) },
                         onBallCellClick = { index -> viewModel.processOnBallCellClick(index) }
                     )
-                    Spacer(Modifier.height(5.dp))
                     Column(
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.End,
                     ) {
                         FutureBalls(upcomingBalls)
                     }
-                    Spacer(Modifier.height(5.dp))
-                    Table( Modifier,
+                    Table(Modifier,
                         allScores,
                         scoreLine = { ScoreLine(modifier, score, topScore) }
                     )
@@ -108,11 +108,14 @@ class MainLayout(
                         .height((sizeOfHeight * 0.1).dp)
                         .background(HeaderBackGround),
                         buttonContent = {
-                            RestartButton(gameStatus,
-                                onclick = {
-                                    if (gameStatus == GameState.GameNotStarted) viewModel.startGame()
-                                    else viewModel.restartGame()
-                                })
+                            gameStatus?.let {
+                                RestartButton(
+                                    it,
+                                    onclick = {
+                                        if (gameStatus == GameState.GameNotStarted) viewModel.startGame()
+                                        else viewModel.restartGame()
+                                    })
+                            }
                         }
                     )
                     Row(
@@ -139,7 +142,7 @@ class MainLayout(
                             Modifier.fillMaxHeight(),
                             verticalAlignment = Alignment.Bottom,
                         ) {
-                            FutureBalls(upcomingBalls) // Takes its intrinsic width
+                            FutureBalls(upcomingBalls)
                         }
 
                         Spacer(modifier = Modifier.width(8.dp)) // Optional: space after futureBalls
@@ -156,7 +159,9 @@ class MainLayout(
 
 private fun mockViewModel(applicationContext: Context): BallGameViewModel {
     return BallGameViewModel(applicationContext.applicationContext as MyApplication).apply {
+        setState(GameState.UserTurn)
         startGame()
+
         addBall(57, 1)
         addBall(21, 2)
         addBall(35, 3)
@@ -164,33 +169,11 @@ private fun mockViewModel(applicationContext: Context): BallGameViewModel {
         addBall(37, 5)
         addBall(39, 6)
 
-        val scores = listOf(
-            Score(
-                null,
-                "player_1",
-                "1234",
-                1234,
-                null
-            ),
-            Score(
-                null,
-                "player_2",
-                "1235",
-                1234,
-                null
-            ),
-            Score(
-                null,
-                "player_3",
-                "1236",
-                1234,
-                null
-            )
-        )
-        scores.forEach {
-            addOldScores(it)
-        }
+
         selectTheBall(37)
+        increaseScoreFor(5)
+        add3Ball()
+
     }
 }
 

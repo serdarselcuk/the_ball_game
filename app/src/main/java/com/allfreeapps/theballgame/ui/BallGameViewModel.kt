@@ -60,9 +60,6 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     private val _errorState: MutableStateFlow<String?> = MutableStateFlow(null)
     val errorState: StateFlow<String?> = _errorState
 
-    private val _oldScores = MutableStateFlow(PriorityQueue<Score>())
-    val oldScores: StateFlow<PriorityQueue<Score>> = _oldScores
-
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score
 
@@ -82,15 +79,18 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     private var _upcomingBalls = MutableStateFlow((arrayOf<Int>()))
     val upcomingBalls: StateFlow<Array<Int>> = _upcomingBalls
 
-    private val _state = MutableStateFlow<GameState>(GameState.GameNotStarted)
-    val state: StateFlow<GameState> = _state
+    private val _state = MutableStateFlow<GameState?>(null)
+    val state: StateFlow<GameState?> = _state
+
+    init {
+       _state.value = GameState.GameNotStarted
+    }
 
     fun startGame() {
-//        getScores()
         if (totalBallCount.value == 0) {
             add3Ball()
             populateUpcomingBalls()
-            _state.value = GameState.UserTurn
+            setState(GameState.UserTurn)
         }
     }
 
@@ -99,14 +99,9 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         startGame()
     }
 
-    fun addOldScores(score: Score) {
-        val scores = _oldScores.value
-        scores.add(score)
-        _oldScores.value = scores
-    }
 
     private fun setEmptyBoard() {
-        _state.value = GameState.GameNotStarted
+        setState(GameState.GameNotStarted)
         _ballList.value = Array(81) { 0 }
         _totalBallCount.value = 0
         resetScore()
@@ -125,15 +120,27 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         _score.value += setToRemove.value.size
     }
 
+    fun setState(gameState: GameState){
+        Log.d(TAG, "setState: $gameState")
+        _state.value = gameState
+    }
+
     fun resetScore() {
+        Log.d(TAG, "resetScore: ${score.value}")
         _score.value = 0
     }
 
     fun resetRemovalSet() {
+        Log.d(TAG, "resetRemovalSet: ${setToRemove.value}")
         _setToRemove.value = mutableListOf()
     }
 
     fun addBall(index: Int, colorCode: Int) {
+        Log.d(TAG, "addBall: $index, $colorCode")
+        if(totalBallCount.value == (MAX_BALL_COUNT)){
+            finishTheGame()
+            return
+        }
         viewModelScope.launch {
             if (totalBallCount.value == (MAX_BALL_COUNT)) return@launch
 
@@ -162,10 +169,12 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     fun selectTheBall(position: Int) {
+        Log.d(TAG, "selectTheBall: $position")
         _selectedBall.value = position
     }
 
     fun deselectTheBall() {
+        Log.d(TAG, "deselectTheBall")
         _selectedBall.value = null
     }
 
@@ -189,11 +198,13 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     private fun isSelectedBall(index: Int): Boolean {
+        Log.d(TAG, "isSelectedBall: $index")
         return selectedBall.value == index
     }
 
 
     fun processEmptyCellClick(destinationIndex: Int ) {
+        Log.d(TAG, "processEmptyCellClick: $destinationIndex")
         if (selectedBall.value == null) {
             Log.d(TAG,"No ball is selected at the moment")
         } //TODO Or handle as an error/log
@@ -226,9 +237,9 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 
     }
 
-
-    suspend fun createThePathToMoveTheBall(destinationIndex: Int): List<Int>? =
+    private suspend fun createThePathToMoveTheBall(destinationIndex: Int): List<Int>? =
         withContext(Dispatchers.Default) {
+            Log.d(TAG, "createThePathToMoveTheBall: $destinationIndex")
             val selectedBallIndex = selectedBall.value
 
             if (isMoveInvalid(selectedBallIndex, destinationIndex)) return@withContext null
@@ -308,9 +319,9 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     private suspend fun findColorSeries(listOfChanges: List<Int>): Boolean = withContext(Dispatchers.Default) {
+        Log.d(TAG, "findColorSeries: $listOfChanges")
         var result = false
-        _state.value = GameState.SearchingForSeries
-
+        setState(GameState.SearchingForSeries)
         listOfChanges.forEach { ballPosition ->
             val startColor = ballList.value[ballPosition]
 
@@ -518,13 +529,13 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 
             findColorSeries(ballPositions)
             removeAllSeries()
+            finishTheGame()
         }
     }
 
     private fun finishTheGame() {
-        if(totalBallCount.value == 0) return
         if(totalBallCount.value == 81){
-            _state.value = GameState.GameOver
+            setState(GameState.GameOver)
         }
     }
 
@@ -532,13 +543,12 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         setEmptyBoard()
     }
 
-
-    fun saveScore() {
+    fun saveScore(userName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertScore(
                 Score(
                     id = null,
-                    firstName = "user name",
+                    firstName = userName,
                     lastName = "user last name",
                     score = score.value,
                     date = null
