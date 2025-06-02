@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,100 +25,134 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.MyApplication
-import com.allfreeapps.theballgame.model.entities.Score
 import com.allfreeapps.theballgame.ui.BallGameViewModel
 import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
+import com.allfreeapps.theballgame.ui.theme.LightGray
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
+import com.allfreeapps.theballgame.utils.Constants
 
-class MainLayout(
-    val viewModel: BallGameViewModel
+@Composable
+fun MainLayout(
+    viewModel: BallGameViewModel,
+    modifier: Modifier,
 ) {
 
-    @Composable
-    fun Build(
-        modifier: Modifier,
-    ) {
+    val configuration = LocalConfiguration.current
+    val orientation = configuration.orientation
+    val gameStatus by viewModel.state.collectAsState()
+    val ballList by viewModel.ballList.collectAsState()
+    val selectedBallIndex by viewModel.selectedBall.collectAsState()
+    val score by viewModel.score.collectAsState()
+    val upcomingBalls by viewModel.upcomingBalls.collectAsState()
+    val allScores by viewModel.allScores.collectAsState()
+    val isMuted by viewModel.isMuted.collectAsState()
+    val topScore = if (allScores.isNotEmpty()) allScores[0].score else 1
+    val orientationIsLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
+    val sizeOfScreen = if (orientationIsLandscape)
+        configuration.screenHeightDp
+    else configuration.screenWidthDp
 
-        val configuration = LocalConfiguration.current
-        val gameStatus by viewModel.state.collectAsState()
-        val ballList by viewModel.ballList.collectAsState()
-        val selectedBallIndex by viewModel.selectedBall.collectAsState()
-        val score by viewModel.score.collectAsState()
-        val upcomingBalls by viewModel.upcomingBalls.collectAsState()
-        val allScores by viewModel.allScores.collectAsState()
-        val topScore = if (allScores.isNotEmpty()) allScores[0].score else 1
 
-        when (configuration.orientation) {
-            Configuration.ORIENTATION_PORTRAIT -> {
-                val sizeOfScreenWidth = configuration.screenWidthDp
-                Column(
-                    modifier = modifier.fillMaxSize(), // Ensure the main Column fills available space
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally,
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(8.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start,
+    )
+    {
+        Header(
+            Modifier
+                .fillMaxWidth()
+                .height(
+                    (sizeOfScreen * if (orientationIsLandscape) 0.1
+                    else 0.12).dp
                 )
+                .background(HeaderBackGround),
+            content = listOf(
                 {
-                    Header(
-                        Modifier
-                            .fillMaxWidth()
-                            .height((sizeOfScreenWidth * 0.12).dp)
-                            .background(HeaderBackGround),
-                        buttonContent = {
-                            gameStatus?.let {
-                                RestartButton(
-                                    it,
-                                    onclick = {
-                                        if (gameStatus == GameState.GameNotStarted) viewModel.startGame()
-                                        else viewModel.restartGame()
-                                    }
-                                )
+                    if (orientationIsLandscape) {
+                        ScoreBoard(Modifier, score)
+                    }
+                },
+                {
+                    MuteButton(
+                        Modifier.padding(2.dp),
+                        isMuted,
+                        onToggleMute = { viewModel.changeSoundStatus() }
+                    )
+                },
+                {
+                    gameStatus?.let {
+                        RestartButton(
+                            it,
+                            onclick = {
+                                viewModel.restartButtonOnClick()
                             }
-                        }
+                        )
+                    }
+                },
+            ),
+                isLandscape = orientationIsLandscape
+        )
+
+//        BoxWithConstraints(modifier = Modifier
+//            .fillMaxWidth()
+//            .weight(1f)
+//        ) {
+//            // maxHeight and maxWidth are available here from the BoxWithConstraints
+//            val availableHeight = maxHeight
+//            val availableWidth = maxWidth
+
+            when (orientationIsLandscape) {
+                false -> {
+                    ComparableScoreLine(
+                        modifier = Modifier.background(LightGray),
+                        maxSizeOfLine = sizeOfScreen,
+                        orientation = orientation,
+                        score = score,
+                        topScore = topScore
                     )
                     Board(
                         Modifier,
-                        sizeOfScreenWidth.dp,
+                        (sizeOfScreen * 0.95).dp,
                         ballList,
                         selectedBallIndex,
-                        onEmptyCellClick = { index -> viewModel.processEmptyCellClick(index) },
-                        onBallCellClick = { index -> viewModel.processOnBallCellClick(index) }
+                        onCellClick = { index ->
+                            viewModel.onCellClick(
+                                index = index,
+                                color = ballList[index]
+                            )
+                        }
                     )
-                    Column(
-                        Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.End,
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        FutureBalls(upcomingBalls)
+                        ScoreBoard(
+                            modifier = Modifier
+                                .width((sizeOfScreen / 3).dp),
+                            score = score
+                        )
+                        FutureBalls(
+                            upcomingBalls = upcomingBalls,
+                            modifier = Modifier // This is fine, FutureBalls will take its content size
+                        )
                     }
-                    Table(Modifier,
-                        allScores,
-                        scoreLine = { ScoreLine(modifier, score, topScore) }
+                    // Corrected Modifier for ScoresTable:
+                    ScoresTable(
+                        Modifier // Use a new Modifier instance
+                            .fillMaxWidth() // Take full width
+                            .weight(1f), // Fill remaining vertical space in the Column
+                        allScores
                     )
                 }
 
-            }
-
-            else -> { // Landscape Mode
-                val sizeOfHeight = configuration.screenHeightDp
-                Column(
-                    modifier = modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.Start,
-                ) {
-
-                    Header(Modifier
-                        .fillMaxWidth()
-                        .height((sizeOfHeight * 0.1).dp)
-                        .background(HeaderBackGround),
-                        buttonContent = {
-                            gameStatus?.let {
-                                RestartButton(
-                                    it,
-                                    onclick = {
-                                        if (gameStatus == GameState.GameNotStarted) viewModel.startGame()
-                                        else viewModel.restartGame()
-                                    })
-                            }
-                        }
-                    )
+                true -> { // Landscape Mode
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -126,33 +161,46 @@ class MainLayout(
                         horizontalArrangement = Arrangement.Start
                     ) {
                         // Group these items to the left
-                        ScoreLine(modifier, score, topScore)// Takes its intrinsic width
+                        ComparableScoreLine(
+                            modifier = Modifier.background(LightGray),
+                            maxSizeOfLine = sizeOfScreen,
+                            orientation = orientation,
+                            score = score,
+                            topScore = topScore
+                        )
+
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Board(
                             Modifier,
-                            (sizeOfHeight * 0.9).dp,
+                            (sizeOfScreen * 0.85).dp,
                             ballList,
                             selectedBallIndex,
-                            onEmptyCellClick = { index -> viewModel.processEmptyCellClick(index) },
-                            onBallCellClick = { index -> viewModel.processOnBallCellClick(index) }
+                            onCellClick = { index ->
+                                viewModel.onCellClick(
+                                    ballList[index],
+                                    index
+                                )
+                            }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Row(
                             Modifier.fillMaxHeight(),
                             verticalAlignment = Alignment.Bottom,
                         ) {
-                            FutureBalls(upcomingBalls)
+                            FutureBalls(
+                                upcomingBalls,
+                                Modifier,
+                                true
+                            )
                         }
 
-                        Spacer(modifier = Modifier.width(8.dp)) // Optional: space after futureBalls
-
-                        // This will be on the far right
-                        Table(Modifier, allScores, scoreLine = {}) // Takes its intrinsic width
+                        Spacer(modifier = Modifier.width(8.dp))
+                        ScoresTable(Modifier.fillMaxSize(), allScores)
                     }
                 }
             }
-        }
+//        }
     }
 }
 
@@ -160,7 +208,6 @@ class MainLayout(
 private fun mockViewModel(applicationContext: Context): BallGameViewModel {
     return BallGameViewModel(applicationContext.applicationContext as MyApplication).apply {
         setState(GameState.UserTurn)
-        startGame()
 
         addBall(57, 1)
         addBall(21, 2)
@@ -169,10 +216,10 @@ private fun mockViewModel(applicationContext: Context): BallGameViewModel {
         addBall(37, 5)
         addBall(39, 6)
 
-
         selectTheBall(37)
         increaseScoreFor(5)
         add3Ball()
+        startGame()
 
     }
 }
@@ -184,10 +231,10 @@ private fun mockViewModel(applicationContext: Context): BallGameViewModel {
 )
 @Composable
 fun PortraitPreview() {
-    val mainLayOut = MainLayout(mockViewModel(LocalContext.current))
+
     TheBallGameTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            mainLayOut.Build(Modifier.padding(innerPadding))
+            MainLayout(mockViewModel(LocalContext.current), Modifier.padding(innerPadding))
         }
     }
 }
@@ -199,10 +246,10 @@ fun PortraitPreview() {
 )
 @Composable
 private fun LandscapePreview() {
-    val mainLayOut = MainLayout(mockViewModel(LocalContext.current))
+
     TheBallGameTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            mainLayOut.Build(Modifier.padding(innerPadding))
+            MainLayout(mockViewModel(LocalContext.current), Modifier.padding(innerPadding))
         }
     }
 }

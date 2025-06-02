@@ -13,6 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 val Black = Color(0xFF000000)
 val White = Color(0xFFFFFFFF)
 val Gray = Color(0xFF808080)
+val LightGray = Color(0xFFAFAFAF)
 
 val Green = Color(0xFF009688)
 val Red = Color(0xFFF44336)
@@ -21,12 +22,29 @@ val Yellow = Color(0xFFFFC107)
 val Brown = Color(0xDF811D00)
 val Purple = Color(0xFF9052FF)
 
+val ball1 = Green
+val ball2= Blue
+val ball3 = Yellow
+val ball4 = Purple
+val ball5 = Red
+val ball6 = Brown
+
+
+
 val HeaderTextColor = PurpleGrey40
 val HeaderBackGround = Purple80
 val ScoreTextColor = PurpleGrey40
-val ScoreLine = arrayOf(White, Green, Red, Blue, Yellow, Brown, Purple)
-val BackgroundColor = Gray
-val CellBoarderColor = White
+val GameColorScale = arrayOf(
+    White,
+    ball1,
+    ball2,
+    ball3,
+    ball4,
+    ball5,
+    ball6
+)
+val BackgroundColor = LightGray
+val CellBoarderColor = Black
 val StartButtonBackgroundColor = Purple40
 val StartButtonTextColor = White
 val DisabledColor = Gray

@@ -16,7 +16,7 @@
       <SelectionState runConfigName="previewScoreBoard">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="previewButtons">
+      <SelectionState runConfigName="PreviewOnPortrait">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

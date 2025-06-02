@@ -1,7 +1,10 @@
 package com.allfreeapps.theballgame.utils
 
+
+import android.util.Log
 import androidx.room.TypeConverter
-import java.text.DateFormat
+import java.util.Locale.US
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 
@@ -18,6 +21,18 @@ class Converters {
     fun dateToString(date: Date): String = date.toString()
 
     @TypeConverter
-    fun stringToDate(string: String): Date? = DateFormat.getDateInstance().parse(string)
+    fun stringToDate(value: String?): Date? {
+        return value?.let {
+
+            val pattern = "EEE MMM dd HH:mm:ss zzz yyyy"
+            val formatter = SimpleDateFormat(pattern, US)
+            try {
+                formatter.parse(it)
+            } catch (e: java.text.ParseException) {
+                Log.e("Converters", "Failed to parse date: $value", e)
+                null
+            }
+        }
+    }
 
 }

@@ -21,6 +21,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import java.util.LinkedList
 import java.util.PriorityQueue
 import java.util.Queue
@@ -57,6 +61,9 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             initialValue = emptyList()
         )
 
+    private val _isMuted = MutableStateFlow(false)
+    val isMuted: StateFlow<Boolean> = _isMuted
+
     private val _errorState: MutableStateFlow<String?> = MutableStateFlow(null)
     val errorState: StateFlow<String?> = _errorState
 
@@ -86,6 +93,16 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
        _state.value = GameState.GameNotStarted
     }
 
+    private fun mute(){
+        Log.d(TAG, "mute: ")
+        _isMuted.value = true
+    }
+
+    private fun unMute(){
+        Log.d(TAG, "unMute: ")
+        _isMuted.value = false
+    }
+
     fun startGame() {
         if (totalBallCount.value == 0) {
             add3Ball()
@@ -94,7 +111,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         }
     }
 
-    fun restartGame() {
+    private fun restartGame() {
         setEmptyBoard()
         startGame()
     }
@@ -544,14 +561,15 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     fun saveScore(userName: String) {
+        val score = score.value
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertScore(
                 Score(
                     id = null,
                     firstName = userName,
-                    lastName = "user last name",
-                    score = score.value,
-                    date = null
+                    lastName = "",
+                    score = score,
+                    date = Date()
                 )
             )
         }
@@ -560,5 +578,21 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     fun processOnBallCellClick(index: Int) {
         if(isSelectedBall(index))  deselectTheBall()
         else  selectTheBall(index)
+    }
+
+    fun changeSoundStatus() {
+        if (isMuted.value) unMute()
+        else mute()
+    }
+
+    fun restartButtonOnClick() = run {
+        if (state.value == GameState.GameNotStarted) startGame()
+        else restartGame()
+    }
+
+    fun onCellClick(color: Int, index: Int) = run {
+        //if  thereIsNoBall
+        if ( color == Constants.NO_BALL) processEmptyCellClick(index)
+        else processOnBallCellClick(index)
     }
 }

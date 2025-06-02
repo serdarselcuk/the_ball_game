@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
+// It's better to import these directly if they are top-level constants in your theme package
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.LinearEasing
@@ -18,8 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,11 +29,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.allfreeapps.theballgame.ui.BallGameViewModel
-import com.allfreeapps.theballgame.ui.theme.ScoreLine // Assuming ScoreLine is a List<Color>
-// It's better to import these directly if they are top-level constants in your theme package
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import com.allfreeapps.theballgame.utils.Constants
@@ -59,16 +56,17 @@ fun Board(
     maxSizeOfBoard: Dp,
     ballList: Array<Int>,
     selectedBallIndex: Int? = -1,
-    onEmptyCellClick: (Int) -> Unit,
-    onBallCellClick: (Int) -> Unit
+    onCellClick: (Int) -> Unit,
 ) {
-    // State collection hoisted to the top-level composable for the board
-
 
     val smallBoxSize = maxSizeOfBoard / Constants.GRID_SIZE
 
     Layout(
         modifier = modifier
+            .border(
+                width = 2.dp,
+                color = Color.Gray
+            )
             .height(maxSizeOfBoard)
             .width(maxSizeOfBoard),
         content = {
@@ -78,12 +76,7 @@ fun Board(
                     ballColorValue = ballColorValue,
                     cellSize = smallBoxSize,
                     isSelected = selectedBallIndex == index,
-                    onCellClick = {
-                        when (ballColorValue) {
-                            Constants.NO_BALL -> onEmptyCellClick(index)
-                            else -> onBallCellClick(index)
-                        }
-                    }
+                    onCellClick = { onCellClick(index) }
                 )
             }
         },
@@ -128,24 +121,28 @@ private fun Cell(
     cellSize: Dp,
     isSelected: Boolean,
     onCellClick: () -> Unit,
-    modifier: Modifier = Modifier // Allow passing external modifiers
+    modifier: Modifier = Modifier
 ) {
+    val boarderBrush = getRadialGradientBrush(
+        cellSize.value,
+        BackgroundColor
+    )
     Box(
-        modifier = modifier // Apply external modifiers first
-            .size(cellSize) // Ensure the Box takes up the full cell size
-            .background(BackgroundColor) // Use imported theme color
+        modifier = modifier
+            .size(cellSize)
+            .background(BackgroundColor)
             .border(
                 BorderStroke(
-                    width = 0.5.dp,
-                    color = CellBoarderColor // Use imported theme color
+                    width = 2.dp,
+                    brush = boarderBrush
                 )
             )
-            .clickable(onClick = onCellClick), // More idiomatic clickable
+            .clickable(onClick = onCellClick),
         contentAlignment = Alignment.Center
     ) {
         Ball(
             colorValue = ballColorValue,
-            ballDisplaySize = cellSize * BALL_SIZE_RATIO, // Use constant for ratio
+            ballDisplaySize = cellSize * BALL_SIZE_RATIO,
             isBallSelected = isSelected
         )
     }
@@ -161,10 +158,7 @@ private fun Ball(
         val jumpAnimationState = rememberBallJumpAnimationState(isBallSelected = isBallSelected)
         val currentJumpOffsetDp: Dp = BALL_JUMP_HEIGHT * jumpAnimationState.value
 
-        // Consider remembering the brush if ballDisplaySize.value or colorValue doesn't change frequently
-        // However, getRadialGradientBrush is not a composable, so direct remember isn't applicable here
-        // unless you make it one or pass remembered inputs. For now, it's recalculated on recomposition.
-        val radialGradientBrush =  remember(ballDisplaySize.value, colorValue) {
+        val radialGradientBrush = remember(ballDisplaySize.value, colorValue) {
             getRadialGradientBrush(ballDisplaySize.value, colorValue.toBallColor())
         }
         Box(
@@ -185,9 +179,8 @@ private fun Ball(
  * Creates a radial gradient brush for the ball's appearance.
  * This is a utility function, not a composable.
  */
-private fun getRadialGradientBrush(ballSizePx: Float, baseColor: Color): Brush {
-    // Create a slightly lighter color for the gradient center (highlight)
-    // and a slightly darker for the edges.
+fun getRadialGradientBrush(ballSizePx: Float, baseColor: Color): Brush {
+
     val centerColor = baseColor.copy(
         red = (baseColor.red * 1.2f).coerceAtMost(1f),
         green = (baseColor.green * 1.2f).coerceAtMost(1f),
@@ -202,27 +195,20 @@ private fun getRadialGradientBrush(ballSizePx: Float, baseColor: Color): Brush {
     return Brush.radialGradient(
         colors = listOf(centerColor, baseColor, edgeColor),
         center = Offset(
-            x = ballSizePx * 0.3f,
-            y = ballSizePx * 0.3f
-        ), // Adjusted for a more centered highlight
-        radius = ballSizePx * 0.8f, // Adjusted for gradient spread
-        tileMode = TileMode.Clamp
+            x = ballSizePx * 1.2f,
+            y = ballSizePx * 1.2f
+        ),
+        radius = ballSizePx * 2f,
+        tileMode = TileMode.Mirror
     )
 }
-
-
 
 @Composable
 private fun rememberBallJumpAnimationState(isBallSelected: Boolean): Animatable<Float, AnimationVector1D> {
     val animatedJumpOffset = remember { Animatable(0f) }
 
-    // Use LaunchedEffect to react to changes in isBallSelected
-    // This coroutine will (re)launch whenever isBallSelected changes.
     LaunchedEffect(key1 = isBallSelected) {
         if (isBallSelected) {
-            // Start the infinite jumping animation
-            // The animation will run until this LaunchedEffect is cancelled
-            // (e.g., isBallSelected becomes false, or the composable leaves the composition)
             animatedJumpOffset.animateTo(
                 targetValue = 1f,
                 animationSpec = infiniteRepeatable(
@@ -231,37 +217,32 @@ private fun rememberBallJumpAnimationState(isBallSelected: Boolean): Animatable<
                 )
             )
         } else {
-            // If not selected, or if the selection changes from true to false,
-            // snap the ball back to its original position (0f offset).
-            // This also cancels any ongoing animation from the 'if (isBallSelected)' block.
             animatedJumpOffset.snapTo(0f)
         }
     }
     return animatedJumpOffset
 }
 
-//
-//@Composable
-//@Preview(
-//    showBackground = true,
-//    name = "board preview",
-//    device = "spec:width=3800dp,height=1800dp,dpi=240,orientation=portrait"
-//)
-//
-//fun BoardPreview() {
-//    val mockViewModel = BallGameViewModel().apply {
-//        addBall(57, 5) // Add some balls for preview
-//        addBall(21, 3)
-//        addBall(35, 2)
-//        addBall(10, 1)
-//        addBall(45, 4)
-//        selectTheBall(21) // Optionally pre-select a ball for previewing the jump
-//    }
-//    // It's good practice to wrap previews that use animations or complex state
-//    // in a way that allows interaction or showcases the state.
-//    // For a simple preview of the board:
-//    Board(mockViewModel).Layout()
-//
-//    // For a more interactive preview, you might need a local state
-//    // to simulate selection if your ViewModel isn't easily manipulated in Preview.
-//}
+@Composable
+@Preview(
+    showBackground = true,
+    name = "board preview",
+    device = "spec:width=3800dp,height=1800dp,dpi=240,orientation=portrait"
+)
+
+fun BoardPreview() {
+    Board(
+        Modifier,
+        800.dp,
+        Array(81) { 0 }.apply {
+            this@apply[2] = 1
+            this@apply[3] = 2
+            this@apply[4] = 3
+            this@apply[5] = 4
+            this@apply[6] = 5
+            this@apply[7] = 6
+        },
+        3,
+        {}
+    )
+}
