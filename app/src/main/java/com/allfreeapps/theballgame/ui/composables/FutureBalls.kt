@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
+import com.allfreeapps.theballgame.utils.getRadialGradientBrush
 import com.allfreeapps.theballgame.utils.toBallColor
 
 
@@ -59,7 +60,10 @@ import com.allfreeapps.theballgame.utils.toBallColor
         val ballDisplaySize = 24.dp
         upcomingBalls.forEachIndexed { index, ballColorInt -> // Use forEachIndexed for keying Spacer
             val radialGradientBrush =  remember(ballDisplaySize.value, ballColorInt) {
-                getRadialGradientBrush(ballDisplaySize.value, ballColorInt.toBallColor())
+                getRadialGradientBrush(
+                    ballSizePx = ballDisplaySize.value,
+                    baseColor = ballColorInt.toBallColor()
+                )
             }
             Box(
                 Modifier

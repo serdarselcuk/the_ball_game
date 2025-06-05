@@ -3,10 +3,11 @@ package com.allfreeapps.theballgame.model.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.allfreeapps.theballgame.utils.Constants
 import java.io.Serializable
 import java.util.Date
 
-@Entity(tableName = "scores")
+@Entity(tableName = Constants.DATABASE_NAME)
 data class Score (
     @PrimaryKey(autoGenerate = true)
     val id: Int?,

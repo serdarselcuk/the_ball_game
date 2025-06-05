@@ -33,8 +33,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
+import com.allfreeapps.theballgame.ui.theme.Black
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import com.allfreeapps.theballgame.utils.Constants
+import com.allfreeapps.theballgame.utils.getRadialGradientBrush
 import com.allfreeapps.theballgame.utils.toBallColor
 
 
@@ -43,6 +45,7 @@ private val DEFAULT_SHADOW_ELEVATION = 18.dp
 private val SELECTED_SHADOW_ELEVATION = 50.dp
 private val BALL_JUMP_HEIGHT = (-5).dp
 private val JUMP_DURATION: Int = 200
+val BALL_CREATION_LATENCY: Int = 200
 
 /**
  * Converts an integer value (presumably an index or type) to a specific ball color.
@@ -53,22 +56,20 @@ private val JUMP_DURATION: Int = 200
 @Composable
 fun Board(
     modifier: Modifier = Modifier,
-    maxSizeOfBoard: Dp,
+    boardSize: Dp,
     ballList: Array<Int>,
     selectedBallIndex: Int? = -1,
     onCellClick: (Int) -> Unit,
 ) {
 
-    val smallBoxSize = maxSizeOfBoard / Constants.GRID_SIZE
+    val smallBoxSize = boardSize / Constants.GRID_SIZE
 
     Layout(
         modifier = modifier
             .border(
                 width = 2.dp,
                 color = Color.Gray
-            )
-            .height(maxSizeOfBoard)
-            .width(maxSizeOfBoard),
+            ),
         content = {
             // Generate a Cell composable for each item in the ballList
             ballList.forEachIndexed { index, ballColorValue ->
@@ -82,7 +83,7 @@ fun Board(
         },
         measurePolicy = { measurables, constraints ->
             // Calculate cell size in pixels once
-            val roundedCellSizePx = smallBoxSize.roundToPx()
+            val roundedCellSizePx = (smallBoxSize).roundToPx()
 
             // Define constraints for each cell
             val cellConstraints = constraints.copy(
@@ -124,9 +125,13 @@ private fun Cell(
     modifier: Modifier = Modifier
 ) {
     val boarderBrush = getRadialGradientBrush(
-        cellSize.value,
-        BackgroundColor
+        ballSizePx = cellSize.value,
+        xRate = 1f,
+        yRate = 1f,
+        radius = 0.5f,
+        baseColor = CellBoarderColor
     )
+
     Box(
         modifier = modifier
             .size(cellSize)
@@ -155,16 +160,26 @@ private fun Ball(
     isBallSelected: Boolean
 ) {
     if (colorValue != Constants.NO_BALL) {
+        val animatedSize = remember { Animatable(5f) }
+        LaunchedEffect(Unit) {
+            animatedSize.animateTo(
+                targetValue = ballDisplaySize.value,
+                animationSpec = tween(durationMillis = BALL_CREATION_LATENCY, easing = LinearEasing)
+            )
+        }
         val jumpAnimationState = rememberBallJumpAnimationState(isBallSelected = isBallSelected)
         val currentJumpOffsetDp: Dp = BALL_JUMP_HEIGHT * jumpAnimationState.value
 
         val radialGradientBrush = remember(ballDisplaySize.value, colorValue) {
-            getRadialGradientBrush(ballDisplaySize.value, colorValue.toBallColor())
+            getRadialGradientBrush(
+                ballSizePx = ballDisplaySize.value,
+                baseColor = colorValue.toBallColor()
+            )
         }
         Box(
             modifier = Modifier
                 .offset(y = currentJumpOffsetDp)
-                .size(ballDisplaySize)
+                .size(animatedSize.value.dp)
                 .shadow(
                     elevation = if (isBallSelected) SELECTED_SHADOW_ELEVATION else DEFAULT_SHADOW_ELEVATION,
                     shape = CircleShape
@@ -175,33 +190,6 @@ private fun Ball(
     }
 }
 
-/**
- * Creates a radial gradient brush for the ball's appearance.
- * This is a utility function, not a composable.
- */
-fun getRadialGradientBrush(ballSizePx: Float, baseColor: Color): Brush {
-
-    val centerColor = baseColor.copy(
-        red = (baseColor.red * 1.2f).coerceAtMost(1f),
-        green = (baseColor.green * 1.2f).coerceAtMost(1f),
-        blue = (baseColor.blue * 1.2f).coerceAtMost(1f)
-    )
-    val edgeColor = baseColor.copy(
-        red = baseColor.red * 0.8f,
-        green = baseColor.green * 0.8f,
-        blue = baseColor.blue * 0.8f
-    )
-
-    return Brush.radialGradient(
-        colors = listOf(centerColor, baseColor, edgeColor),
-        center = Offset(
-            x = ballSizePx * 1.2f,
-            y = ballSizePx * 1.2f
-        ),
-        radius = ballSizePx * 2f,
-        tileMode = TileMode.Mirror
-    )
-}
 
 @Composable
 private fun rememberBallJumpAnimationState(isBallSelected: Boolean): Animatable<Float, AnimationVector1D> {

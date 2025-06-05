@@ -13,6 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 val Black = Color(0xFF000000)
 val White = Color(0xFFFFFFFF)
 val Gray = Color(0xFF808080)
+val DarkGray = Color(0xFF505050)
 val LightGray = Color(0xFFAFAFAF)
 
 val Green = Color(0xFF009688)
@@ -44,7 +45,7 @@ val GameColorScale = arrayOf(
     ball6
 )
 val BackgroundColor = LightGray
-val CellBoarderColor = Black
+val CellBoarderColor = DarkGray
 val StartButtonBackgroundColor = Purple40
 val StartButtonTextColor = White
 val DisabledColor = Gray

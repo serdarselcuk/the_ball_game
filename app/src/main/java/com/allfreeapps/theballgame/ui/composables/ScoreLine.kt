@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.GameColorScale
@@ -48,11 +49,12 @@ fun ScoreBoard(modifier: Modifier, score: Int) {
 @Composable
 fun ComparableScoreLine(
     modifier: Modifier,
-    maxSizeOfLine: Int,
+    maxSizeOfLine: Dp,
     orientation: Int,
     score: Int, topScore: Int
 ) {
 
+    val maxSizeOfLineFloat = maxSizeOfLine.value
     val rateOfScoreLine = if (topScore > 0) score.toFloat() / topScore else 0f
     val dynamicColor = when {
         rateOfScoreLine > 0.9 -> GameColorScale[6]
@@ -73,7 +75,7 @@ fun ComparableScoreLine(
                 .height(20.dp)
             innerBoxModifier = Modifier // Apply background to the inner Box
                 .background(dynamicColor) // Use the calculated dynamicColor here
-                .width((rateOfScoreLine * maxSizeOfLine).dp)
+                .width((rateOfScoreLine * maxSizeOfLineFloat).dp)
                 .fillMaxHeight()
         }
         else -> { // Assuming Configuration.ORIENTATION_LANDSCAPE
@@ -82,7 +84,7 @@ fun ComparableScoreLine(
                 .width(20.dp)
             innerBoxModifier = Modifier // Apply background to the inner Box
                 .background(dynamicColor) // Use the calculated dynamicColor here
-                .height((rateOfScoreLine * maxSizeOfLine).dp)
+                .height((rateOfScoreLine * maxSizeOfLineFloat).dp)
                 .fillMaxWidth()
         }
     }
@@ -105,7 +107,7 @@ val orientation = Configuration.ORIENTATION_PORTRAIT
 //    ScoreLine(Modifier, 10, 10)
     ComparableScoreLine(
         Modifier.background(BackgroundColor),
-        500,
+        500.dp,
         orientation,
         30,50
     )
