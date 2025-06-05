@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
@@ -37,7 +38,7 @@ fun ScoresTable(modifier: Modifier = Modifier, scores: List<Score>) {
 
             // Table Header
             ScoreRow(
-                Modifier.height(25.dp).fillMaxWidth(),
+                Modifier.wrapContentHeight().fillMaxWidth(),
                 playerName = stringResource(R.string.player),
                 score = stringResource(R.string.score),
                 date = stringResource(R.string.date),
@@ -48,10 +49,10 @@ fun ScoresTable(modifier: Modifier = Modifier, scores: List<Score>) {
             LazyColumn {
                 items(scores) { scoreItem ->
                     ScoreRow(
-                        Modifier.height(22.dp),
+                        Modifier.wrapContentHeight(),
                         playerName = scoreItem.firstName,
                         score = scoreItem.score.toString(),
-                        date = scoreItem.date.toString()
+                        date = scoreItem.getDateString()
                     )
                     HorizontalDivider(color = CellBoarderColor)
                 }
@@ -82,7 +83,7 @@ fun ScoreRow(
         Text(
             text = playerName,
             modifier = Modifier
-                .weight(0.4f)
+                .weight(0.8f)
                 .padding(horizontal = 4.dp),
             fontWeight = fontWeight,
             style = style
@@ -90,7 +91,7 @@ fun ScoreRow(
         Text(
             text = score,
             modifier = Modifier
-                .weight(0.3f)
+                .weight(0.8f)
                 .padding(horizontal = 4.dp),
             textAlign = TextAlign.End,
             fontWeight = fontWeight,
@@ -99,7 +100,7 @@ fun ScoreRow(
         Text(
             text = date,
             modifier = Modifier
-                .weight(0.3f)
+                .weight(0.8f)
                 .padding(horizontal = 10.dp),
             textAlign = TextAlign.End,
             fontWeight = fontWeight,

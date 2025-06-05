@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.allfreeapps.theballgame.utils.Constants
+import com.allfreeapps.theballgame.utils.Converters
 import java.io.Serializable
 import java.util.Date
 
@@ -19,10 +20,13 @@ data class Score (
     val score: Int,
     @ColumnInfo(name = "date")
     val date: Date?
+
 ):Comparable<Score>, Serializable {
     override fun compareTo(other: Score): Int {
         return score.compareTo(other.score)
     }
+
+    fun getDateString(): String {
+        return date?.let { Converters().dateToString(it) } ?: ""
+    }
 }
-
-
