@@ -41,11 +41,16 @@ class MainActivity : ComponentActivity() {
                     val state by viewModel.state.collectAsState()
                     when (state) {
                         (GameState.GameOver) -> {
-                            GameOverScreen(onSaveScoreClicked = { username ->
-                                viewModel.saveScore(username)
-                                viewModel.setState(GameState.GameNotStarted)
-                                viewModel.resetGame()
-                            })
+                            GameOverScreen(
+                                onSaveScoreClicked = { username ->
+                                    viewModel.saveScore(username)
+                                    viewModel.setState(GameState.GameNotStarted)
+                                    viewModel.resetGame()
+                                }, onSkipClicked = {
+                                    viewModel.setState(GameState.GameNotStarted)
+                                    viewModel.resetGame()
+                                }
+                            )
                         }
 
                         else -> {
@@ -68,17 +73,20 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun PreviewGameOverScreenWithInput() {
-    GameOverScreen(onSaveScoreClicked = {})
+    GameOverScreen(
+        onSaveScoreClicked = {},
+        onSkipClicked = {}
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewGameScreen() {
     val app = LocalActivity.current?.application
-    val viewModel = BallGameViewModelFactory(app as MyApplication)
-        .create(BallGameViewModel::class.java).apply {
-            setState(GameState.UserTurn)
-        }
+    val viewModel =
+        BallGameViewModelFactory(app as MyApplication).create(BallGameViewModel::class.java).apply {
+                setState(GameState.UserTurn)
+            }
     MainLayout(
         viewModel,
         Modifier
