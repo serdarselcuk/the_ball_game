@@ -112,6 +112,9 @@ fun MainLayout(
                                 ballList[index],
                                 index
                             )
+                        },
+                        removeTheBall = { index ->
+                            viewModel.removeBall(index)
                         }
                     )
                     Row(
@@ -185,6 +188,9 @@ fun MainLayout(
                                     ballList[index],
                                     index
                                 )
+                            },
+                            removeTheBall = { index ->
+                                viewModel.removeBall(index)
                             }
                         )
                         Spacer(modifier = Modifier.width(8.dp))

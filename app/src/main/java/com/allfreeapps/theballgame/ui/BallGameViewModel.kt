@@ -12,21 +12,17 @@ import com.allfreeapps.theballgame.utils.Constants
 import com.allfreeapps.theballgame.utils.Constants.Companion.BALL_LIMIT_TO_REMOVE
 import com.allfreeapps.theballgame.utils.Constants.Companion.GRID_SIZE
 import com.allfreeapps.theballgame.utils.Constants.Companion.MAX_BALL_COUNT
+import com.allfreeapps.theballgame.utils.Markers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 import java.util.LinkedList
-import java.util.PriorityQueue
 import java.util.Queue
 
 class BallGameViewModel( application: Application ) : AndroidViewModel(application)  {
@@ -199,7 +195,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         return selectedBall.value?.let { ballList.value[it] }
     }
 
-    private fun removeBall(index: Int) {
+    fun removeBall(index: Int) {
 //        TODO you can throw error if ball is not exists
         viewModelScope.launch {
             val noBallInTheBoard = totalBallCount.value == 0
@@ -210,9 +206,53 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             copyOfBallList[index] = 0
             _ballList.value = copyOfBallList
             _totalBallCount.value -= 1
-            Log.d(TAG, "index: $index")
+            Log.d(TAG, "index to remove: $index")
         }
     }
+
+    private fun markBallToGetShrink(index: Int){
+        viewModelScope.launch {
+            val noBallInTheBoard = totalBallCount.value == 0
+            val colorValue= ballList.value[index]
+            val hasMarker = colorValue >= 10
+            if(hasMarker)
+                markerPrintout(colorValue)
+            val ballValue= colorValue % 10
+            val ballIsAlreadyRemoved =ballValue  == 0
+            if (noBallInTheBoard || ballIsAlreadyRemoved) return@launch
+
+            val copyOfBallList = _ballList.value.copyOf()
+            copyOfBallList[index] = Markers.BALL_SHRINKING_MARKER.value + ballValue
+            _ballList.value = copyOfBallList
+            Log.d(TAG, "index to mark get smaller: $index")
+            if(hasMarker)
+                Log.d(TAG, "Ball has already a marker: $copyOfBallList")
+        }
+    }
+
+    private fun markBallToGetExpanded(index: Int){
+        viewModelScope.launch {
+            val noBallInTheBoard = totalBallCount.value == 0
+            val colorValue= ballList.value[index]
+            val hasMarker = colorValue >= 10
+            if(hasMarker)
+                markerPrintout(colorValue)
+            val ballValue= colorValue % 10
+            val ballIsAlreadyRemoved =ballValue  == 0
+            if (noBallInTheBoard || ballIsAlreadyRemoved) return@launch
+
+            val copyOfBallList = _ballList.value.copyOf()
+            copyOfBallList[index] = Markers.BALL_EXPANSION_MARKER.value + ballValue
+            _ballList.value = copyOfBallList
+            Log.d(TAG, "index to mark get expanded: $index")
+
+        }
+    }
+
+    private fun markerPrintout(ballValue: Int){
+        Log.d(TAG, "Ball has already a marker: $ballValue")
+    }
+
 
     private fun isSelectedBall(index: Int): Boolean {
         Log.d(TAG, "isSelectedBall: $index")
@@ -220,7 +260,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
 
-    fun processEmptyCellClick(destinationIndex: Int ) {
+    private fun processEmptyCellClick(destinationIndex: Int ) {
         Log.d(TAG, "processEmptyCellClick: $destinationIndex")
         if (selectedBall.value == null) {
             Log.d(TAG,"No ball is selected at the moment")
@@ -427,16 +467,10 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 //        todo throw error when color is 0 or null
         withContext(Dispatchers.IO) {
             val color = getSelectedBallColor() ?: 0
+            val targetIndex = path.last()
             if (color != 0) {
-                path.forEach { ball ->
-                    val selectedBallIndex = selectedBall.value
-                    if (selectedBallIndex != null && !isSelectedBall(ball)) {
-                        addBall(ball, color)
-                        removeBall(selectedBallIndex)
-                        selectTheBall(ball)
-                        delay(Constants.BALL_MOVEMENT_LATENCY)
-                    }
-                }
+                addBall(targetIndex, color)
+                markBallToGetShrink(selectedBall.value!!)
             }
             deselectTheBall()
         }
@@ -517,7 +551,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 
         getRemovables().forEach { set ->
             set.forEach {
-                removeBall(it)
+                markBallToGetExpanded(it)
             }
             increaseScoreFor(set.size)
         }

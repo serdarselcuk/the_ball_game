@@ -6,7 +6,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import com.allfreeapps.theballgame.ui.theme.GameColorScale
 
-fun Int.toBallColor(): Color = GameColorScale[this]
+fun Int.toBallColor(): Color {
+    val num = this % 10 // to remove markers from the ball color
+    return GameColorScale[num]
+}
 
 
 /**

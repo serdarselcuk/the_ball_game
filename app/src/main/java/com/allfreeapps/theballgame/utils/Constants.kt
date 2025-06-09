@@ -4,7 +4,6 @@ import com.allfreeapps.theballgame.BuildConfig
 
 class Constants {
     companion object {
-        const val BALL_MOVEMENT_LATENCY: Long = 50
         const val NO_BALL = 0
         const val GRID_SIZE = BuildConfig.GRID_SIZE
         const val BALL_LIMIT_TO_REMOVE = BuildConfig.BALL_LIMIT_TO_REMOVE

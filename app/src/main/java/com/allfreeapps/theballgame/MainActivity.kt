@@ -11,7 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.progressSemantics
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,7 +25,6 @@ import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.Black
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
-import com.allfreeapps.theballgame.utils.Constants
 
 class MainActivity : ComponentActivity() {
     private val viewModel: BallGameViewModel by viewModels {
