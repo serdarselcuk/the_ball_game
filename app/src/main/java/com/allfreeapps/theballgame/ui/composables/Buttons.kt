@@ -4,21 +4,22 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.DisabledColor
@@ -88,6 +89,56 @@ fun MuteButton(
         )
     }
 }
+@Composable
+fun DeleteButton(
+    modifier: Modifier = Modifier,
+    onClicked: () -> Unit) {
+    IconButton(
+        modifier = modifier,
+        onClick = onClicked
+    ) {
+
+        Icon(
+            painter = painterResource(R.drawable.ic_delete_icon),
+            contentDescription = "Delete items"
+        )
+    }
+}
+
+
+
+@Composable
+fun SettingsButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+){
+    IconButton(
+        modifier = modifier,
+        onClick = onClick
+    )
+    {
+        Icon(
+            painter =  painterResource( R.drawable.settigns_icon ),
+            contentDescription = "Settings"
+        )
+
+    }
+}
+
+@Composable
+fun SkipButton(
+    modifier: Modifier = Modifier,
+    color: Color = Color.Black,
+    onClick: () -> Unit
+){
+    TextButton(
+        onClick = onClick,
+        modifier = modifier
+    ) {
+        Text(text = "SKIP", color = color, fontSize = 20.sp)
+    }
+}
+
 
 
 @Composable
@@ -113,4 +164,25 @@ fun PreviewMuteButton(){
 @Composable
 fun PreviewMuteButtonOff(){
     MuteButton(isMuted = false, onToggleMute = {})
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewMuteSettingsButton(){
+    SettingsButton(onClick = {})
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewMuteSkipButton(){
+    SkipButton(onClick = {})
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewMuteDelteButton(){
+    DeleteButton(onClicked = {})
 }

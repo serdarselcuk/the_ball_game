@@ -78,11 +78,17 @@ class ScoreRepository(context: Context) {
 //     *
 //     * @param score The Score object to delete.
 //     */
-//    suspend fun deleteScore(score: Score) {
-//        withContext(Dispatchers.IO) {
-//            scoreDao.delete(score) // Assuming delete(score: Score) is a suspend fun in ScoreDao
-//        }
-//    }
+    suspend fun deleteScore(id: Int) {
+        withContext(Dispatchers.IO) {
+            scoreDao.delete(id) // Assuming delete(score: Score) is a suspend fun in ScoreDao
+        }
+    }
+
+    suspend fun deleteAllScores() {
+        withContext(Dispatchers.IO) {
+            scoreDao.deleteAll()
+        }
+    }
 //
 //    /**
 //     * Deletes all scores from the database.
