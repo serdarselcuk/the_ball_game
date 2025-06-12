@@ -20,10 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.MyApplication
 import com.allfreeapps.theballgame.model.entities.Score
-import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.LightGray
+import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 
 @Composable
 fun MainLayout(
