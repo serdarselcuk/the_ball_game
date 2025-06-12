@@ -2,6 +2,7 @@ package com.allfreeapps.theballgame.ui.composables
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
@@ -32,6 +34,7 @@ import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.GameOverBackground
 import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
+import com.allfreeapps.theballgame.ui.theme.UserNameFieldColor
 
 
 @Composable
@@ -57,14 +60,22 @@ fun GameOverScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(120.dp)
                 .padding(top = 50.dp)
         ) {
 
             SettingsButton(
                 onClick = { onSettingsClicked() },
                 modifier = Modifier
+                    .wrapContentHeight()
+                    .width(110.dp)
                     .align(Alignment.TopStart)
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = ButtonDefaults.shape
+                    ),
             )
 
             SkipButton(
@@ -78,18 +89,15 @@ fun GameOverScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // .background(BackgroundColor) // Consider removing if background image is sufficient
                 .padding(16.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
-                    .wrapContentHeight()// Make TextField take 80% of column width
-//                    .background(BackgroundColor)
+                    .wrapContentHeight()
                 ,
                 value = username,
                 onValueChange = { username = it },
@@ -101,8 +109,8 @@ fun GameOverScreen(
                     unfocusedTextColor = HeaderTextColor.copy(alpha = 0.5f),
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.Black,
-                    focusedContainerColor = BackgroundColor.copy(alpha = 0.5f),
-                    unfocusedContainerColor = BackgroundColor
+                    focusedContainerColor = UserNameFieldColor.copy(alpha = 0.5f),
+                    unfocusedContainerColor = UserNameFieldColor
                 )
             )
 

@@ -22,6 +22,7 @@ val Blue = Color(0xFF2196F3)
 val Yellow = Color(0xFFFFC107)
 val Brown = Color(0xDF811D00)
 val Purple = Color(0xFF9052FF)
+val GreyPurple = Color(0xDF8A6BD2)
 
 val ball1 = Green
 val ball2= Blue
@@ -31,7 +32,7 @@ val ball5 = Red
 val ball6 = Brown
 
 
-
+val UserNameFieldColor = GreyPurple
 val HeaderTextColor = PurpleGrey40
 val HeaderBackGround = Purple80
 val ScoreTextColor = PurpleGrey40

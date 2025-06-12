@@ -1,9 +1,13 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
@@ -112,16 +116,19 @@ fun SettingsButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ){
-    IconButton(
-        modifier = modifier,
-        onClick = onClick
-    )
-    {
-        Icon(
-            painter =  painterResource( R.drawable.settigns_icon ),
-            contentDescription = "Settings"
+    Box(
+        modifier = modifier
+    ){
+        IconButton(
+            modifier = Modifier.fillMaxSize(),
+            onClick = onClick
         )
-
+        {
+            Icon(
+                painter = painterResource(R.drawable.settigns_icon),
+                contentDescription = "Settings"
+            )
+        }
     }
 }
 
@@ -131,11 +138,20 @@ fun SkipButton(
     color: Color = Color.Black,
     onClick: () -> Unit
 ){
-    TextButton(
-        onClick = onClick,
+    Box(
         modifier = modifier
+            .border(
+                color = Color.Black,
+                width = 2.dp,
+                shape = CircleShape
+            )
     ) {
-        Text(text = "SKIP", color = color, fontSize = 20.sp)
+        TextButton(
+            onClick = onClick,
+            modifier = Modifier
+        ) {
+            Text(text = "SKIP", color = color, fontSize = 20.sp)
+        }
     }
 }
 
@@ -170,13 +186,18 @@ fun PreviewMuteButtonOff(){
 @Preview(showBackground = true)
 @Composable
 fun PreviewMuteSettingsButton(){
-    SettingsButton(onClick = {})
+        SettingsButton(
+            Modifier
+                .height(50.dp)
+                .width(50.dp)
+            , onClick = {})
 }
 
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewMuteSkipButton(){
+
     SkipButton(onClick = {})
 }
 
