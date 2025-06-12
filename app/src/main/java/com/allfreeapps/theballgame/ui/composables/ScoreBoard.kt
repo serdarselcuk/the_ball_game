@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.materialIcon
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,23 +30,32 @@ import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import java.util.Date
 
-
+//TODO add remove all and individual records
 @Composable
-fun ScoresTable(modifier: Modifier = Modifier, scores: List<Score>) {
+fun ScoresTable(
+    modifier: Modifier = Modifier,
+    scores: List<Score>,
+    onDeleteClicked: (Int?) -> Unit) {
 
     Column(modifier.background(BackgroundColor)) {
 
         if (scores.isEmpty()) {
-            Text(stringResource(R.string.no_previous_scores_yet), modifier = Modifier.padding(16.dp))
+            Text(
+                stringResource(R.string.no_previous_scores_yet),
+                modifier = Modifier.padding(16.dp)
+            )
         } else {
 
             // Table Header
             ScoreRow(
-                Modifier.wrapContentHeight().fillMaxWidth(),
+                Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth(),
                 playerName = stringResource(R.string.player),
                 score = stringResource(R.string.score),
                 date = stringResource(R.string.date),
-                isHeader = true
+                isHeader = true,
+                onDeleteClicked = { onDeleteClicked(null) }
             )
             HorizontalDivider(color = CellBoarderColor)
 
@@ -52,7 +65,8 @@ fun ScoresTable(modifier: Modifier = Modifier, scores: List<Score>) {
                         Modifier.wrapContentHeight(),
                         playerName = scoreItem.firstName,
                         score = scoreItem.score.toString(),
-                        date = scoreItem.getDateString()
+                        date = scoreItem.getDateString(),
+                        onDeleteClicked = { scoreItem.id?.let { onDeleteClicked(it) } }
                     )
                     HorizontalDivider(color = CellBoarderColor)
                 }
@@ -67,7 +81,8 @@ fun ScoresTable(modifier: Modifier = Modifier, scores: List<Score>) {
 fun ScoreRow(
     modifier: Modifier = Modifier,
     playerName: String, score: String,
-    date: String, isHeader: Boolean = false
+    date: String, isHeader: Boolean = false,
+    onDeleteClicked: () -> Unit = {}
 ) {
 
     val style =
@@ -106,9 +121,15 @@ fun ScoreRow(
             fontWeight = fontWeight,
             style = style
         )
+
+        DeleteButton(
+            modifier = Modifier
+                .weight(0.2f)
+                .padding(horizontal = 5.dp),
+            onClicked = { onDeleteClicked() }
+        )
     }
 }
-
 
 val scores = listOf(
     Score(
@@ -123,13 +144,24 @@ val scores = listOf(
 @Preview(showBackground = true)
 @Composable
 fun PreviewScoreBoard() {
-    ScoresTable(modifier = Modifier.height(12.dp).fillMaxWidth(), scores = scores)
+    ScoresTable(modifier = Modifier
+        .height(12.dp)
+        .fillMaxWidth(),
+        scores = scores,
+        onDeleteClicked = { id->
+            println(id)
+        }
+    )
 }
 
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewEmptyScoreBoard() {
-    ScoresTable(modifier = Modifier, scores = emptyList())
+    ScoresTable(modifier = Modifier, scores = emptyList(),
+        onDeleteClicked = { id ->
+            println(id)
+        }
+    )
 }
 

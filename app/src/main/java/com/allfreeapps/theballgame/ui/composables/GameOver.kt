@@ -10,10 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,7 +28,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.GameOverBackground
@@ -36,8 +36,9 @@ import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 
 @Composable
 fun GameOverScreen(
-    onSaveScoreClicked: (username: String) -> Unit, // Callback now includes the username
-    onSkipClicked: () -> Unit
+    onSaveScoreClicked: (username: String) -> Unit,
+    onSkipClicked: () -> Unit,
+    onSettingsClicked: () -> Unit = {}
 ) {
     // State for the TextField
     var username by remember { mutableStateOf("") }
@@ -45,6 +46,7 @@ fun GameOverScreen(
     Box(modifier = Modifier
         .fillMaxSize()
         .background(GameOverBackground)) {
+
         Image(
             painter = painterResource(id = R.drawable.game_over_screen),
             contentDescription = "Background",
@@ -52,14 +54,27 @@ fun GameOverScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        TextButton(
-            onClick = onSkipClicked,
+        Box(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
+                .fillMaxWidth()
+                .padding(top = 50.dp)
         ) {
-           Text(text = "SKIP", color = Color.White, fontSize = 20.sp)
+
+            SettingsButton(
+                onClick = { onSettingsClicked() },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp),
+            )
+
+            SkipButton(
+                onClick = onSkipClicked,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+            )
         }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -69,23 +84,35 @@ fun GameOverScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+
             OutlinedTextField(
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .wrapContentHeight()// Make TextField take 80% of column width
+//                    .background(BackgroundColor)
+                ,
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Enter your name") },
+                label = {
+                    Text("Enter your name") },
                 singleLine = true,
-                modifier = Modifier.
-                fillMaxWidth(0.8f) // Make TextField take 80% of column width
-                    .background(BackgroundColor)
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = HeaderTextColor,
+                    unfocusedTextColor = HeaderTextColor.copy(alpha = 0.5f),
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.Black,
+                    focusedContainerColor = BackgroundColor.copy(alpha = 0.5f),
+                    unfocusedContainerColor = BackgroundColor
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                modifier = Modifier
-                    .fillMaxWidth(0.5f) // Make Button take 80% of column width
-                    .background(BackgroundColor.copy(alpha = 0.5f)),
                 onClick = { onSaveScoreClicked(username) },
+                modifier = Modifier.fillMaxWidth(0.5f), // Make Button take 50% of column width
+                shape = ButtonDefaults.elevatedShape, // Use the default button shape
+                colors = ButtonDefaults.buttonColors(containerColor = BackgroundColor.copy(alpha = 0.5f)),
                 enabled = username.isNotBlank() // Enable button only if username is not empty
             ) {
                 Text("SAVE SCORE")
@@ -99,5 +126,5 @@ fun GameOverScreen(
 @Preview(showBackground = true)
 @Composable
 fun PreviewGameOverScreen(){
-    GameOverScreen(onSaveScoreClicked = {}, onSkipClicked = {})
+    GameOverScreen(onSaveScoreClicked = {}, onSkipClicked = {}, onSettingsClicked = {})
 }

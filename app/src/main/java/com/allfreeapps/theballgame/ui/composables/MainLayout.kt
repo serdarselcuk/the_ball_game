@@ -14,41 +14,37 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.MyApplication
-import com.allfreeapps.theballgame.ui.BallGameViewModel
+import com.allfreeapps.theballgame.model.entities.Score
+import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.LightGray
-import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 
 @Composable
 fun MainLayout(
-    viewModel: BallGameViewModel,
-    modifier: Modifier, // From Scaffold
+    modifier: Modifier,
+    isMuted: Boolean = false,
+    orientation: Int,
+    gameStatus: GameState?,
+    ballList: Array<Int>,
+    selectedBallIndex: Int?,
+    score: Int,
+    upcomingBalls: Array<Int>,
+    allScores: List<Score>,
+    changeSoundStatus: () -> Unit = {},
+    restartButtonOnClick: () -> Unit = {},
+    onCellClick: (Int) -> Unit = {},
+    removeTheBall: (Int) -> Unit = {},
+    onDeleteClicked: (Int?) -> Unit = {}
 ) {
-    val configuration = LocalConfiguration.current
-    val orientation = configuration.orientation
-    val gameStatus by viewModel.state.collectAsState()
-    val ballList by viewModel.ballList.collectAsState()
-    val selectedBallIndex by viewModel.selectedBall.collectAsState()
-    val score by viewModel.score.collectAsState()
-    val upcomingBalls by viewModel.upcomingBalls.collectAsState()
-    val allScores by viewModel.allScores.collectAsState()
-    val isMuted by viewModel.isMuted.collectAsState()
+
     val topScore = if (allScores.isNotEmpty()) allScores[0].score else 1
-
     val orientationIsLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
-
 
     BoxWithConstraints(
         modifier = modifier
@@ -63,7 +59,13 @@ fun MainLayout(
             Header(
                 Modifier
                     .fillMaxWidth()
-                    .height(totalAvailableHeight * if (orientationIsLandscape) 0.1f else 0.05f)
+                    .height(
+                        totalAvailableHeight * (
+                            when (orientation) {
+                                Configuration.ORIENTATION_LANDSCAPE -> 0.1f
+                                else -> 0.05f
+                            })
+                    )
                     .background(HeaderBackGround),
                 content = listOf(
                     {
@@ -75,13 +77,13 @@ fun MainLayout(
                         MuteButton(
                             Modifier.padding(2.dp),
                             isMuted,
-                            onToggleMute = { viewModel.changeSoundStatus() }
+                            onToggleMute = { changeSoundStatus() }
                         )
                     },
                     {
                         gameStatus?.let {
                             RestartButton(it,
-                                onclick = { viewModel.restartButtonOnClick() })
+                                onclick = { restartButtonOnClick() })
                         }
                     },
                 ),
@@ -108,13 +110,10 @@ fun MainLayout(
                         ballList = ballList,
                         selectedBallIndex = selectedBallIndex,
                         onCellClick = { index ->
-                            viewModel.onCellClick(
-                                ballList[index],
-                                index
-                            )
+                            onCellClick(index)
                         },
                         removeTheBall = { index ->
-                            viewModel.removeBall(index)
+                            removeTheBall(index)
                         }
                     )
                     Row(
@@ -138,7 +137,10 @@ fun MainLayout(
                         Modifier
                             .fillMaxWidth()
                             .weight(0.3f),
-                        allScores
+                        allScores,
+                        onDeleteClicked = { id ->
+                            onDeleteClicked(id)
+                        }
                     )
                 }
 
@@ -184,13 +186,10 @@ fun MainLayout(
                             ballList = ballList,
                             selectedBallIndex = selectedBallIndex,
                             onCellClick = { index ->
-                                viewModel.onCellClick(
-                                    ballList[index],
-                                    index
-                                )
+                               onCellClick(index)
                             },
                             removeTheBall = { index ->
-                                viewModel.removeBall(index)
+                                removeTheBall(index)
                             }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -207,7 +206,10 @@ fun MainLayout(
                                 Modifier
                                     .fillMaxWidth()
                                     .weight(0.7f),
-                                allScores
+                                allScores,
+                                onDeleteClicked = {id->
+                                    onDeleteClicked(id)
+                                }
                             )
                         }
                     }
@@ -235,33 +237,33 @@ private fun mockViewModel(applicationContext: Context): BallGameViewModel {
 
     }
 }
-
-@Preview(
-    showBackground = true,
-    name = "MainLayout Landscape (Device Spec)",
-    device = "spec:width=1800dp,height=800dp,dpi=240,orientation=portrait"
-)
-@Composable
-fun PortraitPreview() {
-
-    TheBallGameTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            MainLayout(mockViewModel(LocalContext.current), Modifier.padding(innerPadding))
-        }
-    }
-}
-
-@Preview(
-    showBackground = true,
-    name = "MainLayout Landscape (Device Spec)",
-    device = "spec:width=1800dp,height=800dp,dpi=240,orientation=landscape"
-)
-@Composable
-private fun LandscapePreview() {
-
-    TheBallGameTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            MainLayout(mockViewModel(LocalContext.current), Modifier.padding(innerPadding))
-        }
-    }
-}
+//
+//@Preview(
+//    showBackground = true,
+//    name = "MainLayout Landscape (Device Spec)",
+//    device = "spec:width=1800dp,height=800dp,dpi=240,orientation=portrait"
+//)
+//@Composable
+//fun PortraitPreview() {
+//
+//    TheBallGameTheme {
+//        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//            MainLayout(mockViewModel(LocalContext.current), Modifier.padding(innerPadding))
+//        }
+//    }
+//}
+//
+//@Preview(
+//    showBackground = true,
+//    name = "MainLayout Landscape (Device Spec)",
+//    device = "spec:width=1800dp,height=800dp,dpi=240,orientation=landscape"
+//)
+//@Composable
+//private fun LandscapePreview() {
+//
+//    TheBallGameTheme {
+//        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//            MainLayout(mockViewModel(LocalContext.current), Modifier.padding(innerPadding))
+//        }
+//    }
+//}

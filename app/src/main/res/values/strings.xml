@@ -1,8 +1,9 @@
 <resources>
-    <string name="app_name">The Ball Game</string>
+    <string name="ball_game">The Ball Game</string>
+    <string name="settings_activity">Settings</string>
     <string name="header_label">THE COLOR GAME</string>
-    <string name="start_game">Start Game</string>
-    <string name="restart_game">Restart Game</string>
+    <string name="start_game">Start</string>
+    <string name="restart_game">Restart</string>
     <string name="player">Player</string>
     <string name="score">Score</string>
     <string name="date">Date</string>

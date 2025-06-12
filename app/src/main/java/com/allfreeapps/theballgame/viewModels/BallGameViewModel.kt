@@ -1,4 +1,4 @@
-package com.allfreeapps.theballgame.ui
+package com.allfreeapps.theballgame.viewModels
 
 import android.app.Application
 import android.util.Log
@@ -628,5 +628,14 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         //if  thereIsNoBall
         if ( color == Constants.NO_BALL) processEmptyCellClick(index)
         else processOnBallCellClick(index)
+    }
+
+    fun deleteScore(id: Int?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if(id == null) repository.deleteAllScores()
+            else repository.deleteScore(
+                    id = id,
+            )
+        }
     }
 }

@@ -1,17 +1,9 @@
 package com.allfreeapps.theballgame
 
 import android.util.Log
-import com.allfreeapps.theballgame.ui.BallGameViewModel
-import com.google.common.truth.Truth
+import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
-import org.junit.After
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.Test
 import org.mockito.MockedStatic
-import org.mockito.Mockito
 
 @ExperimentalCoroutinesApi
 class ExampleUnitTest {
