@@ -19,20 +19,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.utils.Constants
 import com.allfreeapps.theballgame.utils.Markers
 import com.allfreeapps.theballgame.utils.getRadialGradientBrush
 import com.allfreeapps.theballgame.utils.toBallColor
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 
 private val DEFAULT_SHADOW_ELEVATION = 18.dp
 private val SELECTED_SHADOW_ELEVATION = 25.dp
 private val BALL_JUMP_HEIGHT = (-5).dp
 private const val JUMP_DURATION: Int = 200
 const val BALL_CREATION_LATENCY: Int = 150
-private const val DISAPPEARING_BALL_LATENCY = 150L
 private const val BALL_SIZE_RATIO = 0.8f
 private const val initialBallSize =  5f
 private val expandingRate = 5f/4f
@@ -51,27 +51,25 @@ fun AnimatedBall(
     if (isCurrentlyABall) { // New ball
         when(marker){
             Markers.BALL_SHRINKING -> {// Ball removed
-                LaunchedEffect(Unit) {
-                    delay(DISAPPEARING_BALL_LATENCY)
-                    removeTheBall()
-                }
+
                 Ball(
                     colorValue = color, // Should be invisible or a placeholder
-                    animatedSizeOfCreation = cellSize.value * BALL_SIZE_RATIO,
-                    targetSize = 1f, // Shrink to nothing
-                    isBallSelected = false
+                    initialSize = cellSize.value * BALL_SIZE_RATIO,
+                    targetSize = 1f,
+                    onAnimationComplete = {
+                        removeTheBall()
+                    }
                 )
             }
 
             Markers.BALL_EXPANSION -> { // Ball expanded
-                LaunchedEffect(Unit) {
-                    delay(DISAPPEARING_BALL_LATENCY) // Wait for animation to complete
-                    removeTheBall()
-                }
-                ExplodingBall(
+                Ball(
                     targetSize = cellSize.value * BALL_SIZE_RATIO * expandingRate,
                     initialSize = cellSize.value * BALL_SIZE_RATIO,
-                    colorValue = color
+                    colorValue = color,
+                    onAnimationComplete = {
+                        removeTheBall()
+                    }
                 )
             }
 
@@ -79,7 +77,7 @@ fun AnimatedBall(
                 // New ball
                 Ball(
                     colorValue = color,
-                    animatedSizeOfCreation = initialBallSize,
+                    initialSize = initialBallSize,
                     targetSize = cellSize.value * BALL_SIZE_RATIO,
                     isBallSelected = isBallSelected
                 )
@@ -91,16 +89,20 @@ fun AnimatedBall(
 @Composable
 fun Ball(
     colorValue: Int,
-    animatedSizeOfCreation: Float,
+    initialSize: Float,
     targetSize: Float,
-    isBallSelected: Boolean
+    isBallSelected: Boolean = false,
+    onAnimationComplete: () -> Unit = {}
 ){
-    val animatedSize = remember { Animatable(animatedSizeOfCreation) }
-    LaunchedEffect(Unit) {
-        animatedSize.animateTo(
-            targetValue = targetSize,
-            animationSpec = tween(durationMillis = BALL_CREATION_LATENCY, easing = LinearEasing)
-        )
+    val animatedSize = remember { Animatable(initialSize) }
+    LaunchedEffect(targetSize) { // Relaunch when targetSize changes
+        // Offload animation to a background thread
+        kotlinx.coroutines.withContext(Dispatchers.Default) {
+            animatedSize.animateTo(
+                targetValue = targetSize,
+                animationSpec = tween(durationMillis = BALL_CREATION_LATENCY, easing = LinearEasing)
+            )
+        }.also { onAnimationComplete() }
     }
 
     val jumpAnimationState = rememberBallJumpAnimationState(isBallSelected = isBallSelected)
@@ -135,53 +137,54 @@ fun rememberBallJumpAnimationState(isBallSelected: Boolean): State<Float> {
     )
     val animatedValue = remember { Animatable(-10f) }
 
-    LaunchedEffect(isBallSelected) {
-        if (isBallSelected) {
-            animatedValue.animateTo(1f, animationSpec) // the height of jump
-        } else {
-            animatedValue.snapTo(0f) // Stop and reset animation if not selected
+    LaunchedEffect(isBallSelected) { // Relaunch when isBallSelected changes
+        // Offload animation to a background thread
+        kotlinx.coroutines.withContext(Dispatchers.Default) {
+            if (isBallSelected) {
+                animatedValue.animateTo(1f, animationSpec) // the height of jump
+            } else {
+                animatedValue.snapTo(0f) // Stop and reset animation if not selected
+            }
         }
     }
     return animatedValue.asState()
 }
 
+@Preview(showBackground = true)
 @Composable
-fun ExplodingBall(targetSize: Float, initialSize: Float, colorValue: Int) {
-    val animatedSize = remember { Animatable(initialSize) }
-    LaunchedEffect(Unit) {
-        animatedSize.animateTo(
-            targetValue = targetSize,
-            animationSpec = tween(durationMillis = BALL_CREATION_LATENCY, easing = LinearEasing)
-        )
-    }
+fun ShrinkingBallPreview() {
 
-    val radialGradientBrush = remember(targetSize, colorValue) {
-        getRadialGradientBrush(
-            ballSizePx = targetSize,
-            baseColor = colorValue.toBallColor()
-        )
-    }
-
-    Box(
-        modifier = Modifier
-            .size(animatedSize.value.dp)
-            .shadow(
-                elevation = DEFAULT_SHADOW_ELEVATION, // No selection during explosion
-                shape = CircleShape
-            )
-            .clip(CircleShape)
-            .background(brush = radialGradientBrush)
+    Ball(
+        colorValue = 22,
+        initialSize = 5f,
+        isBallSelected = false,
+        targetSize = 1f,
+        onAnimationComplete = { }
     )
 }
 
 
 @Preview(showBackground = true)
 @Composable
-fun BallPreview() {
-//
-//    Ball(
-//        colorValue = 2,
-//        animatedSizeOfCreation = 5.dp,
-//        isBallSelected = true
-//    )
+fun ExpandingBallPreview() {
+    Ball(
+        colorValue = 32,
+        initialSize = 5f,
+        isBallSelected = false,
+        targetSize = 8f,
+        onAnimationComplete = { }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun NewBallPreview() {
+
+    Ball(
+        colorValue = 2,
+        initialSize = 1f,
+        isBallSelected = true,
+        targetSize = 5f,
+        onAnimationComplete = { }
+    )
 }
