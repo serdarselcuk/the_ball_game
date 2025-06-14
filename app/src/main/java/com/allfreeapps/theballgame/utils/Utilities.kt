@@ -18,8 +18,8 @@ fun Int.toBallColor(): Color {
  */
 fun getRadialGradientBrush(
     ballSizePx: Float,
-    xRate: Float = 1.2f,
-    yRate: Float = 1.2f,
+    xRate: Float = 0.8f,
+    yRate: Float = 0.8f,
     radius:Float = 2f,
     baseColor: Color)
         : Brush {
