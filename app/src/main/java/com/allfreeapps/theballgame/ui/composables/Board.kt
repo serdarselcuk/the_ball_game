@@ -38,7 +38,9 @@ fun Board(
                     cellSize = smallBoxSize,
                     isSelected = selectedBallIndex == index,
                     onCellClick = { onCellClick(index) },
-                    removeTheBall = { removeTheBall(index) }
+                    removeTheBall = {
+                        removeTheBall(index)
+                    }
                 )
             }
         },

@@ -1,7 +1,7 @@
 <resources>
     <string name="ball_game">The Ball Game</string>
     <string name="settings_activity">Settings</string>
-    <string name="header_label">THE COLOR GAME</string>
+    <string name="header_label">THE COLOR BALL GAME</string>
     <string name="start_game">Start</string>
     <string name="restart_game">Restart</string>
     <string name="player">Player</string>

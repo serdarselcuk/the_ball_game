@@ -44,13 +44,13 @@ fun AnimatedBall(
     isBallSelected: Boolean,
     removeTheBall: () -> Unit
 ){
-    val marker = Markers.get(colorValue / 10) // 10 => marked for shrink , 20 => marked for expand
+    val marker = Markers.get(colorValue) // 10 => marked for shrink , 20 => marked for expand
     val color = colorValue % 10 // last digit is the color code (removing marker)
     val isCurrentlyABall = color != Constants.NO_BALL
 
     if (isCurrentlyABall) { // New ball
         when(marker){
-            Markers.BALL_SHRINKING_MARKER -> {// Ball removed
+            Markers.BALL_SHRINKING -> {// Ball removed
                 LaunchedEffect(Unit) {
                     delay(DISAPPEARING_BALL_LATENCY)
                     removeTheBall()
@@ -63,7 +63,7 @@ fun AnimatedBall(
                 )
             }
 
-            Markers.BALL_EXPANSION_MARKER -> { // Ball expanded
+            Markers.BALL_EXPANSION -> { // Ball expanded
                 LaunchedEffect(Unit) {
                     delay(DISAPPEARING_BALL_LATENCY) // Wait for animation to complete
                     removeTheBall()

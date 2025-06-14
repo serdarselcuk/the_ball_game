@@ -74,6 +74,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)   // For testing Coroutines
     testImplementation(libs.mockito.kotlin)            // Mockito for Kotlin
     testImplementation(libs.mockito.inline)            // Mockito inline mock maker
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.common)
 
     // Instrumented Testing (androidTest source set - runs on an Android device/emulator)
     androidTestImplementation(libs.androidx.junit)     // AndroidX Test extensions for JUnit

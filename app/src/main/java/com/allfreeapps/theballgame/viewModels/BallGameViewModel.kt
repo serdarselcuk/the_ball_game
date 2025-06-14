@@ -13,6 +13,8 @@ import com.allfreeapps.theballgame.utils.Constants.Companion.BALL_LIMIT_TO_REMOV
 import com.allfreeapps.theballgame.utils.Constants.Companion.GRID_SIZE
 import com.allfreeapps.theballgame.utils.Constants.Companion.MAX_BALL_COUNT
 import com.allfreeapps.theballgame.utils.Markers
+import com.allfreeapps.theballgame.utils.SoundPlayerManager
+import com.allfreeapps.theballgame.utils.SoundType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,7 +59,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             initialValue = emptyList()
         )
 
-    private val _isMuted = MutableStateFlow(false)
+    private val _isMuted = MutableStateFlow(true)
     val isMuted: StateFlow<Boolean> = _isMuted
 
     private val _errorState: MutableStateFlow<String?> = MutableStateFlow(null)
@@ -92,11 +94,13 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     private fun mute(){
         Log.d(TAG, "mute: ")
         _isMuted.value = true
+        SoundPlayerManager.releaseAll()
     }
 
     private fun unMute(){
         Log.d(TAG, "unMute: ")
         _isMuted.value = false
+        SoundPlayerManager.initializeAll(context = getApplication<Application>().applicationContext)
     }
 
     fun startGame() {
@@ -111,7 +115,6 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         setEmptyBoard()
         startGame()
     }
-
 
     private fun setEmptyBoard() {
         setState(GameState.GameNotStarted)
@@ -203,6 +206,10 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             if (noBallInTheBoard || ballIsAlreadyRemoved) return@launch
 
             val copyOfBallList = _ballList.value.copyOf()
+            // add sound for bubble explode TODO() for ball to be shrunk we can add another sound
+            if(Markers.get(copyOfBallList[index]) == Markers.BALL_EXPANSION) {
+                playBubbleExplodeSound()
+            }
             copyOfBallList[index] = 0
             _ballList.value = copyOfBallList
             _totalBallCount.value -= 1
@@ -222,7 +229,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             if (noBallInTheBoard || ballIsAlreadyRemoved) return@launch
 
             val copyOfBallList = _ballList.value.copyOf()
-            copyOfBallList[index] = Markers.BALL_SHRINKING_MARKER.value + ballValue
+            copyOfBallList[index] = Markers.markTheBall(Markers.BALL_SHRINKING, ballValue)
             _ballList.value = copyOfBallList
             Log.d(TAG, "index to mark get smaller: $index")
             if(hasMarker)
@@ -242,7 +249,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             if (noBallInTheBoard || ballIsAlreadyRemoved) return@launch
 
             val copyOfBallList = _ballList.value.copyOf()
-            copyOfBallList[index] = Markers.BALL_EXPANSION_MARKER.value + ballValue
+            copyOfBallList[index] = Markers.markTheBall(Markers.BALL_EXPANSION, ballValue)
             _ballList.value = copyOfBallList
             Log.d(TAG, "index to mark get expanded: $index")
 
@@ -615,6 +622,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     fun changeSoundStatus() {
+        playClickSound()
         if (isMuted.value) unMute()
         else mute()
     }
@@ -622,15 +630,17 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     fun restartButtonOnClick() = run {
         if (state.value == GameState.GameNotStarted) startGame()
         else restartGame()
+        playClickSound()
     }
 
     fun onCellClick(color: Int, index: Int) = run {
-        //if  thereIsNoBall
+        playTapSound()
         if ( color == Constants.NO_BALL) processEmptyCellClick(index)
         else processOnBallCellClick(index)
     }
 
     fun deleteScore(id: Int?) {
+        playClickSound()
         viewModelScope.launch(Dispatchers.IO) {
             if(id == null) repository.deleteAllScores()
             else repository.deleteScore(
@@ -638,4 +648,39 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             )
         }
     }
+
+    fun saveScoreClicked(userName: String){
+        playClickSound()
+        saveScore(userName)
+        resetGame()
+        setState(GameState.GameNotStarted)
+    }
+
+    fun skipClicked() {
+        playClickSound()
+        resetGame()
+        setState(GameState.GameNotStarted)
+    }
+
+    fun playClickSound() {
+        playSound(SoundType.BUTTON_CLICK)
+    }
+
+    private fun playBubbleExplodeSound() {
+        playSound(SoundType.BUBBLE_EXPLODE)
+    }
+
+    private fun playTapSound() {
+        playSound(SoundType.DEFAULT_TAP)
+    }
+
+    private fun playSound(soundType: SoundType){
+        if( isMuted.value ) return
+        SoundPlayerManager.playSound(soundType)
+    }
+
+    fun releaseSoundManagers(){
+        SoundPlayerManager.releaseAll()
+    }
+
 }

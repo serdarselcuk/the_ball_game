@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,46 +25,43 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.allfreeapps.theballgame.R
-import com.allfreeapps.theballgame.ui.model.GameState
+import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.DisabledColor
 import com.allfreeapps.theballgame.ui.theme.StartButtonBackgroundColor
 import com.allfreeapps.theballgame.ui.theme.StartButtonTextColor
 
 
 @Composable
-    fun RestartButton(
-        gameStatus: GameState,
-        onclick: () -> Unit
-    ){
-        Button(
-            modifier = Modifier
-                .padding(2.dp)
-                .width(90.dp)
-                .height(35.dp),
-            onClick = { onclick() },
-            contentPadding = PaddingValues(
-                horizontal = 6.dp,
-                vertical = 2.dp
-            ),
-            colors = ButtonColors(
-                containerColor = StartButtonBackgroundColor,
-                contentColor = StartButtonTextColor,
-                DisabledColor,
-                DisabledColor
-            ),
-            content = {
-                Text(
-                    text = if(gameStatus == GameState.GameNotStarted ) {
-                        stringResource(R.string.start_game)
-                    } else {
-                        stringResource(R.string.restart_game)
-                    }
-                    ,
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
-        )
-    }
+fun RestartButton(
+    modifier: Modifier = Modifier,
+    buttonText: String = stringResource(R.string.restart_game),
+    colors: ButtonColors = ButtonColors(
+        containerColor = StartButtonBackgroundColor,
+        contentColor = StartButtonTextColor,
+        disabledContainerColor = DisabledColor,
+        disabledContentColor = DisabledColor
+    ),
+    onclick: () -> Unit
+) {
+    Button(
+        modifier = modifier,
+        onClick = {
+            onclick()
+        },
+        contentPadding = PaddingValues(
+            horizontal = 6.dp,
+            vertical = 2.dp
+        ),
+        colors = colors,
+        content = {
+            Text(
+                text = buttonText,
+                maxLines = 1,
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+    )
+}
 
 @Composable
 fun MuteButton(
@@ -74,16 +71,18 @@ fun MuteButton(
 ) {
     IconButton(
         modifier = modifier,
-        onClick = onToggleMute
+        onClick = {
+            onToggleMute()
+        }
     ) {
         val icon: Painter
         val contentDesc: String
 
         if (isMuted) {
-            icon = painterResource( R.drawable.ic_muted_sount_icon )
+            icon = painterResource(R.drawable.ic_muted_sount_icon)
             contentDesc = "Unmute Sound"
         } else {
-            icon = painterResource( R.drawable.ic_sound_icon )
+            icon = painterResource(R.drawable.ic_sound_icon)
             contentDesc = "Mute Sound"
         }
 
@@ -93,13 +92,17 @@ fun MuteButton(
         )
     }
 }
+
 @Composable
 fun DeleteButton(
     modifier: Modifier = Modifier,
-    onClicked: () -> Unit) {
+    onClicked: () -> Unit
+) {
     IconButton(
         modifier = modifier,
-        onClick = onClicked
+        onClick = {
+            onClicked()
+        }
     ) {
 
         Icon(
@@ -110,18 +113,19 @@ fun DeleteButton(
 }
 
 
-
 @Composable
 fun SettingsButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
-){
+) {
     Box(
         modifier = modifier
-    ){
+    ) {
         IconButton(
             modifier = Modifier.fillMaxSize(),
-            onClick = onClick
+            onClick = {
+                onClick()
+            }
         )
         {
             Icon(
@@ -137,7 +141,7 @@ fun SkipButton(
     modifier: Modifier = Modifier,
     color: Color = Color.Black,
     onClick: () -> Unit
-){
+) {
     Box(
         modifier = modifier
             .border(
@@ -147,7 +151,9 @@ fun SkipButton(
             )
     ) {
         TextButton(
-            onClick = onClick,
+            onClick = {
+                onClick()
+            },
             modifier = Modifier
         ) {
             Text(text = "SKIP", color = color, fontSize = 20.sp)
@@ -156,54 +162,84 @@ fun SkipButton(
 }
 
 
-
 @Composable
-@Preview(showBackground = true)
-fun PreviewButtons(){
-    RestartButton(GameState.GameNotStarted, onclick = {})
+fun SaveScoreButton(
+    modifier: Modifier,
+    username: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = {
+            onClick()
+        },
+        modifier = modifier, // Make Button take 50% of column width
+        shape = ButtonDefaults.elevatedShape, // Use the default button shape
+        colors = ButtonDefaults.buttonColors(containerColor = BackgroundColor.copy(alpha = 0.5f)),
+        enabled = username.isNotBlank() // Enable button only if username is not empty
+    ) {
+        Text("SAVE SCORE")
+    }
 }
 
 
 @Composable
 @Preview(showBackground = true)
-fun PreviewRestartButton(){
-    RestartButton(GameState.UserTurn, onclick = {})
+fun PreviewButtons() {
+    RestartButton(
+        Modifier
+            .height(52.dp)
+            .width(52.dp),
+        onclick = {}
+    )
+}
+
+
+@Composable
+@Preview(showBackground = true)
+fun PreviewRestartButton() {
+//    RestartButton(
+//        true,
+//        Modifier
+//            .padding(2.dp)
+//            .width(90.dp)
+//            .height(35.dp),
+//        GameState.UserTurn,
+//        onclick = {}
+//    )
 }
 
 @Composable
 @Preview(showBackground = true)
-fun PreviewMuteButton(){
+fun PreviewMuteButton() {
     MuteButton(isMuted = true, onToggleMute = {})
 }
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewMuteButtonOff(){
+fun PreviewMuteButtonOff() {
     MuteButton(isMuted = false, onToggleMute = {})
 }
 
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewMuteSettingsButton(){
-        SettingsButton(
-            Modifier
-                .height(50.dp)
-                .width(50.dp)
-            , onClick = {})
+fun PreviewMuteSettingsButton() {
+    SettingsButton(
+        Modifier
+            .height(50.dp)
+            .width(50.dp), onClick = {})
 }
 
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewMuteSkipButton(){
-
-    SkipButton(onClick = {})
+fun PreviewMuteSkipButton() {
+//    SkipButton(onClick = {})
 }
 
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewMuteDelteButton(){
-    DeleteButton(onClicked = {})
+fun PreviewMuteDelteButton() {
+//    DeleteButton(onClicked = {})
 }

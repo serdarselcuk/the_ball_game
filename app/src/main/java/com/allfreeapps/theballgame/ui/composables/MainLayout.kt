@@ -30,7 +30,6 @@ fun MainLayout(
     modifier: Modifier,
     isMuted: Boolean = false,
     orientation: Int,
-    gameStatus: GameState?,
     ballList: Array<Int>,
     selectedBallIndex: Int?,
     score: Int,
@@ -81,10 +80,12 @@ fun MainLayout(
                         )
                     },
                     {
-                        gameStatus?.let {
-                            RestartButton(it,
-                                onclick = { restartButtonOnClick() })
-                        }
+                        RestartButton(
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .width(90.dp)
+                                .height(35.dp),
+                            onclick = { restartButtonOnClick() })
                     },
                 ),
                 isLandscape = orientationIsLandscape
@@ -134,10 +135,10 @@ fun MainLayout(
                         )
                     }
                     ScoresTable(
-                        Modifier
+                        modifier = Modifier
                             .fillMaxWidth()
                             .weight(0.3f),
-                        allScores,
+                        scores = allScores,
                         onDeleteClicked = { id ->
                             onDeleteClicked(id)
                         }
@@ -203,10 +204,10 @@ fun MainLayout(
 
                             Spacer(Modifier.height(4.dp))
                             ScoresTable(
-                                Modifier
+                                modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(0.7f),
-                                allScores,
+                                scores = allScores,
                                 onDeleteClicked = {id->
                                     onDeleteClicked(id)
                                 }

@@ -31,11 +31,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.R
-import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.GameOverBackground
 import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 import com.allfreeapps.theballgame.ui.theme.UserNameFieldColor
-
 
 @Composable
 fun GameOverScreen(
@@ -116,15 +114,11 @@ fun GameOverScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
+            SaveScoreButton(
+                modifier = Modifier.fillMaxWidth(0.5f), // Make Button take 50% of column width,
                 onClick = { onSaveScoreClicked(username) },
-                modifier = Modifier.fillMaxWidth(0.5f), // Make Button take 50% of column width
-                shape = ButtonDefaults.elevatedShape, // Use the default button shape
-                colors = ButtonDefaults.buttonColors(containerColor = BackgroundColor.copy(alpha = 0.5f)),
-                enabled = username.isNotBlank() // Enable button only if username is not empty
-            ) {
-                Text("SAVE SCORE")
-            }
+                username = username
+            )
 
             Spacer(modifier = Modifier.height(100.dp)) // Increased space
         }

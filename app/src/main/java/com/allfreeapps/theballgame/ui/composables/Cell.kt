@@ -43,7 +43,9 @@ fun Cell(
                     brush = boarderBrush
                 )
             )
-            .clickable(onClick = onCellClick),
+            .clickable(onClick = {
+                onCellClick()
+            }),
         contentAlignment = Alignment.Center
     ) {
 
