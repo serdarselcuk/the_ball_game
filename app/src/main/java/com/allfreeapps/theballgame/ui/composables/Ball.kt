@@ -34,7 +34,7 @@ private const val JUMP_DURATION: Int = 200
 const val BALL_CREATION_LATENCY: Int = 150
 private const val BALL_SIZE_RATIO = 0.8f
 private const val initialBallSize =  5f
-private val expandingRate = 5f/4f
+private const val expandingRate = 5f/4f
 
 @Composable
 fun AnimatedBall(

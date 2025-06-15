@@ -1,6 +1,5 @@
 package com.allfreeapps.theballgame.ui.composables
 
-import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,12 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.allfreeapps.theballgame.MyApplication
 import com.allfreeapps.theballgame.model.entities.Score
-import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.LightGray
-import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 
 @Composable
 fun MainLayout(

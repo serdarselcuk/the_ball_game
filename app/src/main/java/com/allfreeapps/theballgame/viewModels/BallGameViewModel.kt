@@ -15,6 +15,7 @@ import com.allfreeapps.theballgame.utils.Constants.Companion.MAX_BALL_COUNT
 import com.allfreeapps.theballgame.utils.Markers
 import com.allfreeapps.theballgame.utils.SoundPlayerManager
 import com.allfreeapps.theballgame.utils.SoundType
+import com.allfreeapps.theballgame.utils.Vibrator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,11 +31,12 @@ import java.util.Queue
 class BallGameViewModel( application: Application ) : AndroidViewModel(application)  {
 
     private val repository: ScoreRepository = ScoreRepository(application.applicationContext)
+    private val vibrator = Vibrator(context = application.applicationContext)
 
     companion object {
         const val TAG = "ViewModel"
         const val LAST_GRID_INDEX = GRID_SIZE - 1
-        const val SERIE_LENGTH_ON_INDEXED_BOARD = BALL_LIMIT_TO_REMOVE - 1 //since starting with 0
+        const val SERIES_LENGTH_ON_INDEXED_BOARD = BALL_LIMIT_TO_REMOVE - 1 //since starting with 0
 
         // Define possible movements (row_offset, column_offset)
         val movements = listOf(
@@ -63,7 +65,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     val isMuted: StateFlow<Boolean> = _isMuted
 
     private val _errorState: MutableStateFlow<String?> = MutableStateFlow(null)
-    val errorState: StateFlow<String?> = _errorState
+//    val errorState: StateFlow<String?> = _errorState
 
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score
@@ -73,13 +75,13 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     val ballList: StateFlow<Array<Int>> = _ballList
 
     private val _totalBallCount = MutableStateFlow(0)
-    val totalBallCount: StateFlow<Int> = _totalBallCount
+    private val totalBallCount: StateFlow<Int> = _totalBallCount
 
     private val _selectedBall = MutableStateFlow<Int?>(null)
     val selectedBall: StateFlow<Int?> = _selectedBall
 
     private val _setToRemove = MutableStateFlow<MutableList<MutableSet<Int>>>(mutableListOf())
-    val setToRemove: StateFlow<List<Set<Int>>> = _setToRemove
+    private val setToRemove: StateFlow<List<Set<Int>>> = _setToRemove
 
     private var _upcomingBalls = MutableStateFlow((arrayOf<Int>()))
     val upcomingBalls: StateFlow<Array<Int>> = _upcomingBalls
@@ -103,7 +105,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         SoundPlayerManager.initialize(context = getApplication<Application>().applicationContext)
     }
 
-    fun startGame() {
+    private fun startGame() {
         if (totalBallCount.value == 0) {
             add3Ball()
             populateUpcomingBalls()
@@ -125,33 +127,33 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         deselectTheBall()
     }
 
-    fun increaseScoreFor(ballCount: Int) {
+    private fun increaseScoreFor(ballCount: Int) {
         if (ballCount < 5) return
         val score = 5
         val additionalScore = (2 * (ballCount - 5))
         _score.value += (score + additionalScore)
     }
 
-    fun combinedScore() {
-        _score.value += setToRemove.value.size
-    }
+//    fun combinedScore() {
+//        _score.value += setToRemove.value.size
+//    }
 
-    fun setState(gameState: GameState){
+    private fun setState(gameState: GameState){
         Log.d(TAG, "setState: $gameState")
         _state.value = gameState
     }
 
-    fun resetScore() {
+    private fun resetScore() {
         Log.d(TAG, "resetScore: ${score.value}")
         _score.value = 0
     }
 
-    fun resetRemovalSet() {
+    private fun resetRemovalSet() {
         Log.d(TAG, "resetRemovalSet: ${setToRemove.value}")
         _setToRemove.value = mutableListOf()
     }
 
-    fun addBall(index: Int, colorCode: Int) {
+    private fun addBall(index: Int, colorCode: Int) {
         Log.d(TAG, "addBall: $index, $colorCode")
         if(totalBallCount.value == (MAX_BALL_COUNT)){
             finishTheGame()
@@ -173,7 +175,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 
     private fun positionToIndex(row: Int, column: Int): Int {
         val index = (row * GRID_SIZE) + column
-        Log.d(TAG, "row: $row, column: $column to index: ${index}")
+        Log.d(TAG, "row: $row, column: $column to index: $index")
         return index
     }
 
@@ -184,12 +186,12 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         return arrayOf(row, column)
     }
 
-    fun selectTheBall(position: Int) {
+    private fun selectTheBall(position: Int) {
         Log.d(TAG, "selectTheBall: $position")
         _selectedBall.value = position
     }
 
-    fun deselectTheBall() {
+    private fun deselectTheBall() {
         Log.d(TAG, "deselectTheBall")
         _selectedBall.value = null
     }
@@ -208,7 +210,10 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             val copyOfBallList = _ballList.value.copyOf()
             // add sound for bubble explode TODO() for ball to be shrunk we can add another sound
             when(Markers.get(copyOfBallList[index])){
-                Markers.BALL_EXPANSION ->  playBubbleExplodeSound()
+                Markers.BALL_EXPANSION -> {
+                    playBubbleExplodeSound()
+                    vibrator.vibrate()
+                }
                 Markers.BALL_SHRINKING ->  playHissSound()
                 else -> {} // nothing
             }
@@ -254,7 +259,6 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             copyOfBallList[index] = Markers.markTheBall(Markers.BALL_EXPANSION, ballValue)
             _ballList.value = copyOfBallList
             Log.d(TAG, "index to mark get expanded: $index")
-
         }
     }
 
@@ -275,9 +279,8 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         if (selectedBall.value == null) {
             Log.d(TAG,"No ball is selected at the moment")
         } //TODO Or handle as an error/log
-        // This method now orchestrates the logic
-        // It can launch a single coroutine to manage the sequence
-        viewModelScope.launch { // This launch block uses Dispatchers.Main.immediate by default
+
+        viewModelScope.launch {
             try {
                 val path =
                     createThePathToMoveTheBall(destinationIndex) // Assuming this is quick or also a suspend fun managing its context
@@ -289,7 +292,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
                     val seriesFound = findColorSeries(listOf(destinationIndex))
 
                     if (seriesFound) {
-                        removeAllSeries()
+                        markToBeRemovedAllSeries()
                     } else {
                         populateUpcomingBalls()
                     }
@@ -298,10 +301,9 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
                 Log.e(TAG, "Error processing empty cell click: ${e.message}")
                 _errorState.value = "Failed to move ball: ${e.message}"
             } finally {
-                deselectTheBall() // This might be a simple state update, not needing a specific dispatcher
+                deselectTheBall()
             }
         }
-
     }
 
     private suspend fun createThePathToMoveTheBall(destinationIndex: Int): List<Int>? =
@@ -320,7 +322,6 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
                 queue.add(it)
                 visited[it] = true
             } ?: return@withContext null // If selectedBallIndex is null, no path can be found
-
 
             while (queue.isNotEmpty()) {
                 val currentIndex = queue.poll()
@@ -354,7 +355,6 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             return@withContext null
         }
 
-
     private fun isMoveInvalid(selectedBallIndex: Int?, destinationIndex: Int): Boolean {
         // 1. No ball selected
         if (selectedBallIndex == null) {
@@ -371,8 +371,6 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             return true
         }
 
-        // 3. Destination is occupied by another ball
-        // Assuming _ballList.value is safe to access and 0 means empty
         if (_ballList.value.getOrNull(destinationIndex) != 0) { // Added getOrNull for safety
             Log.d(
                 TAG,
@@ -381,7 +379,6 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             return true
         }
 
-        // If none of the above conditions are met, the move is valid (so isMoveInvalid is false)
         return false
     }
 
@@ -400,8 +397,8 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
                     //                  if down-left is the direction there should be enough space for the series
                     when (direction1) {
                         //                      if diagonal direction, there should be enough space for the series (5 ball not fitting to corners)
-                        Direction.UP_RIGHT, Direction.DOWN_LEFT -> if (((column + row) < SERIE_LENGTH_ON_INDEXED_BOARD) || ((row + column) > ((2 * LAST_GRID_INDEX) - SERIE_LENGTH_ON_INDEXED_BOARD))) continue
-                        Direction.DOWN_RIGHT, Direction.UP_LEFT -> if (((column - row) > SERIE_LENGTH_ON_INDEXED_BOARD) || ((row - column) > SERIE_LENGTH_ON_INDEXED_BOARD)) continue
+                        Direction.UP_RIGHT, Direction.DOWN_LEFT -> if (((column + row) < SERIES_LENGTH_ON_INDEXED_BOARD) || ((row + column) > ((2 * LAST_GRID_INDEX) - SERIES_LENGTH_ON_INDEXED_BOARD))) continue
+                        Direction.DOWN_RIGHT, Direction.UP_LEFT -> if (((column - row) > SERIES_LENGTH_ON_INDEXED_BOARD) || ((row - column) > SERIES_LENGTH_ON_INDEXED_BOARD)) continue
                         else -> {}
                     }
 
@@ -473,7 +470,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
                 || nextC < 0
     }
 
-    suspend fun moveTheBall(path: List<Int>) {
+    private suspend fun moveTheBall(path: List<Int>) {
 //        todo throw error when color is 0 or null
         withContext(Dispatchers.IO) {
             val color = getSelectedBallColor() ?: 0
@@ -531,7 +528,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         return@withContext path
     }
 
-    fun add3Ball() {
+    private fun add3Ball() {
         viewModelScope.launch {
             val ballArray = Array(3) { 0 }
             for (i in 0 until 3) {
@@ -557,7 +554,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         return@withContext randomBall()
     }
 
-    fun removeAllSeries() {
+    private fun markToBeRemovedAllSeries() {
 
         getRemovables().forEach { set ->
             set.forEach {
@@ -590,7 +587,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
             add3Ball()
 
             findColorSeries(ballPositions)
-            removeAllSeries()
+            markToBeRemovedAllSeries()
             finishTheGame()
         }
     }
@@ -601,11 +598,11 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         }
     }
 
-    fun resetGame() {
+    private fun resetGame() {
         setEmptyBoard()
     }
 
-    fun saveScore(userName: String) {
+    private fun saveScore(userName: String) {
         val score = score.value
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertScore(
@@ -620,7 +617,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
         }
     }
 
-    fun processOnBallCellClick(index: Int) {
+    private fun processOnBallCellClick(index: Int) {
         playFilledTapSound()
         if(isSelectedBall(index))  deselectTheBall()
         else  selectTheBall(index)

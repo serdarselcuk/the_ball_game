@@ -7,8 +7,6 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.allfreeapps.theballgame.R
-import kotlinx.coroutines.*
-import kotlin.coroutines.CoroutineContext
 
 // ... other necessary imports
 
