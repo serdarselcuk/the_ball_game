@@ -1,9 +1,8 @@
 package com.allfreeapps.theballgame.ui.model
 
 sealed class GameState {
-    object BallMoving : GameState()
-    object SearchingForSeries : GameState()
-    object UserTurn : GameState()
-    object GameOver : GameState()
-    object GameNotStarted : GameState()
+    data object SearchingForSeries : GameState()
+    data object UserTurn : GameState()
+    data object GameOver : GameState()
+    data object GameNotStarted : GameState()
 }

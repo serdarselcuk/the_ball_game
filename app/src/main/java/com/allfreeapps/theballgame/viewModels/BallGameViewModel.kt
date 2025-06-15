@@ -28,6 +28,7 @@ import java.util.Date
 import java.util.LinkedList
 import java.util.Queue
 
+//@HiltViewModel
 class BallGameViewModel( application: Application ) : AndroidViewModel(application)  {
 
     private val repository: ScoreRepository = ScoreRepository(application.applicationContext)
