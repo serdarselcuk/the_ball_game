@@ -94,13 +94,13 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     private fun mute(){
         Log.d(TAG, "mute: ")
         _isMuted.value = true
-        SoundPlayerManager.releaseAll()
+        SoundPlayerManager.release()
     }
 
     private fun unMute(){
         Log.d(TAG, "unMute: ")
         _isMuted.value = false
-        SoundPlayerManager.initializeAll(context = getApplication<Application>().applicationContext)
+        SoundPlayerManager.initialize(context = getApplication<Application>().applicationContext)
     }
 
     fun startGame() {
@@ -207,8 +207,10 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 
             val copyOfBallList = _ballList.value.copyOf()
             // add sound for bubble explode TODO() for ball to be shrunk we can add another sound
-            if(Markers.get(copyOfBallList[index]) == Markers.BALL_EXPANSION) {
-                playBubbleExplodeSound()
+            when(Markers.get(copyOfBallList[index])){
+                Markers.BALL_EXPANSION ->  playBubbleExplodeSound()
+                Markers.BALL_SHRINKING ->  playHissSound()
+                else -> {} // nothing
             }
             copyOfBallList[index] = 0
             _ballList.value = copyOfBallList
@@ -268,6 +270,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 
 
     private fun processEmptyCellClick(destinationIndex: Int ) {
+        playEmptyTapSound()
         Log.d(TAG, "processEmptyCellClick: $destinationIndex")
         if (selectedBall.value == null) {
             Log.d(TAG,"No ball is selected at the moment")
@@ -558,6 +561,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 
         getRemovables().forEach { set ->
             set.forEach {
+                //marked balls will be removed
                 markBallToGetExpanded(it)
             }
             increaseScoreFor(set.size)
@@ -617,6 +621,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     fun processOnBallCellClick(index: Int) {
+        playFilledTapSound()
         if(isSelectedBall(index))  deselectTheBall()
         else  selectTheBall(index)
     }
@@ -628,13 +633,12 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     fun restartButtonOnClick() = run {
+        playClickSound()
         if (state.value == GameState.GameNotStarted) startGame()
         else restartGame()
-        playClickSound()
     }
 
     fun onCellClick(color: Int, index: Int) = run {
-        playTapSound()
         if ( color == Constants.NO_BALL) processEmptyCellClick(index)
         else processOnBallCellClick(index)
     }
@@ -663,15 +667,19 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     fun playClickSound() {
-        playSound(SoundType.BUTTON_CLICK)
+        playSound(SoundType.DEFAULT_TAP)
     }
 
     private fun playBubbleExplodeSound() {
         playSound(SoundType.BUBBLE_EXPLODE)
     }
 
-    private fun playTapSound() {
-        playSound(SoundType.DEFAULT_TAP)
+    private fun playEmptyTapSound() {
+        playSound(SoundType.EMPTY_TAP)
+    }
+
+    private fun playFilledTapSound() {
+        playSound(SoundType.FILLED_TAP)
     }
 
     private fun playSound(soundType: SoundType){
@@ -680,7 +688,11 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     fun releaseSoundManagers(){
-        SoundPlayerManager.releaseAll()
+        SoundPlayerManager.release()
+    }
+
+    private fun playHissSound() {
+        playSound(SoundType.HISS)
     }
 
 }

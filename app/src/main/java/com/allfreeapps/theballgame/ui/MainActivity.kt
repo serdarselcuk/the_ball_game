@@ -9,10 +9,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -47,6 +49,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun InitialView() {
         TheBallGameTheme {
+
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 val state by viewModel.state.collectAsState()
                 val isMuted by viewModel.isMuted.collectAsState()
@@ -65,7 +68,7 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxWidth()
                                 .fillMaxHeight()
                                 .padding(4.dp)
-                                .background(BackgroundColor)
+                                .background(MaterialTheme.colorScheme.background)
                                 .border(width = 2.dp, color = Black),
                             isMuted = isMuted,
                             onMuteClicked = {
@@ -146,7 +149,6 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(applicationContext, SettingsActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         applicationContext.startActivity(intent)
-
     }
 }
 

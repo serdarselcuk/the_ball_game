@@ -11,15 +11,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = HeaderBackGround, // Purple80 - for header background
+    onPrimary = HeaderTextColor, // PurpleGrey40 - for header text
+    primaryContainer = StartButtonBackgroundColor, // Purple40 - for start button background
+    onPrimaryContainer = StartButtonTextColor, // White - for start button text
+    secondary = UserNameFieldColor, // GreyPurple - for username field
+    background = BackgroundColor, // LightGray - for general background
+    surface = CellBoarderColor, // DarkGray - for cell border
+    onSurface = ScoreTextColor, // PurpleGrey40 - for score text
+    error = DisabledColor, // Gray - for disabled elements
+    onError = Pink80 // GameOverBackground - for game over background
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
+    primary = HeaderBackGround, // Purple80 - for header background
+    onPrimary = HeaderTextColor, // PurpleGrey40 - for header text
+    primaryContainer = StartButtonBackgroundColor, // Purple40 - for start button background
+    onPrimaryContainer = StartButtonTextColor, // White - for start button text
+    secondary = UserNameFieldColor, // GreyPurple - for username field
+    background = BackgroundColor, // LightGray - for general background
+    surface = CellBoarderColor, // DarkGray - for cell border
+    onSurface = ScoreTextColor, // PurpleGrey40 - for score text
+    error = DisabledColor, // Gray - for disabled elements
+    onError = Pink80 // GameOverBackground - for game over background
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
     surface = Color(0xFFFFFBFE),
@@ -31,10 +45,10 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+
 @Composable
 fun TheBallGameTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
