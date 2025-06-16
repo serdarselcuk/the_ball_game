@@ -3,6 +3,7 @@ package com.allfreeapps.theballgame.ui.composables
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,7 +30,7 @@ import java.util.Date
 //TODO add remove all and individual records
 @Composable
 fun ScoresTable(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.fillMaxSize(),
     scores: List<Score>,
     onDeleteClicked: (Int?) -> Unit) {
 
@@ -55,7 +56,10 @@ fun ScoresTable(
             )
             HorizontalDivider(color = CellBoarderColor)
 
-            LazyColumn {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
                 items(scores) { scoreItem ->
                     ScoreRow(
                         Modifier.wrapContentHeight(),
