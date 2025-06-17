@@ -17,15 +17,32 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas")
+        }
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField( "int", "GRID_SIZE", "9" )
         buildConfigField( "int", "BALL_LIMIT_TO_REMOVE", "5" )
     }
 
+    signingConfigs {
+        create("release") { // Use create to define a signing config
+            storeFile = file(providers.gradleProperty("MYAPP_RELEASE_STORE_FILE").get())
+            storePassword = providers.gradleProperty("MYAPP_RELEASE_STORE_PASSWORD").get()
+            keyAlias = providers.gradleProperty("MYAPP_RELEASE_KEY_ALIAS").get()
+            keyPassword = providers.gradleProperty("MYAPP_RELEASE_KEY_PASSWORD").get()
+        }
+    }
+
+
     buildTypes {
-        release {
-            isMinifyEnabled = false
+        getByName("release") { // Use getByName to configure an existing build type
+            // Correct way to assign the signing configuration
+            signingConfig = signingConfigs.getByName("release")
+
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -5,19 +5,19 @@ import android.util.Log
 import androidx.room.TypeConverter
 import java.util.Locale.US
 import java.text.SimpleDateFormat
-//import java.util.Calendar
+import java.util.Calendar
 import java.util.Date
 
 class Converters {
     private val patternToDate = "EEE MMM dd HH:mm:ss zzz yyyy"
     private val patternToString = "MMM dd yyyy"
-//
-//    @TypeConverter
-//    fun calendarToDatestamp(calendar: Calendar): Long = calendar.timeInMillis
-//
-//    @TypeConverter
-//    fun datestampToCalendar(value: Long): Calendar =
-//        Calendar.getInstance().apply { timeInMillis = value }
+
+    @TypeConverter
+    fun calendarToDatestamp(calendar: Calendar): Long = calendar.timeInMillis
+
+    @TypeConverter
+    fun datestampToCalendar(value: Long): Calendar =
+        Calendar.getInstance().apply { timeInMillis = value }
 
     @TypeConverter
     fun dateToString(date: Date): String {
