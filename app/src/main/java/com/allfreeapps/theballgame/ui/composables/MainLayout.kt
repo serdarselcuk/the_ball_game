@@ -1,6 +1,7 @@
 package com.allfreeapps.theballgame.ui.composables
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -46,6 +47,7 @@ fun MainLayout(
             .fillMaxSize()
             .padding(8.dp)
     ) {
+        Log.d("MainLayout", "BoxWithConstraints: maxWidth=$maxWidth, maxHeight=$maxHeight")
 
         val totalAvailableHeight = maxHeight
         val totalAvailableWidth = maxWidth

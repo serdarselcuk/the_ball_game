@@ -1,12 +1,14 @@
 package com.allfreeapps.theballgame.ui.composables
 
 
+import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.utils.Constants
@@ -45,30 +47,38 @@ fun Board(
             }
         },
         measurePolicy = { measurables, constraints ->
+            Log.d("BoardLayout", "Incoming constraints: $constraints")
+            Log.d("BoardLayout", "boardSize (Dp): $boardSize, GRID_SIZE: ${Constants.GRID_SIZE}")
+            Log.d("BoardLayout", "smallBoxSize (Dp): $smallBoxSize")
             // Calculate cell size in pixels once
             val roundedCellSizePx = (smallBoxSize).roundToPx()
-
+            Log.d("BoardLayout", "roundedCellSizePx: $roundedCellSizePx")
             // Define constraints for each cell
-            val cellConstraints = constraints.copy(
-                minWidth = roundedCellSizePx,
-                minHeight = roundedCellSizePx,
-                maxWidth = roundedCellSizePx,
-                maxHeight = roundedCellSizePx
-            )
+            val cellConstraintsForChildren = Constraints.fixed(roundedCellSizePx, roundedCellSizePx)
 
             // Measure each cell (measurable)
             val placeables = measurables.map { measurable ->
-                measurable.measure(cellConstraints)
+                measurable.measure(cellConstraintsForChildren)
             }
 
-            // Define the layout size for the entire board
-            layout(constraints.maxWidth, constraints.maxHeight) {
+            // Calculate the total width and height required by the board based on its content
+            val boardWidthPx = Constants.GRID_SIZE * roundedCellSizePx
+            val boardHeightPx = Constants.GRID_SIZE * roundedCellSizePx
+
+            // Respect incoming constraints:
+            // The board can't be larger than what the parent allows,
+            // but it also shouldn't be smaller than its content if the parent allows it to be larger.
+            val finalWidth = boardWidthPx.coerceIn(constraints.minWidth, constraints.maxWidth)
+            val finalHeight = boardHeightPx.coerceIn(constraints.minHeight, constraints.maxHeight)
+
+            layout(finalWidth, finalHeight) { //calculated and coerced size of the board
                 var currentX = 0
                 var currentY = 0
                 placeables.forEachIndexed { index, placeable ->
+                    // Ensure placement is within the finalWidth and finalHeight if necessary,
+                    // though with fixed cell sizes and grid logic, it should fit.
                     placeable.placeRelative(currentX, currentY)
                     currentX += roundedCellSizePx
-                    // Move to the next row if the end of a row is reached
                     if (((index + 1) % Constants.GRID_SIZE) == 0) {
                         currentX = 0
                         currentY += roundedCellSizePx
