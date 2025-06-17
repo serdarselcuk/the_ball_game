@@ -9,8 +9,7 @@ import java.util.Calendar
 import java.util.Date
 
 class Converters {
-    private val patternToDate = "EEE MMM dd HH:mm:ss zzz yyyy"
-    private val patternToString = "MMM dd yyyy"
+    val formatter = SimpleDateFormat("MMM dd yyyy", US)
 
     @TypeConverter
     fun calendarToDatestamp(calendar: Calendar): Long = calendar.timeInMillis
@@ -21,20 +20,16 @@ class Converters {
 
     @TypeConverter
     fun dateToString(date: Date): String {
-        val formatter = SimpleDateFormat(patternToString, US)
         return formatter.format(date)
     }
 
     @TypeConverter
     fun stringToDate(value: String?): Date? {
         return value?.let {
-
-
-            val formatter = SimpleDateFormat(patternToDate, US)
             try {
                 formatter.parse(it)
             } catch (e: java.text.ParseException) {
-                Log.e("Converters", "Failed to parse date: $value", e)
+                Log.e("Converters", "Failed to parse date: '$value'", e) // Log the pattern too for clarity
                 null
             }
         }
