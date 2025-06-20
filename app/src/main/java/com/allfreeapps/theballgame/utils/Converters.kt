@@ -3,10 +3,10 @@ package com.allfreeapps.theballgame.utils
 
 import android.util.Log
 import androidx.room.TypeConverter
-import java.util.Locale.US
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale.US
 
 class Converters {
     val formatter = SimpleDateFormat("MMM dd yyyy", US)
