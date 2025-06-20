@@ -1,8 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 import com.allfreeapps.theballgame.utils.getRadialGradientBrush
 import com.allfreeapps.theballgame.utils.toBallColor
