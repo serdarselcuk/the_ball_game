@@ -1,6 +1,5 @@
 package com.allfreeapps.theballgame.ui
 
-import BallGameViewModelFactory
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.allfreeapps.theballgame.MyApplication
 import com.allfreeapps.theballgame.ui.composables.GameOverScreen
 import com.allfreeapps.theballgame.ui.composables.MainLayout
 import com.allfreeapps.theballgame.ui.composables.WelcomeScreen
@@ -30,11 +28,12 @@ import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.Black
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val viewModel: BallGameViewModel by viewModels {
-        BallGameViewModelFactory(application as MyApplication)
-    }
+
+    private val viewModel: BallGameViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

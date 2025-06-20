@@ -16,11 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
-import com.allfreeapps.theballgame.viewModels.SettingsViewModel
+//import com.allfreeapps.theballgame.viewModels.SettingsViewModel
 
 class SettingsActivity: ComponentActivity() {
 
-    private val settingsViewModel: SettingsViewModel by viewModels()
+//    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

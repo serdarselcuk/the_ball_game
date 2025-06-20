@@ -1,14 +1,14 @@
 package com.allfreeapps.theballgame.utils
 
-// Your other imports like:
 import android.content.Context
 import androidx.annotation.RawRes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.allfreeapps.theballgame.R
-
-// ... other necessary imports
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
 enum class SoundType(@RawRes val resourceId: Int, val volume: Float =  1.0f) {
     DEFAULT_TAP(R.raw.empty_tap),
@@ -18,13 +18,18 @@ enum class SoundType(@RawRes val resourceId: Int, val volume: Float =  1.0f) {
     HISS(R.raw.hissing, 0.5f),
     // Add more sound types as needed
 }
-object SoundPlayerManager {
+
+@Singleton
+class SoundPlayerManager @Inject constructor(@ApplicationContext private val context: Context) {
     private val players = mutableMapOf<SoundType, ExoPlayer>()
     private var isInitialized = false
 
-    fun initialize(context: Context) {
-        if (isInitialized) return
+    init {
+        if (!isInitialized)
+            initialize()
+    }
 
+    private fun initialize() {
         SoundType.entries.forEach { soundType ->
             val player = ExoPlayer.Builder(context.applicationContext).build()
                 .apply {

@@ -6,11 +6,15 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class Vibrator(
-    private val context: Context
-
+@Singleton
+class Vibrator @Inject constructor(
+    @ApplicationContext private val context: Context
 ) {
+
     private var lastVibration = 0L
     private val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val vibratorManager =

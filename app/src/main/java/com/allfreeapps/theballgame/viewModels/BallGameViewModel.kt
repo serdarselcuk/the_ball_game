@@ -1,12 +1,11 @@
 package com.allfreeapps.theballgame.viewModels
 
-import android.app.Application
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.allfreeapps.theballgame.model.Direction
 import com.allfreeapps.theballgame.model.entities.Score
-import com.allfreeapps.theballgame.repository.ScoreRepository
+import com.allfreeapps.theballgame.service.ScoreRepository
 import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.utils.Constants
 import com.allfreeapps.theballgame.utils.Constants.Companion.BALL_LIMIT_TO_REMOVE
@@ -16,6 +15,7 @@ import com.allfreeapps.theballgame.utils.Markers
 import com.allfreeapps.theballgame.utils.SoundPlayerManager
 import com.allfreeapps.theballgame.utils.SoundType
 import com.allfreeapps.theballgame.utils.Vibrator
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,12 +27,14 @@ import kotlinx.coroutines.withContext
 import java.util.Date
 import java.util.LinkedList
 import java.util.Queue
+import javax.inject.Inject
 
-//@HiltViewModel
-class BallGameViewModel( application: Application ) : AndroidViewModel(application)  {
-
-    private val repository: ScoreRepository = ScoreRepository(application.applicationContext)
-    private val vibrator = Vibrator(context = application.applicationContext)
+@HiltViewModel
+class BallGameViewModel @Inject constructor(
+    private val repository: ScoreRepository,
+    private val vibrator: Vibrator,
+    private val soundPlayerManager: SoundPlayerManager,
+) : ViewModel()  {
 
     companion object {
         const val TAG = "ViewModel"
@@ -96,14 +98,17 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 
     private fun mute(){
         Log.d(TAG, "mute: ")
-        _isMuted.value = true
-        SoundPlayerManager.release()
+        if(! isMuted.value) {
+            _isMuted.value = true
+            soundPlayerManager.release()
+        }
     }
 
     private fun unMute(){
         Log.d(TAG, "unMute: ")
-        _isMuted.value = false
-        SoundPlayerManager.initialize(context = getApplication<Application>().applicationContext)
+        if (_isMuted.value) {
+            _isMuted.value = false
+        }
     }
 
     private fun startGame() {
@@ -669,6 +674,7 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
     }
 
     private fun playBubbleExplodeSound() {
+        vibrator.vibrate()
         playSound(SoundType.BUBBLE_EXPLODE)
     }
 
@@ -682,11 +688,11 @@ class BallGameViewModel( application: Application ) : AndroidViewModel(applicati
 
     private fun playSound(soundType: SoundType){
         if( isMuted.value ) return
-        SoundPlayerManager.playSound(soundType)
+        soundPlayerManager.playSound(soundType)
     }
 
     fun releaseSoundManagers(){
-        SoundPlayerManager.release()
+        soundPlayerManager.release()
     }
 
     private fun playHissSound() {

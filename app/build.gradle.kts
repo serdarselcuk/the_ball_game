@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 android {
     buildFeatures.buildConfig = true
@@ -15,7 +16,7 @@ android {
         minSdk = 30
         targetSdk = 35
         versionCode = 1
-        versionName = "1.1"
+        versionName = "2.0"
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
@@ -73,6 +74,10 @@ dependencies {
     // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom)) // Compose Bill of Materials - manages versions
     implementation(libs.androidx.ui)
+    // Hilt-Dagger
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)   // For Composable previews in Android Studio
     implementation(libs.androidx.material3)            // Material Design 3 components
@@ -103,4 +108,5 @@ dependencies {
     // Debug Only (debug source set - only included in debug builds)
     debugImplementation(libs.androidx.ui.tooling)      // Compose tooling for layout inspection, etc.
     debugImplementation(libs.androidx.ui.test.manifest) // For Compose test manifest generation
+
 }
