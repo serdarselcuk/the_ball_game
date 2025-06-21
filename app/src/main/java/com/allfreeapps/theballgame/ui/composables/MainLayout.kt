@@ -101,20 +101,7 @@ fun MainLayout(
                         score = score,
                         topScore = topScore
                     )
-                    Board(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(totalAvailableWidth),
-                        boardSize = (totalAvailableWidth),
-                        ballList = ballList,
-                        selectedBallIndex = selectedBallIndex,
-                        onCellClick = { index ->
-                            onCellClick(index)
-                        },
-                        removeTheBall = { index ->
-                            removeTheBall(index)
-                        }
-                    )
+                    // future ball and score board will be in same row
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -132,6 +119,21 @@ fun MainLayout(
                             modifier = Modifier
                         )
                     }
+
+                    Board(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(totalAvailableWidth),
+                        boardSize = (totalAvailableWidth),
+                        ballList = ballList,
+                        selectedBallIndex = selectedBallIndex,
+                        onCellClick = { index ->
+                            onCellClick(index)
+                        },
+                        removeTheBall = { index ->
+                            removeTheBall(index)
+                        }
+                    )
                     ScoresTable(
                         modifier = Modifier
                             .fillMaxWidth()
