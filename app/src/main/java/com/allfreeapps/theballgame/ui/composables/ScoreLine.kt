@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -23,11 +25,11 @@ import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 import com.allfreeapps.theballgame.ui.theme.ScoreTextColor
 
-
 @Composable
-fun ScoreBoard(modifier: Modifier, score: Int) {
+fun ScoreBoard(modifier: Modifier = Modifier, score: Int) {
     Box(
-        modifier
+        modifier = modifier
+            .shadow(elevation = 1.dp)
             .background(HeaderBackGround)
             .border(
                 width = 2.dp,
@@ -37,7 +39,6 @@ fun ScoreBoard(modifier: Modifier, score: Int) {
                 horizontal = 5.dp,
                 vertical = 1.dp
             )
-            .shadow(elevation = 1.dp)
     ) {
         Text(
             text = "Score: $score",
@@ -48,51 +49,67 @@ fun ScoreBoard(modifier: Modifier, score: Int) {
 
 @Composable
 fun ComparableScoreLine(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     maxSizeOfLine: Dp,
     orientation: Int,
-    score: Int, topScore: Int
+    score: Int,
+    topScore: Int
 ) {
-
-    val maxSizeOfLineFloat = maxSizeOfLine.value
     val rateOfScoreLine = if (topScore > 0) score.toFloat() / topScore else 0f
-    val dynamicColor = when {
-        rateOfScoreLine > 0.9 -> GameColorScale[6]
-        rateOfScoreLine > 0.8 -> GameColorScale[5]
-        rateOfScoreLine > 0.6 -> GameColorScale[4]
-        rateOfScoreLine > 0.4 -> GameColorScale[3]
-        rateOfScoreLine > 0.2 -> GameColorScale[2]
-        else -> GameColorScale[1]
+
+
+    val colorIndex = when {
+        rateOfScoreLine > 0.9 -> 6
+        rateOfScoreLine > 0.8 -> 5
+        rateOfScoreLine > 0.6 -> 4
+        rateOfScoreLine > 0.4 -> 3
+        rateOfScoreLine > 0.2 -> 2
+        rateOfScoreLine > 0.0 -> 1
+        else -> 0
+    }
+    val dynamicColor = GameColorScale[colorIndex]
+
+    val isPortrait = orientation == Configuration.ORIENTATION_PORTRAIT
+
+    val tubeGradient = if (isPortrait) {
+        Brush.verticalGradient(
+            colors = listOf(
+                dynamicColor.copy(alpha = 0.7f),
+                dynamicColor,
+                dynamicColor.copy(alpha = 0.7f)
+            )
+        )
+    } else {
+        Brush.horizontalGradient(
+            colors = listOf(
+                dynamicColor.copy(alpha = 0.7f),
+                dynamicColor,
+                dynamicColor.copy(alpha = 0.7f)
+            )
+        )
     }
 
-    var outerBoxModifier = modifier
-    var innerBoxModifier : Modifier
+    val outerBoxModifier = modifier
+        .then(
+            if (isPortrait) Modifier.fillMaxWidth().height(20.dp)
+            else Modifier.fillMaxHeight().width(20.dp)
+        )
+        .shadow(elevation = 2.dp, spotColor = Color.Black, ambientColor = Color.Black)
 
-    when (orientation) {
-        Configuration.ORIENTATION_PORTRAIT -> {
-            outerBoxModifier = outerBoxModifier
-                .fillMaxWidth()
-                .height(20.dp)
-            innerBoxModifier = Modifier // Apply background to the inner Box
-                .background(dynamicColor) // Use the calculated dynamicColor here
-                .width((rateOfScoreLine * maxSizeOfLineFloat).dp)
-                .fillMaxHeight()
-        }
-        else -> { // Assuming Configuration.ORIENTATION_LANDSCAPE
-            outerBoxModifier = outerBoxModifier
-                .fillMaxHeight()
-                .width(20.dp)
-            innerBoxModifier = Modifier // Apply background to the inner Box
-                .background(dynamicColor) // Use the calculated dynamicColor here
-                .height((rateOfScoreLine * maxSizeOfLineFloat).dp)
-                .fillMaxWidth()
-        }
-    }
-  Box(
+    val innerBoxModifier = Modifier
+        .background(tubeGradient)
+        .then(
+            if (isPortrait) Modifier.width((rateOfScoreLine * maxSizeOfLine.value).dp).fillMaxHeight()
+            else Modifier.height((rateOfScoreLine * maxSizeOfLine.value).dp).fillMaxWidth()
+        )
+        .border(width = 0.5.dp, color = dynamicColor.copy(alpha = 0.5f))
+        .shadow(elevation = 1.dp, spotColor = Color.White.copy(alpha = 0.5f), ambientColor = Color.Transparent)
+
+    Box(
         modifier = outerBoxModifier,
-        contentAlignment = Alignment.BottomStart
+        contentAlignment = if (isPortrait) Alignment.CenterStart else Alignment.BottomStart // Adjust alignment based on orientation
     ) {
-         Box(
+        Box(
             modifier = innerBoxModifier
         )
     }
