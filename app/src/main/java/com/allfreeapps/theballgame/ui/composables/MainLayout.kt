@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.model.entities.Score
+import com.allfreeapps.theballgame.ui.MainActivity
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.LightGray
 
@@ -36,7 +37,8 @@ fun MainLayout(
     restartButtonOnClick: () -> Unit = {},
     onCellClick: (Int) -> Unit = {},
     removeTheBall: (Int) -> Unit = {},
-    onDeleteClicked: (Int?) -> Unit = {}
+    onDeleteClicked: (Int?) -> Unit = {},
+    onSettingsClicked: () -> Unit = {},
 ) {
 
     val topScore = if (allScores.isNotEmpty()) allScores[0].score else 1
@@ -53,17 +55,18 @@ fun MainLayout(
         val totalAvailableWidth = maxWidth
 
         Column(modifier = Modifier.fillMaxSize()) {
+            val headerHeight = totalAvailableHeight * (
+                    when (orientation) {
+                        Configuration.ORIENTATION_LANDSCAPE -> 0.1f
+                        else -> 0.05f
+                    })
+
             Header(
-                Modifier
+                modifier = Modifier
                     .fillMaxWidth()
-                    .height(
-                        totalAvailableHeight * (
-                            when (orientation) {
-                                Configuration.ORIENTATION_LANDSCAPE -> 0.1f
-                                else -> 0.05f
-                            })
-                    )
+                    .height(headerHeight)
                     .background(HeaderBackGround),
+                fontSize = (headerHeight * 0.45f).value,
                 content = listOf(
                     {
                         if (orientationIsLandscape) {
@@ -72,15 +75,25 @@ fun MainLayout(
                     },
                     {
                         MuteButton(
-                            Modifier.padding(2.dp),
+                            Modifier.padding(1.dp),
                             isMuted,
                             onToggleMute = { changeSoundStatus() }
                         )
                     },
                     {
+                        SettingsButton(
+                            modifier =Modifier
+                                .width(50.dp)
+                                .padding(1.dp),
+                            onClick = {
+                                onSettingsClicked()
+                            }
+                        )
+                    },
+                    {
                         RestartButton(
                             modifier = Modifier
-                                .padding(2.dp)
+                                .padding(1.dp)
                                 .width(90.dp)
                                 .height(35.dp),
                             onclick = { restartButtonOnClick() })
