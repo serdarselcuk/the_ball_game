@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.allfreeapps.theballgame.model.Direction
 import com.allfreeapps.theballgame.model.entities.Score
 import com.allfreeapps.theballgame.service.ScoreRepository
+import com.allfreeapps.theballgame.service.SettingsRepository
 import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.utils.Constants
 import com.allfreeapps.theballgame.utils.Constants.Companion.BALL_LIMIT_TO_REMOVE
@@ -34,6 +35,7 @@ class BallGameViewModel @Inject constructor(
     private val repository: ScoreRepository,
     private val vibrator: Vibrator,
     private val soundPlayerManager: SoundPlayerManager,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel()  {
 
     companion object {
@@ -64,7 +66,7 @@ class BallGameViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    private val _isMuted = MutableStateFlow(true)
+    private val _isMuted = MutableStateFlow(settingsRepository.isMuteOnStart.value)
     val isMuted: StateFlow<Boolean> = _isMuted
 
     private val _errorState: MutableStateFlow<String?> = MutableStateFlow(null)
@@ -670,25 +672,25 @@ class BallGameViewModel @Inject constructor(
     }
 
     fun playClickSound() {
-        playSound(SoundType.DEFAULT_TAP)
+        playSound(SoundType.DEFAULT_TAP, settingsRepository.clickVolume.value)
     }
 
     private fun playBubbleExplodeSound() {
         vibrator.vibrate()
-        playSound(SoundType.BUBBLE_EXPLODE)
+        playSound(SoundType.BUBBLE_EXPLODE, settingsRepository.bubbleExplodeVolume.value)
     }
 
     private fun playEmptyTapSound() {
-        playSound(SoundType.EMPTY_TAP)
+        playSound(SoundType.EMPTY_TAP, settingsRepository.tappingVolume.value)
     }
 
     private fun playFilledTapSound() {
-        playSound(SoundType.FILLED_TAP)
+        playSound(SoundType.FILLED_TAP, settingsRepository.bubbleSelectVolume.value)
     }
 
-    private fun playSound(soundType: SoundType){
+    private fun playSound(soundType: SoundType, volume: Float? = null){
         if( isMuted.value ) return
-        soundPlayerManager.playSound(soundType)
+        soundPlayerManager.playSound(soundType, volume)
     }
 
     fun releaseSoundManagers(){
@@ -696,7 +698,7 @@ class BallGameViewModel @Inject constructor(
     }
 
     private fun playHissSound() {
-        playSound(SoundType.HISS)
+        playSound(SoundType.HISS, settingsRepository.hissVolume.value)
     }
 
 }

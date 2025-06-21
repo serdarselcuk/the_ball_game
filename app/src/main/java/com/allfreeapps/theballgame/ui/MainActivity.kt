@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui
 
+import android.app.Application
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,8 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.allfreeapps.theballgame.service.SettingsRepository
 import com.allfreeapps.theballgame.ui.composables.GameOverScreen
 import com.allfreeapps.theballgame.ui.composables.MainLayout
 import com.allfreeapps.theballgame.ui.composables.WelcomeScreen
@@ -29,11 +33,15 @@ import com.allfreeapps.theballgame.ui.theme.Black
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val viewModel: BallGameViewModel by viewModels()
+
+    @Inject
+    lateinit var settingRepository: SettingsRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +54,9 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun InitialView() {
-        TheBallGameTheme {
+        TheBallGameTheme(
+            darkTheme = settingRepository.darkTheme.value?: isSystemInDarkTheme()
+        ) {
 
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 val state by viewModel.state.collectAsState()

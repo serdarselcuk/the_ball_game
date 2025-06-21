@@ -6,12 +6,13 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.allfreeapps.theballgame.R
+import com.allfreeapps.theballgame.service.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class SoundType(@RawRes val resourceId: Int, val volume: Float =  1.0f) {
-    DEFAULT_TAP(R.raw.empty_tap),
+enum class SoundType(@RawRes val resourceId: Int, val defaultVolume: Float =  1.0f) {
+    DEFAULT_TAP(R.raw.empty_tap, 0.7f),
     BUBBLE_EXPLODE(R.raw.bubble_explode),
     EMPTY_TAP(R.raw.filled_tap),
     FILLED_TAP(R.raw.bubble),
@@ -20,7 +21,10 @@ enum class SoundType(@RawRes val resourceId: Int, val volume: Float =  1.0f) {
 }
 
 @Singleton
-class SoundPlayerManager @Inject constructor(@ApplicationContext private val context: Context) {
+class SoundPlayerManager @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val settingsRepository: SettingsRepository
+) {
     private val players = mutableMapOf<SoundType, ExoPlayer>()
     private var isInitialized = false
 
@@ -40,6 +44,8 @@ class SoundPlayerManager @Inject constructor(@ApplicationContext private val con
                     playWhenReady = false // Don't play immediately
                     repeatMode = Player.REPEAT_MODE_OFF
                     volume = soundType.volume
+                    // Update volume based on settingsRepository if needed
+                    // For example: volume = settingsRepository.getSoundVolume(soundType)
                     prepare() // Prepare the player
                 }
             players[soundType] = player
@@ -47,7 +53,12 @@ class SoundPlayerManager @Inject constructor(@ApplicationContext private val con
         isInitialized = true
     }
 
-    fun playSound(soundType: SoundType = SoundType.DEFAULT_TAP) {
+    private val SoundType.volume: Float
+        get() = settingsRepository.getSoundEffectsVolume() * this.defaultVolume
+
+    fun playSound(soundType: SoundType = SoundType.DEFAULT_TAP, volume: Float? = null) {
+        val valuePersentage = volume?.let { it/100f }
+        if(valuePersentage != null && soundType.defaultVolume != valuePersentage) updateVolume(soundType, valuePersentage)
         players[soundType]?.apply {
             seekTo(0)
             play()
@@ -59,5 +70,13 @@ class SoundPlayerManager @Inject constructor(@ApplicationContext private val con
         players.clear()
         isInitialized = false
         // Looper.myLooper()?.quitSafely() // Consider if you manually prepared a Looper
+    }
+
+    fun updateVolume(soundType: SoundType, newVolume: Float) {
+        players[soundType]?.volume = newVolume
+    }
+
+    fun updateAllVolumes() {
+        SoundType.entries.forEach { updateVolume(it, settingsRepository.getSoundEffectsVolume()) }
     }
 }
