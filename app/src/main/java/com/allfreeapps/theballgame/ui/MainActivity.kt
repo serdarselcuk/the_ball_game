@@ -129,6 +129,10 @@ class MainActivity : ComponentActivity() {
                             },
                             removeTheBall = { index ->
                                 viewModel.removeBall(index)
+                            },
+                            onSettingsClicked = {
+                                viewModel.playClickSound()
+                                navigateToSettings()
                             }
                         )
                     }

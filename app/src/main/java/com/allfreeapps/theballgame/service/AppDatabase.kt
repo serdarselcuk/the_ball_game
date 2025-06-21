@@ -7,7 +7,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import androidx.work.impl.Migration_1_2
 import com.allfreeapps.theballgame.model.entities.Score
 import com.allfreeapps.theballgame.service.dao.ScoreDao
 import com.allfreeapps.theballgame.utils.Constants

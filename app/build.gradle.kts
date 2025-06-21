@@ -16,7 +16,7 @@ android {
         minSdk = 30
         targetSdk = 35
         versionCode = 1
-        versionName = "2.0"
+        versionName = "2.1"
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
@@ -87,6 +87,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)             // For Coroutines and Flow support with Room
     ksp(libs.androidx.room.compiler)                   // Room annotation processor (KSP)
 
+    // Data store
+    implementation(libs.androidx.datastore.preferences)
     // WorkManager (Background Processing)
     implementation(libs.androidx.work.runtime.ktx)
 

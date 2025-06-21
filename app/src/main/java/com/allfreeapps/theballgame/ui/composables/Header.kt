@@ -25,7 +25,10 @@ import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 fun Header(
     modifier: Modifier = Modifier,
     content: List<@Composable () -> Unit>,
-    isLandscape: Boolean = false
+    isLandscape: Boolean = false,
+    shadowOffset: Float = 2f,
+    fontSize: Float = 24f
+
 ) {
 
     Row(
@@ -33,8 +36,6 @@ fun Header(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val shadowOffset = if (isLandscape) 4f else 2f
-        val fontSize = if (isLandscape) 32.sp else 24.sp
 
         Text(
             modifier = Modifier.padding(
@@ -47,7 +48,7 @@ fun Header(
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.ExtraBold,
                 color = HeaderTextColor,
-                fontSize = fontSize,
+                fontSize = fontSize.sp,
                 shadow = androidx.compose.ui.graphics.Shadow(
                     color = androidx.compose.ui.graphics.Color.Black,
                     offset = Offset(shadowOffset, shadowOffset),
@@ -65,7 +66,6 @@ fun Header(
                 Modifier.weight(1f)
             )
             for (item in content) {
-                Spacer(modifier = Modifier.width(5.dp))
                 item()
             }
         }
