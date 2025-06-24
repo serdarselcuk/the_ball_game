@@ -22,6 +22,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,6 +59,12 @@ class BallGameViewModel @Inject constructor(
             Pair(Direction.UP_RIGHT, Direction.DOWN_LEFT)
         )
     }
+
+    val gameSpeed: StateFlow<Int> = settingsRepository.speed.stateIn(
+        scope = viewModelScope, // The coroutine scope for collection
+        started = SharingStarted.WhileSubscribed(2000L),
+        initialValue = 75
+    )
 
     val allScores: StateFlow<List<Score>> = repository.getAllScoresFlow()
         .stateIn(
@@ -96,21 +103,49 @@ class BallGameViewModel @Inject constructor(
 
     init {
        _state.value = GameState.GameNotStarted
-    }
 
-    private fun mute(){
-        Log.d(TAG, "mute: ")
-        if(! isMuted.value) {
-            _isMuted.value = true
-            soundPlayerManager.release()
+        viewModelScope.launch {
+            settingsRepository.masterVolume.collect { newMasterVolume ->
+                Log.d("BallGameViewModel", "masterVolume changed in repo: $newMasterVolume")
+                soundPlayerManager.updateAllVolumes(newMasterVolume)
+            }
         }
-    }
 
-    private fun unMute(){
-        Log.d(TAG, "unMute: ")
-        if (_isMuted.value) {
-            _isMuted.value = false
+        viewModelScope.launch {
+            settingsRepository.bubbleExplodeVolume.collect { newBubbleVolume ->
+                Log.d("BallGameViewModel", "bubbleExplodeVolume changed in repo: $newBubbleVolume")
+                soundPlayerManager.updateVolume(SoundType.BUBBLE_EXPLODE ,newBubbleVolume)
+            }
         }
+
+        viewModelScope.launch {
+            settingsRepository.bubbleSelectVolume.collect { newSelectVolume ->
+                Log.d("BallGameViewModel", "bubbleSelectVolume changed in repo: $newSelectVolume")
+                soundPlayerManager.updateVolume(SoundType.FILLED_TAP ,newSelectVolume)
+            }
+        }
+
+        viewModelScope.launch {
+            settingsRepository.tappingVolume.collect { newTappingVolume ->
+                Log.d("BallGameViewModel", "tappingVolume changed in repo: $newTappingVolume")
+                soundPlayerManager.updateVolume(SoundType.EMPTY_TAP ,newTappingVolume)
+            }
+        }
+
+        viewModelScope.launch {
+            settingsRepository.hissVolume.collect { newHissVolume ->
+                Log.d("BallGameViewModel", "hissVolume changed in repo: $newHissVolume")
+                soundPlayerManager.updateVolume(SoundType.HISS ,newHissVolume)
+            }
+        }
+
+        viewModelScope.launch {
+            settingsRepository.clickVolume.collect { newClickVolume ->
+                Log.d("BallGameViewModel", "clickVolume changed in repo: $newClickVolume")
+                soundPlayerManager.updateVolume(SoundType.DEFAULT_TAP ,newClickVolume)
+            }
+        }
+
     }
 
     private fun startGame() {
@@ -141,10 +176,6 @@ class BallGameViewModel @Inject constructor(
         val additionalScore = (2 * (ballCount - 5))
         _score.value += (score + additionalScore)
     }
-
-//    fun combinedScore() {
-//        _score.value += setToRemove.value.size
-//    }
 
     private fun setState(gameState: GameState){
         Log.d(TAG, "setState: $gameState")
@@ -274,12 +305,10 @@ class BallGameViewModel @Inject constructor(
         Log.d(TAG, "Ball has already a marker: $ballValue")
     }
 
-
     private fun isSelectedBall(index: Int): Boolean {
         Log.d(TAG, "isSelectedBall: $index")
         return selectedBall.value == index
     }
-
 
     private fun processEmptyCellClick(destinationIndex: Int ) {
         playEmptyTapSound()
@@ -291,7 +320,7 @@ class BallGameViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val path =
-                    createThePathToMoveTheBall(destinationIndex) // Assuming this is quick or also a suspend fun managing its context
+                    createThePathToMoveTheBall(destinationIndex)
 
                 if (path != null) {
 
@@ -441,7 +470,6 @@ class BallGameViewModel @Inject constructor(
         return@withContext result
     }
 
-
     private suspend fun exploreTheDirection(
         startColor: Int,
         row: Int,
@@ -483,8 +511,10 @@ class BallGameViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             val color = getSelectedBallColor() ?: 0
             val targetIndex = path.last()
-            if (color != 0) {
+            if (color != 0) {//selected cell have the bal
+                // ball is added to the target TODO ball can be marked to be expanded from 0
                 addBall(targetIndex, color)
+                //selected ball will be removed after shrinking affect on UI
                 markBallToGetShrink(selectedBall.value!!)
             }
             deselectTheBall()
@@ -513,7 +543,6 @@ class BallGameViewModel @Inject constructor(
 
         return@withContext neighbors
     }
-
 
     /**
      * Reconstructs the path from the start index to the target index using the parent map.
@@ -637,6 +666,21 @@ class BallGameViewModel @Inject constructor(
         else mute()
     }
 
+    private fun mute(){
+        Log.d(TAG, "muted and all sound players released")
+        if(! isMuted.value) {
+            _isMuted.value = true
+            soundPlayerManager.releaseAll()
+        }
+    }
+
+    private fun unMute(){
+        Log.d(TAG, "un Muted ")
+        if (_isMuted.value) {
+            _isMuted.value = false
+        }
+    }
+
     fun restartButtonOnClick() = run {
         playClickSound()
         if (state.value == GameState.GameNotStarted) startGame()
@@ -672,33 +716,33 @@ class BallGameViewModel @Inject constructor(
     }
 
     fun playClickSound() {
-        playSound(SoundType.DEFAULT_TAP, settingsRepository.clickVolume.value)
+        playSound(SoundType.DEFAULT_TAP)
     }
 
     private fun playBubbleExplodeSound() {
         vibrator.vibrate()
-        playSound(SoundType.BUBBLE_EXPLODE, settingsRepository.bubbleExplodeVolume.value)
+        playSound(SoundType.BUBBLE_EXPLODE)
     }
 
     private fun playEmptyTapSound() {
-        playSound(SoundType.EMPTY_TAP, settingsRepository.tappingVolume.value)
+        playSound(SoundType.EMPTY_TAP)
     }
 
     private fun playFilledTapSound() {
-        playSound(SoundType.FILLED_TAP, settingsRepository.bubbleSelectVolume.value)
-    }
-
-    private fun playSound(soundType: SoundType, volume: Float? = null){
-        if( isMuted.value ) return
-        soundPlayerManager.playSound(soundType, volume)
-    }
-
-    fun releaseSoundManagers(){
-        soundPlayerManager.release()
+        playSound(SoundType.FILLED_TAP)
     }
 
     private fun playHissSound() {
-        playSound(SoundType.HISS, settingsRepository.hissVolume.value)
+        playSound(SoundType.HISS)
+    }
+
+    private fun playSound(soundType: SoundType){
+        if( isMuted.value ) return
+        soundPlayerManager.playSound(soundType)
+    }
+
+    fun releaseSoundManagers(){
+        soundPlayerManager.releaseAll()
     }
 
 }

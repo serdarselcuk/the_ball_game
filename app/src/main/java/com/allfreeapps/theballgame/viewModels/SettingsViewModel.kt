@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.allfreeapps.theballgame.service.SettingsRepository
+import com.allfreeapps.theballgame.utils.SoundPlayerManager
+import com.allfreeapps.theballgame.utils.SoundType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -11,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     companion object {
@@ -19,14 +21,15 @@ class SettingsViewModel @Inject constructor(
     }
 
     val isMuteOnStart: StateFlow<Boolean> = settingsRepository.isMuteOnStart
-    val darkTheme: StateFlow<Boolean?> = settingsRepository.darkTheme
-    val speed: StateFlow<Float> = settingsRepository.speed
-    val masterVolume: StateFlow<Float> = settingsRepository.masterVolume
-    val hissVolume: StateFlow<Float> = settingsRepository.hissVolume
-    val clickVolume: StateFlow<Float> = settingsRepository.clickVolume
-    val bubbleSelectVolume: StateFlow<Float> = settingsRepository.bubbleSelectVolume
-    val bubbleExplodeVolume: StateFlow<Float> = settingsRepository.bubbleExplodeVolume
-    val tappingVolume: StateFlow<Float> = settingsRepository.tappingVolume
+    val systemTheme: StateFlow<Boolean> = settingsRepository.systemTheme
+    val darkTheme: StateFlow<Boolean> = settingsRepository.darkTheme
+    val speed: StateFlow<Int> = settingsRepository.speed
+    val masterVolume: StateFlow<Int> = settingsRepository.masterVolume
+    val hissVolume: StateFlow<Int> = settingsRepository.hissVolume
+    val clickVolume: StateFlow<Int> = settingsRepository.clickVolume
+    val bubbleSelectVolume: StateFlow<Int> = settingsRepository.bubbleSelectVolume
+    val bubbleExplodeVolume: StateFlow<Int> = settingsRepository.bubbleExplodeVolume
+    val tappingVolume: StateFlow<Int> = settingsRepository.tappingVolume
 
     fun setVolume(volumeLevel: Float) {
         viewModelScope.launch {
@@ -48,10 +51,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setModeOnStart(darkTheme: Boolean?) {
+    fun setModeOnStart(darkTheme: Boolean) {
         viewModelScope.launch {
             try {
-                settingsRepository.setModeOnStart(darkTheme)
+                settingsRepository.setDarkMoeOnStart(darkTheme)
             }catch (e: Exception){
                 Log.e(TAG, "darkTheme could not be set")
             }
@@ -92,6 +95,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 settingsRepository.setBubbleExplodeVolume(bubbleExplodeVolume)
+
             }catch (e: Exception){
                 Log.e(TAG, "bubbleExplodeVolume could not be set")
             }
@@ -102,6 +106,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 settingsRepository.setTappingVolume(tappingVolume)
+
             }catch (e: Exception){
                 Log.e(TAG, "tappingVolume could not be set")
             }
@@ -109,8 +114,12 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setSystemDefaultMode(it: Boolean) {
-        if(it){
-            setModeOnStart(null)
+        viewModelScope.launch {
+            try {
+                settingsRepository.setSystemTheme(it)
+            }catch (e: Exception){
+                Log.e(TAG, "darkTheme could not be set")
+            }
         }
 
     }

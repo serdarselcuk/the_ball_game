@@ -3,6 +3,9 @@ package com.allfreeapps.theballgame.ui
 import android.app.Application
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.service.SettingsRepository
@@ -43,6 +45,7 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var settingRepository: SettingsRepository
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -54,8 +57,12 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun InitialView() {
+        val systemTheme by settingRepository.systemTheme.collectAsState()
+        val darkThemeEnabled by settingRepository.darkTheme.collectAsState()
+        val useDarkTheme = if (systemTheme) isSystemInDarkTheme() else darkThemeEnabled
+
         TheBallGameTheme(
-            darkTheme = settingRepository.darkTheme.value?: isSystemInDarkTheme()
+            darkTheme = useDarkTheme
         ) {
 
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -67,6 +74,7 @@ class MainActivity : ComponentActivity() {
                 val score by viewModel.score.collectAsState()
                 val upcomingBalls by viewModel.upcomingBalls.collectAsState()
                 val allScores by viewModel.allScores.collectAsState()
+                val gameSpeed by viewModel.gameSpeed.collectAsState()
 
                 when (state) {
                     GameState.GameNotStarted -> {
@@ -109,18 +117,19 @@ class MainActivity : ComponentActivity() {
                     else -> {
 
                         MainLayout(
-                            Modifier
+                            modifier = Modifier
                                 .padding(innerPadding)
                                 .padding(4.dp)
                                 .background(BackgroundColor)
                                 .border(width = 2.dp, color = Black),
-                            isMuted,
-                            orientation,
-                            ballList,
-                            selectedBallIndex,
-                            score,
-                            upcomingBalls,
-                            allScores,
+                            isMuted = isMuted,
+                            orientation = orientation,
+                            ballList = ballList,
+                            selectedBallIndex = selectedBallIndex,
+                            score = score,
+                            gameSpeed = gameSpeed,
+                            upcomingBalls = upcomingBalls,
+                            allScores = allScores,
                             onDeleteClicked = { id ->
                                 viewModel.deleteScore(id)
                             },

@@ -4,33 +4,31 @@ package com.allfreeapps.theballgame.utils
 import android.util.Log
 import androidx.room.TypeConverter
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale.US
 
 class Converters {
-    val formatter = SimpleDateFormat("MMM dd yyyy", US)
-
-    @TypeConverter
-    fun calendarToDatestamp(calendar: Calendar): Long = calendar.timeInMillis
-
-    @TypeConverter
-    fun datestampToCalendar(value: Long): Calendar =
-        Calendar.getInstance().apply { timeInMillis = value }
+    private val new_formatter = SimpleDateFormat("MMM dd yyyy", US)
+    private val old_formatter = SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", US)
 
     @TypeConverter
     fun dateToString(date: Date): String {
-        return formatter.format(date)
+        return new_formatter.format(date)
     }
 
     @TypeConverter
     fun stringToDate(value: String?): Date? {
         return value?.let {
             try {
-                formatter.parse(it)
+                new_formatter.parse(it)
             } catch (e: java.text.ParseException) {
-                Log.e("Converters", "Failed to parse date: '$value'", e) // Log the pattern too for clarity
-                null
+                Log.d("Converters", "Failed to parse date: '$value'", e)
+                try {
+                    old_formatter.parse(it)
+                }catch (e2: java.text.ParseException){
+                    Log.e("Converters", "Failed to parse date: '$value'", e2)
+                    null
+                }
             }
         }
     }

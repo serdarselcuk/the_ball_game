@@ -23,8 +23,9 @@ import com.allfreeapps.theballgame.viewModels.SettingsViewModel
 
 @Composable
 fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel) {
-    val isMuteOnStart = viewModel.isMuteOnStart.collectAsState()
+    val isMuteOnStart by viewModel.isMuteOnStart.collectAsState()
     val darkMode by viewModel.darkTheme.collectAsState()
+    val systemTheme by viewModel.systemTheme.collectAsState()
     val speed by viewModel.speed.collectAsState()
     val volume by viewModel.masterVolume.collectAsState()
     val clickVolume by viewModel.clickVolume.collectAsState()
@@ -53,23 +54,24 @@ fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel) {
                     verticalArrangement = Arrangement.Top
                 ) {
                     Checkbox(
-                        checked = darkMode == null,
-                        onCheckedChange = { viewModel.setSystemDefaultMode(it) })
+                        checked = systemTheme,
+                        onCheckedChange = { viewModel.setSystemDefaultMode(it) }
+                    )
                     Text(text = "Use system")
                 }
 
                 SettingsToggle(
                     label = "Dark mode",
-                    checked = darkMode ?: false,
+                    checked = if(!systemTheme) darkMode else false,
                     onCheckedChange = { viewModel.setModeOnStart(it) },
-                    enabled = darkMode != null
+                    enabled = !systemTheme
                 )
             }
         }
 
         SettingsToggle(
             label = "Mute on Start",
-            checked = isMuteOnStart.value,
+            checked = isMuteOnStart,
             onCheckedChange = { viewModel.setIsMuteOnStart(it) }
         )
 
@@ -83,7 +85,9 @@ fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel) {
         SettingsLevelControl(
             label = "Master Volume",
             value = volume,
-            onValueChange = { viewModel.setVolume(it) }
+            onValueChange = {
+                viewModel.setVolume(it)
+            }
         )
 
         SettingsLevelControl(
@@ -105,7 +109,7 @@ fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel) {
         )
 
         SettingsLevelControl(
-            label = "Tapping Volume",
+            label = "Empty Cell Volume",
             value = tappingVolume,
             onValueChange = { viewModel.setTappingVolume(it) }
         )
@@ -150,9 +154,9 @@ fun SettingsToggle(
 @Composable
 fun SettingsLevelControl(
     label: String,
-    value: Float,
+    value: Int,
     onValueChange: (Float) -> Unit,
-    valueRange: ClosedFloatingPointRange<Float> = 0f..100f
+    valueRange: ClosedFloatingPointRange<Float> = 0F..100F
 ) {
     Log.d("SettingsLevelControl", "$label - Value received: $value")
     Column(
@@ -166,7 +170,7 @@ fun SettingsLevelControl(
             modifier = Modifier.fillMaxWidth()
         ) {
             Slider(
-                value = value,
+                value = value.toFloat(),
                 onValueChange = { value->
                     Log.d("SettingsLevelControl", "$label - onValueChange: $value")
                     onValueChange(value)
@@ -174,7 +178,7 @@ fun SettingsLevelControl(
                 valueRange = valueRange,
                 modifier = Modifier.weight(1f)
             )
-            Text(text = "${value.toInt()}%")
+            Text(text = "${value}%")
         }
     }
 }

@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "9c3339d8946c882eaf47ed230be5fb45",
+    "identityHash": "7bdef8269993683096a0a2b960cc7dca",
     "entities": [
       {
         "tableName": "scores",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `fist_name` TEXT NOT NULL, `last_name` TEXT, `score` INTEGER NOT NULL, `date` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `fist_name` TEXT NOT NULL, `last_name` TEXT, `score` INTEGER NOT NULL, `date` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -33,7 +33,8 @@
           {
             "fieldPath": "date",
             "columnName": "date",
-            "affinity": "TEXT"
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -46,7 +47,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9c3339d8946c882eaf47ed230be5fb45')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7bdef8269993683096a0a2b960cc7dca')"
     ]
   }
 }

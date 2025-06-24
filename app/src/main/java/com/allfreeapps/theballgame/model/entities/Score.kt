@@ -19,14 +19,10 @@ data class Score (
     @ColumnInfo(name = "score")
     val score: Int,
     @ColumnInfo(name = "date")
-    val date: Date?
+    val date: Date
 
 ):Comparable<Score>, Serializable {
     override fun compareTo(other: Score): Int {
         return score.compareTo(other.score)
-    }
-
-    fun getDateString(): String {
-        return date?.let { Converters().dateToString(it) } ?: ""
     }
 }

@@ -11,13 +11,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class SoundType(@RawRes val resourceId: Int, val defaultVolume: Float =  1.0f) {
-    DEFAULT_TAP(R.raw.empty_tap, 0.7f),
+enum class SoundType( @RawRes val resourceId: Int) {
+
+    DEFAULT_TAP(R.raw.empty_tap),
     BUBBLE_EXPLODE(R.raw.bubble_explode),
     EMPTY_TAP(R.raw.filled_tap),
     FILLED_TAP(R.raw.bubble),
-    HISS(R.raw.hissing, 0.5f),
-    // Add more sound types as needed
+    HISS(R.raw.hissing),
 }
 
 @Singleton
@@ -26,57 +26,62 @@ class SoundPlayerManager @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) {
     private val players = mutableMapOf<SoundType, ExoPlayer>()
-    private var isInitialized = false
 
-    init {
-        if (!isInitialized)
-            initialize()
-    }
-
-    private fun initialize() {
-        SoundType.entries.forEach { soundType ->
-            val player = ExoPlayer.Builder(context.applicationContext).build()
-                .apply {
-                    val mediaItem = MediaItem.fromUri(
-                        "android.resource://${context.applicationContext.packageName}/${soundType.resourceId}"
-                    )
-                    setMediaItem(mediaItem)
-                    playWhenReady = false // Don't play immediately
-                    repeatMode = Player.REPEAT_MODE_OFF
-                    volume = soundType.volume
-                    // Update volume based on settingsRepository if needed
-                    // For example: volume = settingsRepository.getSoundVolume(soundType)
-                    prepare() // Prepare the player
-                }
-            players[soundType] = player
+    private fun initialize(soundType: SoundType): Player {
+        return players.getOrPut(soundType) {
+            createAndConfigurePlayer(soundType)
         }
-        isInitialized = true
     }
 
-    private val SoundType.volume: Float
-        get() = settingsRepository.getSoundEffectsVolume() * this.defaultVolume
+    private fun createAndConfigurePlayer(soundType: SoundType): ExoPlayer {
+        return ExoPlayer.Builder(context.applicationContext)
+            .build()
+            .apply {
+                val mediaItem = MediaItem.fromUri(
+                    "android.resource://${context.applicationContext.packageName}/${soundType.resourceId}"
+                )
+                setMediaItem(mediaItem)
+                playWhenReady = false // Don't play immediately
+                repeatMode = Player.REPEAT_MODE_OFF
+                volume = settingsRepository.getVolume(soundType).percentage * settingsRepository.getMasterVolume().percentage
+                prepare()
+            }
+    }
 
-    fun playSound(soundType: SoundType = SoundType.DEFAULT_TAP, volume: Float? = null) {
-        val valuePersentage = volume?.let { it/100f }
-        if(valuePersentage != null && soundType.defaultVolume != valuePersentage) updateVolume(soundType, valuePersentage)
-        players[soundType]?.apply {
+    fun playSound(soundType: SoundType = SoundType.DEFAULT_TAP) {
+
+        (players[soundType] ?: initialize(soundType))
+         .apply {
             seekTo(0)
             play()
         }
+
     }
 
-    fun release() {
+    fun releaseAll() {
         players.values.forEach { it.release() }
         players.clear()
-        isInitialized = false
-        // Looper.myLooper()?.quitSafely() // Consider if you manually prepared a Looper
     }
 
-    fun updateVolume(soundType: SoundType, newVolume: Float) {
+    // this overLoaded type is for only changing the volume of a specific sound
+    fun updateVolume(soundType: SoundType, newVolume: Int) {
+        updateVolume(soundType, newVolume.percentage * settingsRepository.getMasterVolume().percentage)
+    }
+
+    // this can be called if only sound is in float type and private for the class
+    // since it has to be calculated with master ans particular voice levels
+    private fun updateVolume(soundType: SoundType, newVolume: Float) {
         players[soundType]?.volume = newVolume
     }
 
-    fun updateAllVolumes() {
-        SoundType.entries.forEach { updateVolume(it, settingsRepository.getSoundEffectsVolume()) }
+    fun updateAllVolumes(masterVolume: Int) {
+        SoundType.entries.forEach {
+            updateVolume(it,
+                settingsRepository.getVolume(it).percentage * masterVolume.percentage
+                )
+        }
     }
+
+    private val Int.percentage: Float get() = this/100F
+
 }

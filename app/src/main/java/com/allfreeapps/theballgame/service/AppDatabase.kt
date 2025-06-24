@@ -12,7 +12,7 @@ import com.allfreeapps.theballgame.service.dao.ScoreDao
 import com.allfreeapps.theballgame.utils.Constants
 import com.allfreeapps.theballgame.utils.Converters
 
-@Database(entities = [Score::class], version = 2)
+@Database(entities = [Score::class], version = 3)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 

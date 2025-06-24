@@ -30,8 +30,8 @@ import kotlinx.coroutines.Dispatchers
 private val DEFAULT_SHADOW_ELEVATION = 18.dp
 private val SELECTED_SHADOW_ELEVATION = 25.dp
 private val BALL_JUMP_HEIGHT = (-5).dp
+const val BALL_CREATION_LATENCY: Int = 300
 private const val JUMP_DURATION: Int = 200
-const val BALL_CREATION_LATENCY: Int = 150
 private const val BALL_SIZE_RATIO = 0.8f
 private const val initialBallSize =  5f
 private const val expandingRate = 5f/4f
@@ -41,7 +41,8 @@ fun AnimatedBall(
     cellSize: Dp,
     colorValue: Int,
     isBallSelected: Boolean,
-    removeTheBall: () -> Unit
+    removeTheBall: () -> Unit,
+    gameSpeed:Int
 ){
     val marker = Markers.get(colorValue) // 10 => marked for shrink , 20 => marked for expand
     val color = colorValue % 10 // last digit is the color code (removing marker)
@@ -57,7 +58,8 @@ fun AnimatedBall(
                     targetSize = 1f,
                     onAnimationComplete = {
                         removeTheBall()
-                    }
+                    },
+                    gameSpeed = gameSpeed
                 )
             }
 
@@ -68,7 +70,8 @@ fun AnimatedBall(
                     colorValue = color,
                     onAnimationComplete = {
                         removeTheBall()
-                    }
+                    },
+                    gameSpeed = gameSpeed
                 )
             }
 
@@ -78,7 +81,8 @@ fun AnimatedBall(
                     colorValue = color,
                     initialSize = initialBallSize,
                     targetSize = cellSize.value * BALL_SIZE_RATIO,
-                    isBallSelected = isBallSelected
+                    isBallSelected = isBallSelected,
+                    gameSpeed = gameSpeed
                 )
             }
         }
@@ -91,15 +95,16 @@ fun Ball(
     initialSize: Float,
     targetSize: Float,
     isBallSelected: Boolean = false,
-    onAnimationComplete: () -> Unit = {}
+    onAnimationComplete: () -> Unit = {},
+    gameSpeed: Int = 75
 ){
     val animatedSize = remember { Animatable(initialSize) }
-    LaunchedEffect(targetSize) { // Relaunch when targetSize changes
+    LaunchedEffect(targetSize, gameSpeed) { // Relaunch when targetSize changes
         // Offload animation to a background thread
         kotlinx.coroutines.withContext(Dispatchers.Default) {
             animatedSize.animateTo(
                 targetValue = targetSize,
-                animationSpec = tween(durationMillis = BALL_CREATION_LATENCY, easing = LinearEasing)
+                animationSpec = tween(durationMillis = BALL_CREATION_LATENCY - (gameSpeed*2), easing = LinearEasing)
             )
         }.also { onAnimationComplete() }
     }
@@ -158,7 +163,8 @@ fun ShrinkingBallPreview() {
         initialSize = 5f,
         isBallSelected = false,
         targetSize = 1f,
-        onAnimationComplete = { }
+        onAnimationComplete = { },
+        gameSpeed = 75
     )
 }
 
@@ -171,7 +177,8 @@ fun ExpandingBallPreview() {
         initialSize = 5f,
         isBallSelected = false,
         targetSize = 8f,
-        onAnimationComplete = { }
+        onAnimationComplete = { },
+        gameSpeed = 50
     )
 }
 
@@ -184,6 +191,7 @@ fun NewBallPreview() {
         initialSize = 1f,
         isBallSelected = true,
         targetSize = 5f,
-        onAnimationComplete = { }
+        onAnimationComplete = { },
+        gameSpeed = 50
     )
 }

@@ -65,7 +65,7 @@ fun ScoresTable(
                         Modifier.wrapContentHeight(),
                         playerName = scoreItem.firstName,
                         score = scoreItem.score.toString(),
-                        date = scoreItem.getDateString(),
+                        date = scoreItem.date.toString(),
                         onDeleteClicked = { scoreItem.id?.let { onDeleteClicked(it) } }
                     )
                     HorizontalDivider(color = CellBoarderColor)
@@ -135,9 +135,9 @@ val scores = listOf(
     Score(
         1, "player_1", "last name", 1224, Date()
     ), Score(
-        2, "player_1", "last name", 1234, null
+        2, "player_1", "last name", 1234, Date()
     ), Score(
-        3, "player_3", "last name", 1244, null
+        3, "player_3", "last name", 1244, Date()
     )
 )
 
