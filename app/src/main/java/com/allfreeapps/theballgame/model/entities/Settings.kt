@@ -4,12 +4,14 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 
 object Settings {
+    val SYSTEM_THEME= booleanPreferencesKey("systemTheme")
+    val DARK_THEME= booleanPreferencesKey("darkThemeOnStart")
     val IS_MUTE_ON_START= booleanPreferencesKey("isMuteOnStart")
     val SPEED = intPreferencesKey("speed")
     val VOLUME= intPreferencesKey("volume")
     val CLICK_VOLUME= intPreferencesKey("clickVolume")
+    val HISS_VOLUME= intPreferencesKey("hissVolume")
     val BUBBLE_SELECT_VOLUME= intPreferencesKey("bubbleSelectVolume")
     val BUBBLE_EXPLODE_VOLUME= intPreferencesKey("bubbleExplodeVolume")
     val TAPPING_VOLUME= intPreferencesKey("tappingVolume")
-    val DARK_THEME= booleanPreferencesKey("modeOnStart")
 }

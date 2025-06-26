@@ -22,6 +22,7 @@ fun Cell(
     ballColorValue: Int,
     cellSize: Dp,
     isSelected: Boolean,
+    gameSpeed: Int,
     onCellClick: () -> Unit,
     removeTheBall: () -> Unit
 ) {
@@ -53,7 +54,8 @@ fun Cell(
             cellSize = cellSize,
             colorValue = ballColorValue,
             isBallSelected = isSelected,
-            removeTheBall
+            removeTheBall,
+            gameSpeed = gameSpeed
         )
 
     }
@@ -68,6 +70,7 @@ fun CellPreview() {
         ballColorValue = 1,
         cellSize = 100.dp,
         isSelected = false,
+        gameSpeed = 50,
         onCellClick = {},
         removeTheBall = {}
     )

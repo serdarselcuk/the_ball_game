@@ -18,6 +18,7 @@ import com.allfreeapps.theballgame.utils.Constants
 fun Board(
     modifier: Modifier = Modifier,
     boardSize: Dp,
+    gameSpeed: Int,
     ballList: Array<Int>,
     selectedBallIndex: Int? = -1,
     onCellClick: (Int) -> Unit,
@@ -40,6 +41,7 @@ fun Board(
                     cellSize = smallBoxSize,
                     isSelected = selectedBallIndex == index,
                     onCellClick = { onCellClick(index) },
+                    gameSpeed = gameSpeed,
                     removeTheBall = {
                         removeTheBall(index)
                     }
@@ -101,6 +103,7 @@ fun BoardPreview() {
     Board(
         modifier=Modifier,
         boardSize = 800.dp,
+        gameSpeed = 50,
         ballList = Array(81) { 0 }.apply {
             this@apply[2] = 1
             this@apply[3] = 2

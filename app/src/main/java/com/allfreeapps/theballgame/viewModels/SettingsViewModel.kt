@@ -1,151 +1,135 @@
 package com.allfreeapps.theballgame.viewModels
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.allfreeapps.theballgame.model.entities.Settings
+import com.allfreeapps.theballgame.service.SettingsRepository
+import com.allfreeapps.theballgame.utils.SoundPlayerManager
+import com.allfreeapps.theballgame.utils.SoundType
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val dataStore: DataStore<Preferences>,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
-    val masterVolume: StateFlow<Int> = dataStore.data
-        .map { preferences ->
-            preferences[Settings.VOLUME] ?: 5
-        } .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(2000),
-            initialValue = 5
-        )
-    val isMuteOnStart: StateFlow<Boolean> = dataStore.data
-        .map { preferences ->
-            preferences[Settings.IS_MUTE_ON_START] ?: false
-        } .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(2000),
-            initialValue = true
-        )
-    val darkTheme: StateFlow<Boolean> = dataStore.data
-        .map { preferences ->
-            preferences[Settings.DARK_THEME] ?: false
-        } .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(2000),
-            initialValue = false
-        )
-    val speed: StateFlow<Int> = dataStore.data
-        .map { preferences ->
-            preferences[Settings.SPEED] ?: 5
-        } .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(2000),
-            initialValue = 5
-        )
-    val clickVolume: StateFlow<Int> = dataStore.data
-        .map { preferences ->
-            preferences[Settings.CLICK_VOLUME] ?: 5
-        } .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(2000),
-            initialValue = 5
-        )
-    val bubbleSelectVolume: StateFlow<Int> = dataStore.data
-        .map { preferences ->
-            preferences[Settings.BUBBLE_SELECT_VOLUME] ?: 5
-        } .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(2000),
-            initialValue = 5
-        )
-    val bubbleExplodeVolume: StateFlow<Int> = dataStore.data
-        .map { preferences ->
-            preferences[Settings.BUBBLE_EXPLODE_VOLUME] ?: 5
-        } .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(2000),
-            initialValue = 5
-        )
+    companion object {
+        private const val TAG = "SettingsViewModel"
+    }
 
-    val tappingVolume: StateFlow<Int> = dataStore.data
-        .map { preferences ->
-            preferences[Settings.TAPPING_VOLUME] ?: 5
-        } .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(2000),
-            initialValue = 5
-        )
+    val isMuteOnStart: StateFlow<Boolean> = settingsRepository.isMuteOnStart
+    val systemTheme: StateFlow<Boolean> = settingsRepository.systemTheme
+    val darkTheme: StateFlow<Boolean> = settingsRepository.darkTheme
+    val speed: StateFlow<Int> = settingsRepository.speed
+    val masterVolume: StateFlow<Int> = settingsRepository.masterVolume
+    val hissVolume: StateFlow<Int> = settingsRepository.hissVolume
+    val clickVolume: StateFlow<Int> = settingsRepository.clickVolume
+    val bubbleSelectVolume: StateFlow<Int> = settingsRepository.bubbleSelectVolume
+    val bubbleExplodeVolume: StateFlow<Int> = settingsRepository.bubbleExplodeVolume
+    val tappingVolume: StateFlow<Int> = settingsRepository.tappingVolume
 
-
-    fun setVolume(volumeLevel: Int) {
+    fun setVolume(volumeLevel: Float) {
         viewModelScope.launch {
-            dataStore.edit { settings ->
-                settings[Settings.VOLUME] = volumeLevel
+            try {
+                settingsRepository.setVolume(volumeLevel)
+            }catch (e: Exception){
+                Log.e(TAG, "volumeLevel could not be set")
             }
         }
     }
 
     fun setIsMuteOnStart(isMuteOnStart: Boolean) {
         viewModelScope.launch {
-            dataStore.edit { settings ->
-                settings[Settings.IS_MUTE_ON_START] = isMuteOnStart
+            try {
+                settingsRepository.setIsMuteOnStart(isMuteOnStart)
+            }catch (e: Exception){
+                Log.e(TAG, "isMuteOnStart could not be set")
             }
         }
     }
 
     fun setModeOnStart(darkTheme: Boolean) {
         viewModelScope.launch {
-            dataStore.edit { settings ->
-                settings[Settings.DARK_THEME] = darkTheme
+            try {
+                settingsRepository.setDarkMoeOnStart(darkTheme)
+            }catch (e: Exception){
+                Log.e(TAG, "darkTheme could not be set")
             }
         }
     }
 
-    fun setSpeed(gameSpeed: Int) {
+    fun setSpeed(gameSpeed: Float) {
         viewModelScope.launch {
-            dataStore.edit { settings ->
-                settings[Settings.SPEED] = gameSpeed
+            try {
+                settingsRepository.setSpeed(gameSpeed)
+            }catch (e: Exception){
+                Log.e(TAG, "gameSpeed could not be set")
             }
         }
     }
 
-    fun setClickVolume(clickVolume: Int) {
+    fun setClickVolume(clickVolume: Float) {
         viewModelScope.launch {
-            dataStore.edit { settings ->
-                settings[Settings.CLICK_VOLUME] = clickVolume
+            try {
+                settingsRepository.setClickVolume(clickVolume)
+            }catch (e: Exception){
+                Log.e(TAG, "clickVolume could not be set")
             }
         }
     }
 
-    fun setBubbleSelectVolume(bubbleselectVolume: Int) {
+    fun setBubbleSelectVolume(bubbleselectVolume: Float) {
         viewModelScope.launch {
-            dataStore.edit { settings ->
-                settings[Settings.BUBBLE_SELECT_VOLUME] = bubbleselectVolume
+            try {
+                settingsRepository.setBubbleSelectVolume(bubbleselectVolume)
+            }catch (e: Exception){
+                Log.e(TAG, "bubbleselectVolume could not be set")
             }
         }
     }
 
-    fun setBubbleExplodeVolume(bubbleexplodeVolume: Int) {
+    fun setBubbleExplodeVolume(bubbleExplodeVolume: Float) {
         viewModelScope.launch {
-            dataStore.edit { settings ->
-                settings[Settings.BUBBLE_EXPLODE_VOLUME] = bubbleexplodeVolume
+            try {
+                settingsRepository.setBubbleExplodeVolume(bubbleExplodeVolume)
+
+            }catch (e: Exception){
+                Log.e(TAG, "bubbleExplodeVolume could not be set")
             }
         }
     }
 
-    fun setTappingVolume(tappingVolume: Int) {
+    fun setTappingVolume(tappingVolume: Float) {
         viewModelScope.launch {
-            dataStore.edit { settings ->
-                settings[Settings.TAPPING_VOLUME] = tappingVolume
+            try {
+                settingsRepository.setTappingVolume(tappingVolume)
+
+            }catch (e: Exception){
+                Log.e(TAG, "tappingVolume could not be set")
+            }
+        }
+    }
+
+    fun setSystemDefaultMode(it: Boolean) {
+        viewModelScope.launch {
+            try {
+                settingsRepository.setSystemTheme(it)
+            }catch (e: Exception){
+                Log.e(TAG, "darkTheme could not be set")
+            }
+        }
+
+    }
+
+    fun setHissVolume(it: Float) {
+        viewModelScope.launch {
+            try {
+                settingsRepository.setHissVolume(it)
+            }catch (e: Exception){
+                Log.e(TAG, "tappingVolume could not be set")
             }
         }
     }

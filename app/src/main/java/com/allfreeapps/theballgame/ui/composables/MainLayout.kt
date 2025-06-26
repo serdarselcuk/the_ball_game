@@ -31,6 +31,7 @@ fun MainLayout(
     ballList: Array<Int>,
     selectedBallIndex: Int?,
     score: Int,
+    gameSpeed: Int,
     upcomingBalls: Array<Int>,
     allScores: List<Score>,
     changeSoundStatus: () -> Unit = {},
@@ -139,6 +140,7 @@ fun MainLayout(
                             .height(totalAvailableWidth),
                         boardSize = (totalAvailableWidth),
                         ballList = ballList,
+                        gameSpeed = gameSpeed,
                         selectedBallIndex = selectedBallIndex,
                         onCellClick = { index ->
                             onCellClick(index)
@@ -198,6 +200,7 @@ fun MainLayout(
                                 .fillMaxHeight(),
                             boardSize = (totalAvailableHeight * 0.9f ),
                             ballList = ballList,
+                            gameSpeed = gameSpeed,
                             selectedBallIndex = selectedBallIndex,
                             onCellClick = { index ->
                                onCellClick(index)
