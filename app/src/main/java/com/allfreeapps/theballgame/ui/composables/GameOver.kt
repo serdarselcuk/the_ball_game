@@ -30,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.R
+import com.allfreeapps.theballgame.model.entities.Score
 import com.allfreeapps.theballgame.ui.theme.GameOverBackground
 import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 import com.allfreeapps.theballgame.ui.theme.UserNameFieldColor
@@ -38,14 +39,45 @@ import com.allfreeapps.theballgame.ui.theme.UserNameFieldColor
 fun GameOverScreen(
     onSaveScoreClicked: (username: String) -> Unit,
     onSkipClicked: () -> Unit,
-    onSettingsClicked: () -> Unit = {}
+    onSettingsClicked: () -> Unit = {},
+    onDeleteClicked: (Int?) -> Unit = {},
+    allScores: List<Score>
 ) {
+    var scoreSaved = remember {  false }
     // State for the TextField
-    var username by remember { mutableStateOf("") }
+    if(scoreSaved){
+        ScoresTable(
+            modifier = Modifier
+                .fillMaxWidth(),
+            scores = allScores,
+            onDeleteClicked = { id ->
+                onDeleteClicked(id)
+            }
+        )
+    }else {
+        SavingScoreScreen(
+            onSaveScoreClicked = { username ->
+                onSaveScoreClicked(username)
+                scoreSaved = true
+            },
+            onSkipClicked = onSkipClicked,
+            onSettingsClicked = onSettingsClicked,
+        )
+    }
+}
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(GameOverBackground)) {
+@Composable
+fun SavingScoreScreen(
+    onSaveScoreClicked: (username: String) -> Unit,
+    onSkipClicked: () -> Unit,
+    onSettingsClicked: () -> Unit = {}
+){
+    var username by remember { mutableStateOf("") }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(GameOverBackground)
+    ) {
 
         Image(
             painter = painterResource(id = R.drawable.game_over_screen),
@@ -94,12 +126,12 @@ fun GameOverScreen(
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
-                    .wrapContentHeight()
-                ,
+                    .wrapContentHeight(),
                 value = username,
                 onValueChange = { username = it },
                 label = {
-                    Text("Enter your name") },
+                    Text("Enter your name")
+                },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = HeaderTextColor,
@@ -115,7 +147,9 @@ fun GameOverScreen(
 
             SaveScoreButton(
                 modifier = Modifier.fillMaxWidth(0.5f), // Make Button take 50% of column width,
-                onClick = { onSaveScoreClicked(username) },
+                onClick = {
+                    onSaveScoreClicked(username)
+                },
                 username = username
             )
 
@@ -127,5 +161,5 @@ fun GameOverScreen(
 @Preview(showBackground = true)
 @Composable
 fun PreviewGameOverScreen(){
-    GameOverScreen(onSaveScoreClicked = {}, onSkipClicked = {}, onSettingsClicked = {})
+    GameOverScreen(onSaveScoreClicked = {}, onSkipClicked = {}, onSettingsClicked = {}, onDeleteClicked = {}, allScores = listOf())
 }

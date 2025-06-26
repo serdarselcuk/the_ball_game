@@ -110,7 +110,11 @@ class MainActivity : ComponentActivity() {
                             onSettingsClicked = {
                                 viewModel.playClickSound()
                                 navigateToSettings()
-                            }
+                            },
+                            onDeleteClicked = { id ->
+                                viewModel.deleteScore(id)
+                            },
+                            allScores = allScores
                         )
                     }
 

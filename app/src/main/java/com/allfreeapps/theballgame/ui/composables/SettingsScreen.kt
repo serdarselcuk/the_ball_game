@@ -18,7 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import android.util.Log
+import androidx.compose.foundation.border
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.ui.platform.LocalContext
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.preferencesDataStoreFile
+import com.allfreeapps.theballgame.service.SettingsRepository
 import com.allfreeapps.theballgame.viewModels.SettingsViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 
 @Composable
@@ -38,35 +49,52 @@ fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel) {
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Game Settings", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
+        Text("Game Settings",
+            style = typography.headlineSmall)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = colorScheme.secondary
+                ),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
         ) {
-            Text(text = "Theme")
+
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = "Theme",
+                    style = typography.bodyLarge
+                )
+
+                Row(
+                    modifier = Modifier.padding(end = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    Text(text = "Use system")
                     Checkbox(
                         checked = systemTheme,
                         onCheckedChange = { viewModel.setSystemDefaultMode(it) }
                     )
-                    Text(text = "Use system")
                 }
-
-                SettingsToggle(
-                    label = "Dark mode",
-                    checked = if(!systemTheme) darkMode else false,
-                    onCheckedChange = { viewModel.setModeOnStart(it) },
-                    enabled = !systemTheme
-                )
             }
+
+            SettingsToggle(
+                label = "Dark mode",
+                checked = darkMode,
+                onCheckedChange = { viewModel.setModeOnStart(it) },
+                enabled = !systemTheme
+            )
         }
 
         SettingsToggle(
@@ -131,8 +159,9 @@ fun SettingsToggle(
     enabled: Boolean = true
 ) {
     Row(
-        modifier = Modifier.padding(vertical = 8.dp),
+        modifier = Modifier.padding( 8.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Absolute.SpaceBetween
     ) {
         Text(
             text = label,
@@ -143,6 +172,7 @@ fun SettingsToggle(
             else
                 colorScheme.onSurface.copy(alpha = 0.38f)
         )
+
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -183,8 +213,24 @@ fun SettingsLevelControl(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun PreviewSettingsScreen() {
-//    SettingsScreen(modifier = Modifier.padding(16.dp), viewModel = SettingsViewModel())
+    val context = LocalContext.current
+    val mockSettingsViewModel = SettingsViewModel(
+        settingsRepository = SettingsRepository(
+            dataStore = PreferenceDataStoreFactory.create(
+                corruptionHandler = androidx.datastore.core.handlers.ReplaceFileCorruptionHandler(
+                    produceNewData = { emptyPreferences() }
+                ),
+//            migrations = listOf(androidx.datastore.migrations.SharedPreferencesMigration(context, YOUR_SHARED_PREFS_NAME_IF_MIGRATING)),
+                scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                produceFile = { context.preferencesDataStoreFile("app_settings") }
+            )
+        )
+    )
+    SettingsScreen(
+        modifier = Modifier.padding(16.dp),
+        viewModel = mockSettingsViewModel
+    )
 }

@@ -5,7 +5,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.allfreeapps.theballgame.model.entities.Settings
-import com.allfreeapps.theballgame.utils.SoundPlayerManager
 import com.allfreeapps.theballgame.utils.SoundType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
