@@ -32,7 +32,7 @@ import com.allfreeapps.theballgame.ui.theme.StartButtonTextColor
 
 
 @Composable
-fun RestartButton(
+fun ButtonWithText(
     modifier: Modifier = Modifier,
     buttonText: String = stringResource(R.string.restart_game),
     colors: ButtonColors = ButtonColors(
@@ -185,7 +185,7 @@ fun SaveScoreButton(
 @Composable
 @Preview(showBackground = true)
 fun PreviewButtons() {
-    RestartButton(
+    ButtonWithText(
         Modifier
             .height(52.dp)
             .width(52.dp),

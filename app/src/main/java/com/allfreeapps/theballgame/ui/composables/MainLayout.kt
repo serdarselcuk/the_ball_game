@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.model.entities.Score
-import com.allfreeapps.theballgame.ui.MainActivity
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.LightGray
 
@@ -92,7 +91,7 @@ fun MainLayout(
                         )
                     },
                     {
-                        RestartButton(
+                        ButtonWithText(
                             modifier = Modifier
                                 .padding(1.dp)
                                 .width(90.dp)

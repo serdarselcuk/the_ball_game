@@ -4,8 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.allfreeapps.theballgame.service.SettingsRepository
-import com.allfreeapps.theballgame.utils.SoundPlayerManager
-import com.allfreeapps.theballgame.utils.SoundType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

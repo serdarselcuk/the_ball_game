@@ -1,11 +1,7 @@
 package com.allfreeapps.theballgame.ui
 
-import android.app.Application
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -113,6 +109,9 @@ class MainActivity : ComponentActivity() {
                             },
                             onDeleteClicked = { id ->
                                 viewModel.deleteScore(id)
+                            },
+                            onCloseScoresClicked = {
+                                viewModel.closeScoresClicked()
                             },
                             allScores = allScores
                         )
