@@ -77,7 +77,7 @@ fun WelcomeScreen(
                     style = Stroke(width = strokeWidth/1.5f, cap = StrokeCap.Round)
                 )
             }
-            RestartButton(
+            ButtonWithText(
                 Modifier
                     .padding(2.dp)
                     .width(90.dp)

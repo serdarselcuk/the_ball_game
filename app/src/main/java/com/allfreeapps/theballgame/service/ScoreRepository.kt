@@ -40,7 +40,7 @@ class ScoreRepository @Inject constructor(
      * Deletes a score from the database.
      * This operation is performed on the IO dispatcher.
      *
-     * @param score The Score object to delete.
+     * @param id The Score object to delete.
      */
     suspend fun deleteScore(id: Int) {
         withContext(Dispatchers.IO) {

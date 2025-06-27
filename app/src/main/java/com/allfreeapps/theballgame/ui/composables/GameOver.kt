@@ -30,22 +30,94 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.R
+import com.allfreeapps.theballgame.model.entities.Score
 import com.allfreeapps.theballgame.ui.theme.GameOverBackground
 import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 import com.allfreeapps.theballgame.ui.theme.UserNameFieldColor
+import java.util.Date
 
 @Composable
 fun GameOverScreen(
     onSaveScoreClicked: (username: String) -> Unit,
     onSkipClicked: () -> Unit,
-    onSettingsClicked: () -> Unit = {}
+    onSettingsClicked: () -> Unit = {},
+    onCloseScoresClicked: () -> Unit,
+    onDeleteClicked: (Int?) -> Unit = {},
+    allScores: List<Score>
 ) {
-    // State for the TextField
-    var username by remember { mutableStateOf("") }
+    var scoreSaved by remember { mutableStateOf(false) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        if (scoreSaved) {
+            ScoreSavedScreen(
+                onCloseScoresClicked = {
+                    scoreSaved = false
+                    onCloseScoresClicked()
+                },
+                onDeleteClicked = onDeleteClicked,
+                allScores = allScores
+            )
+        } else {
+            SavingScoreScreen(
+                onSaveScoreClicked = { username ->
+                    onSaveScoreClicked(username)
+                    scoreSaved = true
+                },
+                onSkipClicked = onSkipClicked,
+                onSettingsClicked = onSettingsClicked,
+            )
+        }
+    }
+}
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(GameOverBackground)) {
+@Composable
+fun ScoreSavedScreen(
+    onCloseScoresClicked: () -> Unit,
+    onDeleteClicked: (Int?) -> Unit,
+    allScores: List<Score>
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+            .background(GameOverBackground),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        ScoresTable(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            scores = allScores,
+            onDeleteClicked = { id ->
+                onDeleteClicked(id)
+            }
+        )
+        ButtonWithText(
+            modifier = Modifier
+                .fillMaxWidth(0.5f)
+                .padding(vertical = 16.dp),
+            onclick = {
+                onCloseScoresClicked()
+            },
+            buttonText = "Close"
+        )
+    }
+}
+
+@Composable
+fun SavingScoreScreen(
+    onSaveScoreClicked: (username: String) -> Unit,
+    onSkipClicked: () -> Unit,
+    onSettingsClicked: () -> Unit = {}
+){
+    var username by remember { mutableStateOf("") }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(GameOverBackground)
+    ) {
 
         Image(
             painter = painterResource(id = R.drawable.game_over_screen),
@@ -94,12 +166,12 @@ fun GameOverScreen(
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
-                    .wrapContentHeight()
-                ,
+                    .wrapContentHeight(),
                 value = username,
                 onValueChange = { username = it },
                 label = {
-                    Text("Enter your name") },
+                    Text("Enter your name")
+                },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = HeaderTextColor,
@@ -115,7 +187,9 @@ fun GameOverScreen(
 
             SaveScoreButton(
                 modifier = Modifier.fillMaxWidth(0.5f), // Make Button take 50% of column width,
-                onClick = { onSaveScoreClicked(username) },
+                onClick = {
+                    onSaveScoreClicked(username)
+                },
                 username = username
             )
 
@@ -127,5 +201,51 @@ fun GameOverScreen(
 @Preview(showBackground = true)
 @Composable
 fun PreviewGameOverScreen(){
-    GameOverScreen(onSaveScoreClicked = {}, onSkipClicked = {}, onSettingsClicked = {})
+    GameOverScreen(
+        onSaveScoreClicked = {},
+        onSkipClicked = {},
+        onSettingsClicked = {},
+        onCloseScoresClicked = {},
+        onDeleteClicked = {},
+        allScores = listOf(
+            Score(
+                1,
+                "User1",
+                "",
+                100,
+                date = Date()
+            ), Score(
+                2,
+                "User2",
+                "",
+                200,
+                date = Date()
+
+            )
+        )
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewScoreSavedScreen() {
+    ScoreSavedScreen(
+        onCloseScoresClicked = {},
+        onDeleteClicked = {},
+        allScores = listOf(
+            Score(
+                1,
+                "User1",
+                "",
+                100,
+                date = Date()
+            ), Score(
+                2,
+                "User2",
+                "",
+                200,
+                date = Date()
+            )
+        )
+    )
 }

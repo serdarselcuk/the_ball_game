@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.allfreeapps.theballgame.utils.Constants
-import com.allfreeapps.theballgame.utils.Converters
 import java.io.Serializable
 import java.util.Date
 
