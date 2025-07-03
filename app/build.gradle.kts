@@ -16,7 +16,7 @@ android {
         minSdk = 30
         targetSdk = 35
         versionCode = 1
-        versionName = "2.1"
+        versionName = "2.5"
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")

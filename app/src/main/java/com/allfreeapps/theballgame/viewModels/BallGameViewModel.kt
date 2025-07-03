@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.viewModels
 
+import android.os.VibrationEffect
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,6 +43,9 @@ class BallGameViewModel @Inject constructor(
         const val TAG = "ViewModel"
         const val LAST_GRID_INDEX = GRID_SIZE - 1
         const val SERIES_LENGTH_ON_INDEXED_BOARD = BALL_LIMIT_TO_REMOVE - 1 //since starting with 0
+        val REMOVE_BALLS_VIBRATION_DURATION = 100L
+        val CLICK_VIBRATION_DURATION = 50L
+        val NO_WAY_TO_MOVE_BALL_VIBRATION_DURATION = 50L
 
         // Define possible movements (row_offset, column_offset)
         val movements = listOf(
@@ -250,7 +254,6 @@ class BallGameViewModel @Inject constructor(
             when(Markers.get(copyOfBallList[index])){
                 Markers.BALL_EXPANSION -> {
                     playBubbleExplodeSound()
-                    vibrator.vibrate()
                 }
                 Markers.BALL_SHRINKING ->  playHissSound()
                 else -> {} // nothing
@@ -311,6 +314,7 @@ class BallGameViewModel @Inject constructor(
 
     private fun processEmptyCellClick(destinationIndex: Int ) {
         playEmptyTapSound()
+        vibrator.vibrate(CLICK_VIBRATION_DURATION)
         Log.d(TAG, "processEmptyCellClick: $destinationIndex")
         if (selectedBall.value == null) {
             Log.d(TAG,"No ball is selected at the moment")
@@ -332,6 +336,8 @@ class BallGameViewModel @Inject constructor(
                     } else {
                         populateUpcomingBalls()
                     }
+                } else {
+                    vibrator.vibrate(NO_WAY_TO_MOVE_BALL_VIBRATION_DURATION)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing empty cell click: ${e.message}")
@@ -655,6 +661,7 @@ class BallGameViewModel @Inject constructor(
 
     private fun processOnBallCellClick(index: Int) {
         playFilledTapSound()
+        vibrator.vibrate(CLICK_VIBRATION_DURATION)
         if(isSelectedBall(index))  deselectTheBall()
         else  selectTheBall(index)
     }
@@ -724,7 +731,7 @@ class BallGameViewModel @Inject constructor(
     }
 
     private fun playBubbleExplodeSound() {
-        vibrator.vibrate()
+        vibrator.vibrate(REMOVE_BALLS_VIBRATION_DURATION)
         playSound(SoundType.BUBBLE_EXPLODE)
     }
 
