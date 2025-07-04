@@ -1,6 +1,5 @@
 package com.allfreeapps.theballgame.viewModels
 
-import android.os.VibrationEffect
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,15 +36,16 @@ class BallGameViewModel @Inject constructor(
     private val vibrator: Vibrator,
     private val soundPlayerManager: SoundPlayerManager,
     private val settingsRepository: SettingsRepository
-) : ViewModel()  {
+) : ViewModel() {
 
     companion object {
         const val TAG = "ViewModel"
         const val LAST_GRID_INDEX = GRID_SIZE - 1
         const val SERIES_LENGTH_ON_INDEXED_BOARD = BALL_LIMIT_TO_REMOVE - 1 //since starting with 0
-        val REMOVE_BALLS_VIBRATION_DURATION = 100L
-        val CLICK_VIBRATION_DURATION = 50L
-        val NO_WAY_TO_MOVE_BALL_VIBRATION_DURATION = 50L
+        const val REMOVE_BALLS_VIBRATION_DURATION = 100L
+        const val CLICK_VIBRATION_DURATION = 3L
+        const val NO_WAY_TO_MOVE_BALL_VIBRATION_DURATION = 50L
+        const val GAME_OVER_VIBRATION_DURATION = 1000L
 
         // Define possible movements (row_offset, column_offset)
         val movements = listOf(
@@ -79,6 +79,10 @@ class BallGameViewModel @Inject constructor(
     private val _isMuted = MutableStateFlow(settingsRepository.isMuteOnStart.value)
     val isMuted: StateFlow<Boolean> = _isMuted
 
+
+    private val _vibrationTurnedOn = MutableStateFlow(settingsRepository.isVibrationTurnedOn.value)
+    private val vibrationTurnedOn: StateFlow<Boolean> = _vibrationTurnedOn
+
     private val _errorState: MutableStateFlow<String?> = MutableStateFlow(null)
 //    val errorState: StateFlow<String?> = _errorState
 
@@ -105,7 +109,7 @@ class BallGameViewModel @Inject constructor(
     val state: StateFlow<GameState?> = _state
 
     init {
-       _state.value = GameState.GameNotStarted
+        _state.value = GameState.GameNotStarted
 
         viewModelScope.launch {
             settingsRepository.masterVolume.collect { newMasterVolume ->
@@ -115,37 +119,44 @@ class BallGameViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            settingsRepository.isVibrationTurnedOn.collect { vibrationTurnedOn ->
+                Log.d("BallGameViewModel", "masterVolume changed in repo: $vibrationTurnedOn")
+                _vibrationTurnedOn.value = vibrationTurnedOn
+            }
+        }
+
+        viewModelScope.launch {
             settingsRepository.bubbleExplodeVolume.collect { newBubbleVolume ->
                 Log.d("BallGameViewModel", "bubbleExplodeVolume changed in repo: $newBubbleVolume")
-                soundPlayerManager.updateVolume(SoundType.BUBBLE_EXPLODE ,newBubbleVolume)
+                soundPlayerManager.updateVolume(SoundType.BUBBLE_EXPLODE, newBubbleVolume)
             }
         }
 
         viewModelScope.launch {
             settingsRepository.bubbleSelectVolume.collect { newSelectVolume ->
                 Log.d("BallGameViewModel", "bubbleSelectVolume changed in repo: $newSelectVolume")
-                soundPlayerManager.updateVolume(SoundType.FILLED_TAP ,newSelectVolume)
+                soundPlayerManager.updateVolume(SoundType.FILLED_TAP, newSelectVolume)
             }
         }
 
         viewModelScope.launch {
             settingsRepository.tappingVolume.collect { newTappingVolume ->
                 Log.d("BallGameViewModel", "tappingVolume changed in repo: $newTappingVolume")
-                soundPlayerManager.updateVolume(SoundType.EMPTY_TAP ,newTappingVolume)
+                soundPlayerManager.updateVolume(SoundType.EMPTY_TAP, newTappingVolume)
             }
         }
 
         viewModelScope.launch {
             settingsRepository.hissVolume.collect { newHissVolume ->
                 Log.d("BallGameViewModel", "hissVolume changed in repo: $newHissVolume")
-                soundPlayerManager.updateVolume(SoundType.HISS ,newHissVolume)
+                soundPlayerManager.updateVolume(SoundType.HISS, newHissVolume)
             }
         }
 
         viewModelScope.launch {
             settingsRepository.clickVolume.collect { newClickVolume ->
                 Log.d("BallGameViewModel", "clickVolume changed in repo: $newClickVolume")
-                soundPlayerManager.updateVolume(SoundType.DEFAULT_TAP ,newClickVolume)
+                soundPlayerManager.updateVolume(SoundType.DEFAULT_TAP, newClickVolume)
             }
         }
 
@@ -180,7 +191,7 @@ class BallGameViewModel @Inject constructor(
         _score.value += (score + additionalScore)
     }
 
-    private fun setState(gameState: GameState){
+    private fun setState(gameState: GameState) {
         Log.d(TAG, "setState: $gameState")
         _state.value = gameState
     }
@@ -197,8 +208,8 @@ class BallGameViewModel @Inject constructor(
 
     private fun addBall(index: Int, colorCode: Int) {
         Log.d(TAG, "addBall: $index, $colorCode")
-        if(totalBallCount.value == (MAX_BALL_COUNT)){
-            finishTheGame()
+        if (totalBallCount.value == (MAX_BALL_COUNT)) {
+            isItEndOfTheGame()
             return
         }
         viewModelScope.launch {
@@ -251,11 +262,12 @@ class BallGameViewModel @Inject constructor(
 
             val copyOfBallList = _ballList.value.copyOf()
             // add sound for bubble explode TODO() for ball to be shrunk we can add another sound
-            when(Markers.get(copyOfBallList[index])){
+            when (Markers.get(copyOfBallList[index])) {
                 Markers.BALL_EXPANSION -> {
                     playBubbleExplodeSound()
                 }
-                Markers.BALL_SHRINKING ->  playHissSound()
+
+                Markers.BALL_SHRINKING -> playHissSound()
                 else -> {} // nothing
             }
             copyOfBallList[index] = 0
@@ -265,35 +277,35 @@ class BallGameViewModel @Inject constructor(
         }
     }
 
-    private fun markBallToGetShrink(index: Int){
+    private fun markBallToGetShrink(index: Int) {
         viewModelScope.launch {
             val noBallInTheBoard = totalBallCount.value == 0
-            val colorValue= ballList.value[index]
+            val colorValue = ballList.value[index]
             val hasMarker = colorValue >= 10
-            if(hasMarker)
+            if (hasMarker)
                 markerPrintout(colorValue)
-            val ballValue= colorValue % 10
-            val ballIsAlreadyRemoved =ballValue  == 0
+            val ballValue = colorValue % 10
+            val ballIsAlreadyRemoved = ballValue == 0
             if (noBallInTheBoard || ballIsAlreadyRemoved) return@launch
 
             val copyOfBallList = _ballList.value.copyOf()
             copyOfBallList[index] = Markers.markTheBall(Markers.BALL_SHRINKING, ballValue)
             _ballList.value = copyOfBallList
             Log.d(TAG, "index to mark get smaller: $index")
-            if(hasMarker)
+            if (hasMarker)
                 Log.d(TAG, "Ball has already a marker: $copyOfBallList")
         }
     }
 
-    private fun markBallToGetExpanded(index: Int){
+    private fun markBallToGetExpanded(index: Int) {
         viewModelScope.launch {
             val noBallInTheBoard = totalBallCount.value == 0
-            val colorValue= ballList.value[index]
+            val colorValue = ballList.value[index]
             val hasMarker = colorValue >= 10
-            if(hasMarker)
+            if (hasMarker)
                 markerPrintout(colorValue)
-            val ballValue= colorValue % 10
-            val ballIsAlreadyRemoved =ballValue  == 0
+            val ballValue = colorValue % 10
+            val ballIsAlreadyRemoved = ballValue == 0
             if (noBallInTheBoard || ballIsAlreadyRemoved) return@launch
 
             val copyOfBallList = _ballList.value.copyOf()
@@ -303,7 +315,7 @@ class BallGameViewModel @Inject constructor(
         }
     }
 
-    private fun markerPrintout(ballValue: Int){
+    private fun markerPrintout(ballValue: Int) {
         Log.d(TAG, "Ball has already a marker: $ballValue")
     }
 
@@ -312,12 +324,12 @@ class BallGameViewModel @Inject constructor(
         return selectedBall.value == index
     }
 
-    private fun processEmptyCellClick(destinationIndex: Int ) {
+    private fun processEmptyCellClick(destinationIndex: Int) {
         playEmptyTapSound()
-        vibrator.vibrate(CLICK_VIBRATION_DURATION)
+        vibrate(CLICK_VIBRATION_DURATION)
         Log.d(TAG, "processEmptyCellClick: $destinationIndex")
         if (selectedBall.value == null) {
-            Log.d(TAG,"No ball is selected at the moment")
+            Log.d(TAG, "No ball is selected at the moment")
         } //TODO Or handle as an error/log
 
         viewModelScope.launch {
@@ -337,7 +349,7 @@ class BallGameViewModel @Inject constructor(
                         populateUpcomingBalls()
                     }
                 } else {
-                    vibrator.vibrate(NO_WAY_TO_MOVE_BALL_VIBRATION_DURATION)
+                    vibrate(NO_WAY_TO_MOVE_BALL_VIBRATION_DURATION)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing empty cell click: ${e.message}")
@@ -424,56 +436,57 @@ class BallGameViewModel @Inject constructor(
         return false
     }
 
-    private suspend fun findColorSeries(listOfChanges: List<Int>): Boolean = withContext(Dispatchers.Default) {
-        Log.d(TAG, "findColorSeries: $listOfChanges")
-        var result = false
-        setState(GameState.SearchingForSeries)
-        listOfChanges.forEach { ballPosition ->
-            val startColor = ballList.value[ballPosition]
+    private suspend fun findColorSeries(listOfChanges: List<Int>): Boolean =
+        withContext(Dispatchers.Default) {
+            Log.d(TAG, "findColorSeries: $listOfChanges")
+            var result = false
+            setState(GameState.SearchingForSeries)
+            listOfChanges.forEach { ballPosition ->
+                val startColor = ballList.value[ballPosition]
 
-            // Skip empty cells or invalid colors as starting points
-            if (startColor > 0) {
-                val (row, column) = indexToPosition(ballPosition)
+                // Skip empty cells or invalid colors as starting points
+                if (startColor > 0) {
+                    val (row, column) = indexToPosition(ballPosition)
 
-                for ((direction1, direction2) in directionPairsToSearch) {
-                    //                  if down-left is the direction there should be enough space for the series
-                    when (direction1) {
-                        //                      if diagonal direction, there should be enough space for the series (5 ball not fitting to corners)
-                        Direction.UP_RIGHT, Direction.DOWN_LEFT -> if (((column + row) < SERIES_LENGTH_ON_INDEXED_BOARD) || ((row + column) > ((2 * LAST_GRID_INDEX) - SERIES_LENGTH_ON_INDEXED_BOARD))) continue
-                        Direction.DOWN_RIGHT, Direction.UP_LEFT -> if (((column - row) > SERIES_LENGTH_ON_INDEXED_BOARD) || ((row - column) > SERIES_LENGTH_ON_INDEXED_BOARD)) continue
-                        else -> {}
-                    }
+                    for ((direction1, direction2) in directionPairsToSearch) {
+                        //                  if down-left is the direction there should be enough space for the series
+                        when (direction1) {
+                            //                      if diagonal direction, there should be enough space for the series (5 ball not fitting to corners)
+                            Direction.UP_RIGHT, Direction.DOWN_LEFT -> if (((column + row) < SERIES_LENGTH_ON_INDEXED_BOARD) || ((row + column) > ((2 * LAST_GRID_INDEX) - SERIES_LENGTH_ON_INDEXED_BOARD))) continue
+                            Direction.DOWN_RIGHT, Direction.UP_LEFT -> if (((column - row) > SERIES_LENGTH_ON_INDEXED_BOARD) || ((row - column) > SERIES_LENGTH_ON_INDEXED_BOARD)) continue
+                            else -> {}
+                        }
 
-                    val currentSeries = mutableSetOf<Int>()
-                    currentSeries.add(
-                        positionToIndex(
-                            row, column
-                        )
-                    ) // Start with the current cell
+                        val currentSeries = mutableSetOf<Int>()
+                        currentSeries.add(
+                            positionToIndex(
+                                row, column
+                            )
+                        ) // Start with the current cell
 
-                    // Explore in each direction
-                    val direction1Series = async {
-                        exploreTheDirection(startColor, row, column, direction1)
-                    }
+                        // Explore in each direction
+                        val direction1Series = async {
+                            exploreTheDirection(startColor, row, column, direction1)
+                        }
 
-                    val direction2Series = async {
-                        exploreTheDirection(startColor, row, column, direction2)
-                    }
+                        val direction2Series = async {
+                            exploreTheDirection(startColor, row, column, direction2)
+                        }
 
-                    currentSeries.addAll(direction1Series.await())
-                    currentSeries.addAll(direction2Series.await())
+                        currentSeries.addAll(direction1Series.await())
+                        currentSeries.addAll(direction2Series.await())
 
-                    // If the series is long enough, add all its cells to the result set
-                    if (currentSeries.size >= BALL_LIMIT_TO_REMOVE) {
-                        _setToRemove.value.add(currentSeries)
-                        result = true
+                        // If the series is long enough, add all its cells to the result set
+                        if (currentSeries.size >= BALL_LIMIT_TO_REMOVE) {
+                            _setToRemove.value.add(currentSeries)
+                            result = true
+                        }
                     }
                 }
             }
-        }
 
-        return@withContext result
-    }
+            return@withContext result
+        }
 
     private suspend fun exploreTheDirection(
         startColor: Int,
@@ -618,8 +631,8 @@ class BallGameViewModel @Inject constructor(
             val ballPositions = mutableListOf<Int>()
             for (color in upcomingBalls) {
                 val ballPosition = randomBall()
-                if (ballPosition == -1){
-                    finishTheGame()
+                if (ballPosition == -1) {
+                    isItEndOfTheGame()
                     break
                 }
                 addBall(ballPosition, color)
@@ -630,13 +643,15 @@ class BallGameViewModel @Inject constructor(
 
             findColorSeries(ballPositions)
             markToBeRemovedAllSeries()
-            finishTheGame()
+            isItEndOfTheGame()
         }
     }
 
-    private fun finishTheGame() {
-        if(totalBallCount.value == 81){
+    private fun isItEndOfTheGame() {
+
+        if (totalBallCount.value == 81) {
             setState(GameState.GameOver)
+            vibrate(GAME_OVER_VIBRATION_DURATION)
         }
     }
 
@@ -661,9 +676,9 @@ class BallGameViewModel @Inject constructor(
 
     private fun processOnBallCellClick(index: Int) {
         playFilledTapSound()
-        vibrator.vibrate(CLICK_VIBRATION_DURATION)
-        if(isSelectedBall(index))  deselectTheBall()
-        else  selectTheBall(index)
+        vibrate(CLICK_VIBRATION_DURATION)
+        if (isSelectedBall(index)) deselectTheBall()
+        else selectTheBall(index)
     }
 
     fun changeSoundStatus() {
@@ -672,15 +687,15 @@ class BallGameViewModel @Inject constructor(
         else mute()
     }
 
-    private fun mute(){
+    private fun mute() {
         Log.d(TAG, "muted and all sound players released")
-        if(! isMuted.value) {
+        if (!isMuted.value) {
             _isMuted.value = true
             soundPlayerManager.releaseAll()
         }
     }
 
-    private fun unMute(){
+    private fun unMute() {
         Log.d(TAG, "un Muted ")
         if (_isMuted.value) {
             _isMuted.value = false
@@ -694,21 +709,21 @@ class BallGameViewModel @Inject constructor(
     }
 
     fun onCellClick(color: Int, index: Int) = run {
-        if ( color == Constants.NO_BALL) processEmptyCellClick(index)
+        if (color == Constants.NO_BALL) processEmptyCellClick(index)
         else processOnBallCellClick(index)
     }
 
     fun deleteScore(id: Int?) {
         playClickSound()
         viewModelScope.launch(Dispatchers.IO) {
-            if(id == null) repository.deleteAllScores()
+            if (id == null) repository.deleteAllScores()
             else repository.deleteScore(
-                    id = id,
+                id = id,
             )
         }
     }
 
-    fun saveScoreClicked(userName: String){
+    fun saveScoreClicked(userName: String) {
         playClickSound()
         saveScore(userName)
 
@@ -731,7 +746,7 @@ class BallGameViewModel @Inject constructor(
     }
 
     private fun playBubbleExplodeSound() {
-        vibrator.vibrate(REMOVE_BALLS_VIBRATION_DURATION)
+        vibrate(REMOVE_BALLS_VIBRATION_DURATION)
         playSound(SoundType.BUBBLE_EXPLODE)
     }
 
@@ -747,13 +762,17 @@ class BallGameViewModel @Inject constructor(
         playSound(SoundType.HISS)
     }
 
-    private fun playSound(soundType: SoundType){
-        if( isMuted.value ) return
+    private fun playSound(soundType: SoundType) {
+        if (isMuted.value) return
         soundPlayerManager.playSound(soundType)
     }
 
-    fun releaseSoundManagers(){
+    fun releaseSoundManagers() {
         soundPlayerManager.releaseAll()
+    }
+
+    fun vibrate(duration: Long) {
+        if (vibrationTurnedOn.value) vibrator.vibrate(duration)
     }
 
 }

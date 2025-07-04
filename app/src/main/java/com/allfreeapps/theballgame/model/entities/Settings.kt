@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 
 object Settings {
+    val IS_VIBRATION_ON = booleanPreferencesKey("vibrationOn")
     val SYSTEM_THEME= booleanPreferencesKey("systemTheme")
     val DARK_THEME= booleanPreferencesKey("darkThemeOnStart")
     val IS_MUTE_ON_START= booleanPreferencesKey("isMuteOnStart")

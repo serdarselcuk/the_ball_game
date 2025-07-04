@@ -43,6 +43,7 @@ fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel) {
     val bubbleExplodeVolume by viewModel.bubbleExplodeVolume.collectAsState()
     val tappingVolume by viewModel.tappingVolume.collectAsState()
     val hissVolume by viewModel.hissVolume.collectAsState()
+    val isVibrationTurnedOn by viewModel.isVibrationTurnedOn.collectAsState()
 
     Column(
         modifier = modifier,
@@ -96,11 +97,23 @@ fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel) {
             )
         }
 
-        SettingsToggle(
-            label = "Mute on Start",
-            checked = isMuteOnStart,
-            onCheckedChange = { viewModel.setIsMuteOnStart(it) }
-        )
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SettingsToggle(
+                label = "Mute on Start",
+                checked = isMuteOnStart,
+                onCheckedChange = { viewModel.setIsMuteOnStart(it) }
+            )
+
+            SettingsToggle(
+                label = "Vibration",
+                checked = isVibrationTurnedOn,
+                onCheckedChange = { viewModel.setVibrationTurnedOn(it) }
+            )
+        }
 
 
         SettingsLevelControl(

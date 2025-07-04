@@ -28,6 +28,17 @@ class SettingsViewModel @Inject constructor(
     val bubbleSelectVolume: StateFlow<Int> = settingsRepository.bubbleSelectVolume
     val bubbleExplodeVolume: StateFlow<Int> = settingsRepository.bubbleExplodeVolume
     val tappingVolume: StateFlow<Int> = settingsRepository.tappingVolume
+    val isVibrationTurnedOn: StateFlow<Boolean> = settingsRepository.isVibrationTurnedOn
+
+    fun setVibrationTurnedOn(it: Boolean) {
+        viewModelScope.launch {
+            try {
+                settingsRepository.setVibrationTurnedOn(it)
+            } catch (e: Exception) {
+                Log.e(TAG, "isVibrationTurnedOn could not be set")
+            }
+        }
+    }
 
     fun setVolume(volumeLevel: Float) {
         viewModelScope.launch {
