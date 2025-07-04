@@ -24,12 +24,22 @@ class SettingsRepository @Inject constructor(
 ){
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    val isVibrationTurnedOn: StateFlow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[Settings.IS_VIBRATION_ON] ?: false
+        }.stateIn(
+            scope = applicationScope,
+            started = SharingStarted.Lazily,
+            initialValue = false
+        )
+
     val isMuteOnStart: StateFlow<Boolean> = dataStore.data
         .map { preferences ->
             preferences[Settings.IS_MUTE_ON_START] ?: false
         } .stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = true
         )
 
@@ -39,7 +49,7 @@ class SettingsRepository @Inject constructor(
             preferences[Settings.DARK_THEME]?:false
         }.stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = false
         )
 
@@ -48,7 +58,7 @@ class SettingsRepository @Inject constructor(
             preferences[Settings.SYSTEM_THEME]?:false
         } .stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = false
         )
 
@@ -57,7 +67,7 @@ class SettingsRepository @Inject constructor(
             preferences[Settings.VOLUME] ?: 50
         } .stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = 50
         )
 
@@ -66,7 +76,7 @@ class SettingsRepository @Inject constructor(
             preferences[Settings.HISS_VOLUME] ?: 50
         } .stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = 50
         )
 
@@ -75,7 +85,7 @@ class SettingsRepository @Inject constructor(
             preferences[Settings.SPEED] ?: 50
         } .stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = 50
         )
     val clickVolume: StateFlow<Int> = dataStore.data
@@ -83,7 +93,7 @@ class SettingsRepository @Inject constructor(
             preferences[Settings.CLICK_VOLUME] ?: 50
         } .stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = 50
         )
     val bubbleSelectVolume: StateFlow<Int> = dataStore.data
@@ -91,7 +101,7 @@ class SettingsRepository @Inject constructor(
             preferences[Settings.BUBBLE_SELECT_VOLUME] ?: 50
         } .stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = 50
         )
     val bubbleExplodeVolume: StateFlow<Int> = dataStore.data
@@ -99,7 +109,7 @@ class SettingsRepository @Inject constructor(
             preferences[Settings.BUBBLE_EXPLODE_VOLUME] ?: 50
         } .stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = 50
         )
 
@@ -108,7 +118,7 @@ class SettingsRepository @Inject constructor(
             preferences[Settings.TAPPING_VOLUME] ?: 50
         } .stateIn(
             scope = applicationScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.Lazily,
             initialValue = 50
         )
 
@@ -199,6 +209,12 @@ class SettingsRepository @Inject constructor(
             SoundType.EMPTY_TAP -> tappingVolume.value
             SoundType.FILLED_TAP -> bubbleSelectVolume.value
             SoundType.HISS -> hissVolume.value
+        }
+    }
+
+    suspend fun setVibrationTurnedOn(boolean: Boolean) {
+        dataStore.edit {
+            it[Settings.IS_VIBRATION_ON] = boolean
         }
     }
 }
