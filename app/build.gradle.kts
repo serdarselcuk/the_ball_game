@@ -15,7 +15,7 @@ android {
         applicationId = "com.allfreeapps.theballgame"
         minSdk = 30
         targetSdk = 35
-        versionCode = 1
+        versionCode = 2
         versionName = "2.6"
 
         ksp {
