@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.service.SettingsRepository
 import com.allfreeapps.theballgame.viewModels.SettingsViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -32,7 +33,7 @@ import kotlinx.coroutines.SupervisorJob
 
 
 @Composable
-fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel) {
+fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
     val isMuteOnStart by viewModel.isMuteOnStart.collectAsState()
     val darkMode by viewModel.darkTheme.collectAsState()
     val systemTheme by viewModel.systemTheme.collectAsState()
@@ -246,3 +247,29 @@ fun PreviewSettingsScreen() {
         viewModel = mockSettingsViewModel
     )
 }
+
+@Preview(
+    showBackground = true,
+    uiMode = android.content.res.Configuration.ORIENTATION_LANDSCAPE
+)
+@Composable
+fun PreviewSettingsLandScapeScreen() {
+    val context = LocalContext.current
+    val mockSettingsViewModel = SettingsViewModel(
+        settingsRepository = SettingsRepository(
+            dataStore = PreferenceDataStoreFactory.create(
+                corruptionHandler = androidx.datastore.core.handlers.ReplaceFileCorruptionHandler(
+                    produceNewData = { emptyPreferences() }
+                ),
+//            migrations = listOf(androidx.datastore.migrations.SharedPreferencesMigration(context, YOUR_SHARED_PREFS_NAME_IF_MIGRATING)),
+                scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                produceFile = { context.preferencesDataStoreFile("app_settings") }
+            )
+        )
+    )
+    SettingsScreen(
+        modifier = Modifier.padding(16.dp),
+        viewModel = mockSettingsViewModel
+    )
+}
+

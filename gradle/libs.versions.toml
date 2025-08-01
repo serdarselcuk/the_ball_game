@@ -1,6 +1,7 @@
 [versions]
 agp = "8.8.2"
 datastorePreferences = "1.1.7"
+hiltNavigationCompose = "1.2.0"
 kotlin = "2.0.0"
 coreKtx = "1.16.0"
 devtools = "2.0.0-1.0.21"
@@ -14,6 +15,7 @@ composeBom = "2024.04.01"
 media3Exoplayer = "1.7.1"
 mockitoInline = "5.2.0"
 mockitoKotlin = "5.2.1"
+navigationCompose = "2.7.7"
 roomRuntime = "2.7.1"
 truth = "1.1.5"
 workRuntimeKtx = "2.10.1"
@@ -22,8 +24,10 @@ hilt = "2.51.1"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-media3-common = { module = "androidx.media3:media3-common", version.ref = "media3Exoplayer" }
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }

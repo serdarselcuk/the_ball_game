@@ -48,8 +48,28 @@ class SoundPlayerManager @Inject constructor(
             }
     }
 
-    fun playSound(soundType: SoundType = SoundType.DEFAULT_TAP) {
+    fun playBubbleExplodeSound(isMuted: Boolean) {
+        playSound(isMuted, SoundType.BUBBLE_EXPLODE)
+    }
 
+    fun playEmptyTapSound(isMuted: Boolean) {
+        playSound(isMuted, SoundType.EMPTY_TAP)
+    }
+
+    fun playFilledTapSound(isMuted: Boolean) {
+        playSound(isMuted, SoundType.FILLED_TAP)
+    }
+
+    fun playHissSound(isMuted: Boolean) {
+        playSound(isMuted, SoundType.HISS)
+    }
+
+    fun playClickSound(isMuted: Boolean) {
+        playSound(isMuted, SoundType.DEFAULT_TAP)
+    }
+
+    fun playSound(isMuted: Boolean, soundType: SoundType = SoundType.DEFAULT_TAP) {
+        if (isMuted) return
         (players[soundType] ?: initialize(soundType))
          .apply {
             seekTo(0)

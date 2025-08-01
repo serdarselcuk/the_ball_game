@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -25,7 +26,6 @@ import com.allfreeapps.theballgame.utils.Constants
 import com.allfreeapps.theballgame.utils.Markers
 import com.allfreeapps.theballgame.utils.getRadialGradientBrush
 import com.allfreeapps.theballgame.utils.toBallColor
-import kotlinx.coroutines.Dispatchers
 
 private val DEFAULT_SHADOW_ELEVATION = 18.dp
 private val SELECTED_SHADOW_ELEVATION = 25.dp
@@ -33,8 +33,8 @@ private val BALL_JUMP_HEIGHT = (-5).dp
 const val BALL_CREATION_LATENCY: Int = 300
 private const val JUMP_DURATION: Int = 200
 private const val BALL_SIZE_RATIO = 0.8f
-private const val initialBallSize =  5f
-private const val expandingRate = 5f/4f
+private const val initialBallSize = 5f
+private const val expandingRate = 5f / 4f
 
 @Composable
 fun AnimatedBall(
@@ -42,41 +42,39 @@ fun AnimatedBall(
     colorValue: Int,
     isBallSelected: Boolean,
     removeTheBall: () -> Unit,
-    gameSpeed:Int
-){
+    gameSpeed: Int
+) {
     val marker = Markers.get(colorValue) // 10 => marked for shrink , 20 => marked for expand
     val color = colorValue % 10 // last digit is the color code (removing marker)
     val isCurrentlyABall = color != Constants.NO_BALL
-
+    Log.d("AnimatedBall", "isCurrentlyABall: $isCurrentlyABall, color: $color")
     if (isCurrentlyABall) { // New ball
-        when(marker){
+        when (marker) {
             Markers.BALL_SHRINKING -> {// Ball removed
-
+                Log.d("AnimatedBall", "Ball removed")
                 Ball(
                     colorValue = color, // Should be invisible or a placeholder
                     initialSize = cellSize.value * BALL_SIZE_RATIO,
                     targetSize = 1f,
-                    onAnimationComplete = {
-                        removeTheBall()
-                    },
+                    onAnimationComplete = removeTheBall,
                     gameSpeed = gameSpeed
                 )
             }
 
             Markers.BALL_EXPANSION -> { // Ball expanded
+                Log.d("AnimatedBall", "Ball expanded")
                 Ball(
                     targetSize = cellSize.value * BALL_SIZE_RATIO * expandingRate,
                     initialSize = cellSize.value * BALL_SIZE_RATIO,
                     colorValue = color,
-                    onAnimationComplete = {
-                        removeTheBall()
-                    },
+                    onAnimationComplete = removeTheBall,
                     gameSpeed = gameSpeed
                 )
             }
 
             else -> {
                 // New ball
+                Log.d("AnimatedBall", "New ball")
                 Ball(
                     colorValue = color,
                     initialSize = initialBallSize,
@@ -99,14 +97,15 @@ fun Ball(
     gameSpeed: Int = 75
 ){
     val animatedSize = remember { Animatable(initialSize) }
-    LaunchedEffect(targetSize, gameSpeed) { // Relaunch when targetSize changes
-        // Offload animation to a background thread
-        kotlinx.coroutines.withContext(Dispatchers.Default) {
-            animatedSize.animateTo(
-                targetValue = targetSize,
-                animationSpec = tween(durationMillis = BALL_CREATION_LATENCY - (gameSpeed*2), easing = LinearEasing)
+    LaunchedEffect(targetSize, gameSpeed) {
+        animatedSize.animateTo(
+            targetValue = targetSize,
+            animationSpec = tween(
+                durationMillis = BALL_CREATION_LATENCY - (gameSpeed * 2),
+                easing = LinearEasing
             )
-        }.also { onAnimationComplete() }
+        )
+        onAnimationComplete() // Call after animation finishes
     }
 
     val jumpAnimationState = rememberBallJumpAnimationState(isBallSelected = isBallSelected)
@@ -135,19 +134,37 @@ fun Ball(
 
 @Composable
 fun rememberBallJumpAnimationState(isBallSelected: Boolean): State<Float> {
-    val animationSpec = infiniteRepeatable<Float>(
-        animation = tween(durationMillis =JUMP_DURATION, easing = LinearOutSlowInEasing),// how long will it take to jump, movement speed change
-        repeatMode = RepeatMode.Reverse
-    )
-    val animatedValue = remember { Animatable(-10f) }
+    val animatedValue = remember { Animatable(0f) } // Initial state is 0f (baseline)
 
-    LaunchedEffect(isBallSelected) { // Relaunch when isBallSelected changes
-        // Offload animation to a background thread
-        kotlinx.coroutines.withContext(Dispatchers.Default) {
-            if (isBallSelected) {
-                animatedValue.animateTo(1f, animationSpec) // the height of jump
-            } else {
-                animatedValue.snapTo(0f) // Stop and reset animation if not selected
+    // This spec is only used when isBallSelected is true
+    val jumpAnimationSpec = remember(JUMP_DURATION) {
+        infiniteRepeatable<Float>(
+            animation = tween(durationMillis = JUMP_DURATION, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    }
+
+    LaunchedEffect(isBallSelected) {
+        if (isBallSelected) {
+
+            // This handles the transition from unselected (at 0f) to selected.
+            if (animatedValue.value != 0f && animatedValue.targetValue != 1f) {
+                animatedValue.snapTo(0f)
+            }
+            // Animate to 1f for the jump
+            animatedValue.animateTo(1f, jumpAnimationSpec)
+        } else {
+            // For unselected balls:
+            // If it's currently running (i.e., was jumping), stop the animation.
+            if (animatedValue.isRunning) {
+                animatedValue.stop()
+            }
+            // Ensure it animates or snaps back to 0f (baseline, no jump).
+            // This handles the transition from selected (jumping) to unselected.
+            if (animatedValue.value != 0f) {
+                // You can choose to animate or snap here.
+                // Snapping is simpler if an animation isn't desired for deselection.
+                animatedValue.snapTo(0f)
             }
         }
     }

@@ -37,17 +37,24 @@ android {
         }
     }
 
-
     buildTypes {
+
         getByName("release") { // Use getByName to configure an existing build type
             // Correct way to assign the signing configuration
             signingConfig = signingConfigs.getByName("release")
 
             isMinifyEnabled = true
+            isShrinkResources = true
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        getByName("debug") {
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 
@@ -74,8 +81,10 @@ dependencies {
     // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom)) // Compose Bill of Materials - manages versions
     implementation(libs.androidx.ui)
+    implementation(libs.androidx.navigation.compose)
     // Hilt-Dagger
     implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
     implementation(libs.androidx.ui.graphics)

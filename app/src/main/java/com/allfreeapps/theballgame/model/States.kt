@@ -1,8 +1,10 @@
-package com.allfreeapps.theballgame.ui.model
+package com.allfreeapps.theballgame.model
 
-sealed class GameState {
-    data object SearchingForSeries : GameState()
-    data object UserTurn : GameState()
-    data object GameOver : GameState()
-    data object GameNotStarted : GameState()
+enum class GameState {
+    SEARCHING_FOR_SERIES,
+    USER_TURN,
+    GAME_OVER,
+    GAME_NOT_STARTED,
+    GAME_STARTED,
+    GAME_PAUSED,
 }

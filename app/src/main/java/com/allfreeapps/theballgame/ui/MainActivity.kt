@@ -19,24 +19,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.allfreeapps.theballgame.navigation.Screen
 import com.allfreeapps.theballgame.service.SettingsRepository
 import com.allfreeapps.theballgame.ui.composables.GameOverScreen
 import com.allfreeapps.theballgame.ui.composables.MainLayout
+import com.allfreeapps.theballgame.ui.composables.ScoreTableScreen
+import com.allfreeapps.theballgame.ui.composables.SettingsScreen
 import com.allfreeapps.theballgame.ui.composables.WelcomeScreen
-import com.allfreeapps.theballgame.ui.model.GameState
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.Black
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
-import com.allfreeapps.theballgame.viewModels.BallGameViewModel
+import com.allfreeapps.theballgame.viewModels.WelcomeScreenViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: BallGameViewModel by viewModels()
+    private val viewModel: WelcomeScreenViewModel by viewModels()
 
     @Inject
     lateinit var settingRepository: SettingsRepository
@@ -47,121 +51,14 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            InitialView()
+            InitialView(
+                viewModel = viewModel,
+                settingsRepository = settingRepository,
+                navigateToSettings = { navigateToSettings() }
+            )
         }
     }
 
-    @Composable
-    fun InitialView() {
-        val systemTheme by settingRepository.systemTheme.collectAsState()
-        val darkThemeEnabled by settingRepository.darkTheme.collectAsState()
-        val useDarkTheme = if (systemTheme) isSystemInDarkTheme() else darkThemeEnabled
-
-        TheBallGameTheme(
-            darkTheme = useDarkTheme
-        ) {
-
-            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                val state by viewModel.state.collectAsState()
-                val isMuted by viewModel.isMuted.collectAsState()
-                val orientation = resources.configuration.orientation
-                val ballList by viewModel.ballList.collectAsState()
-                val selectedBallIndex by viewModel.selectedBall.collectAsState()
-                val score by viewModel.score.collectAsState()
-                val upcomingBalls by viewModel.upcomingBalls.collectAsState()
-                val allScores by viewModel.allScores.collectAsState()
-                val gameSpeed by viewModel.gameSpeed.collectAsState()
-
-                when (state) {
-                    GameState.GameNotStarted -> {
-                        WelcomeScreen(
-                            Modifier
-                                .padding(innerPadding)
-                                .fillMaxWidth()
-                                .fillMaxHeight()
-                                .padding(4.dp)
-                                .background(MaterialTheme.colorScheme.background)
-                                .border(width = 2.dp, color = Black),
-                            isMuted = isMuted,
-                            onMuteClicked = {
-                                viewModel.changeSoundStatus()
-                              },
-                            onSettingsClicked = {
-                                viewModel.playClickSound()
-                                navigateToSettings()
-                            },
-                            restartButtonOnClick = {
-                                viewModel.restartButtonOnClick()
-                            }
-                        )
-                    }
-
-                    GameState.GameOver -> {
-                        GameOverScreen(
-                            onSaveScoreClicked = { username ->
-                                viewModel.saveScoreClicked(username)
-                            }, onSkipClicked = {
-                                viewModel.skipClicked()
-                            },
-                            onSettingsClicked = {
-                                viewModel.playClickSound()
-                                navigateToSettings()
-                            },
-                            onDeleteClicked = { id ->
-                                viewModel.deleteScore(id)
-                            },
-                            onCloseScoresClicked = {
-                                viewModel.closeScoresClicked()
-                            },
-                            allScores = allScores
-                        )
-                    }
-
-                    else -> {
-
-                        MainLayout(
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .padding(4.dp)
-                                .background(BackgroundColor)
-                                .border(width = 2.dp, color = Black),
-                            isMuted = isMuted,
-                            orientation = orientation,
-                            ballList = ballList,
-                            selectedBallIndex = selectedBallIndex,
-                            score = score,
-                            gameSpeed = gameSpeed,
-                            upcomingBalls = upcomingBalls,
-                            allScores = allScores,
-                            onDeleteClicked = { id ->
-                                viewModel.deleteScore(id)
-                            },
-                            changeSoundStatus = {
-                                viewModel.changeSoundStatus()
-                            },
-                            restartButtonOnClick = {
-                                viewModel.restartButtonOnClick()
-                            },
-                            onCellClick = { index ->
-
-                                viewModel.onCellClick(
-                                    ballList[index],
-                                    index
-                                )
-                            },
-                            removeTheBall = { index ->
-                                viewModel.removeBall(index)
-                            },
-                            onSettingsClicked = {
-                                viewModel.playClickSound()
-                                navigateToSettings()
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -174,11 +71,120 @@ class MainActivity : ComponentActivity() {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         applicationContext.startActivity(intent)
     }
+
 }
 
-@Preview(showBackground = true)
 @Composable
-fun PreviewGameScreen() {
-   MainActivity().InitialView()
-}
+fun InitialView(
+    settingsRepository: SettingsRepository,
+    viewModel: WelcomeScreenViewModel,
+    navigateToSettings: () -> Unit = {}
+) {
+//    val viewModel: MainViewModel = hiltViewModel()
+    val systemTheme by settingsRepository.systemTheme.collectAsState()
+    val darkThemeEnabled by settingsRepository.darkTheme.collectAsState()
+    val useDarkTheme = if (systemTheme) isSystemInDarkTheme() else darkThemeEnabled
 
+    TheBallGameTheme(
+        darkTheme = useDarkTheme
+    ) {
+        // 1. Create a NavController
+        val navController = rememberNavController()
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            // 2. Create a NavHost
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Welcome.route, // Your initial screen
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable(Screen.Welcome.route) {
+                    WelcomeScreen(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(4.dp)
+                            .background(MaterialTheme.colorScheme.background)
+                            .border(width = 2.dp, color = Black),
+                        onSettingsClicked = {
+                            navigateToSettings()
+                        },
+                        onStartButtonClicked = {
+                            navController.navigate(Screen.Game.route)
+                        }
+                    )
+                }
+
+                composable(Screen.Game.route) {
+
+                    MainLayout(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .background(BackgroundColor)
+                            .border(width = 2.dp, color = Black),
+                        onSettingsClicked = {
+                            navigateToSettings()
+                        },
+                        gameOver = {
+                            navController.navigate(Screen.GameOver.route) {
+                                popUpTo(Screen.Game.route) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    )
+                }
+
+                composable(Screen.GameOver.route) {
+                    GameOverScreen(
+                        onSaveScoreClicked = {
+                            navController.navigate(Screen.Scores.route) {
+                                popUpTo(Screen.GameOver.route) { inclusive = true }
+                            }
+                        },
+                        onSkipClicked = {
+                            navController.navigate(Screen.Welcome.route) {
+                                popUpTo(Screen.GameOver.route) { inclusive = true }
+                            }
+                        },
+                        onSettingsClicked = {
+                            navController.navigate(Screen.Settings.route)
+                        }
+                    )
+                }
+
+                composable(Screen.Settings.route) {
+                    SettingsScreen(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .padding(16.dp)
+
+                    )
+                }
+
+                composable(Screen.Scores.route) {
+                    ScoreTableScreen(
+                        Modifier
+                            .padding(8.dp),
+                        onCloseScoresClicked = {
+                            navController.navigate(Screen.Welcome.route) {
+                                popUpTo(Screen.Scores.route) { inclusive = true }
+                            }
+                        }
+                    )
+
+                }
+                // Add other destinations (e.g., Settings) here
+            }
+        }
+    }
+}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewGameScreen() {
+////  InitialView(
+////      viewModel = hiltViewModel(),
+////      settingsRepository = hiltViewModel()
+////  )
+//}
+//

@@ -24,7 +24,9 @@ import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.model.entities.Score
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 //TODO add remove all and individual records
 @Composable
@@ -64,7 +66,7 @@ fun ScoresTable(
                         Modifier.wrapContentHeight(),
                         playerName = scoreItem.firstName,
                         score = scoreItem.score.toString(),
-                        date = scoreItem.date.toString(),
+                        date = formatDate(scoreItem.date),
                         onDeleteClicked = { scoreItem.id?.let { onDeleteClicked(it) } }
                     )
                     HorizontalDivider(color = CellBoarderColor)
@@ -75,14 +77,21 @@ fun ScoresTable(
 
 }
 
+private fun formatDate(date: Date): String {
+    return SimpleDateFormat("EEE MMM dd", Locale.getDefault()).format(date)
+}
+
 
 @Composable
 fun ScoreRow(
     modifier: Modifier = Modifier,
-    playerName: String, score: String,
-    date: String, isHeader: Boolean = false,
+    playerName: String,
+    score: String,
+    date: String,
+    isHeader: Boolean = false,
     onDeleteClicked: () -> Unit = {}
 ) {
+
 
     val style =
         if (isHeader) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium

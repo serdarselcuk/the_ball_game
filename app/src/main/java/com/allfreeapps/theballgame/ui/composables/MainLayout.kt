@@ -15,32 +15,32 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.allfreeapps.theballgame.model.entities.Score
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.allfreeapps.theballgame.R
+import com.allfreeapps.theballgame.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.LightGray
+import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 
 @Composable
 fun MainLayout(
     modifier: Modifier,
-    isMuted: Boolean = false,
-    orientation: Int,
-    ballList: Array<Int>,
-    selectedBallIndex: Int?,
-    score: Int,
-    gameSpeed: Int,
-    upcomingBalls: Array<Int>,
-    allScores: List<Score>,
-    changeSoundStatus: () -> Unit = {},
-    restartButtonOnClick: () -> Unit = {},
-    onCellClick: (Int) -> Unit = {},
-    removeTheBall: (Int) -> Unit = {},
-    onDeleteClicked: (Int?) -> Unit = {},
+    viewModel: BallGameViewModel = hiltViewModel(),
     onSettingsClicked: () -> Unit = {},
+    gameOver: () -> Unit = {}
 ) {
-
+    val isMuted by viewModel.isMuted.collectAsState()
+    val orientation = LocalContext.current.resources.configuration.orientation
+    val score by viewModel.score.collectAsState()
+    val upcomingBalls by viewModel.upcomingBalls.collectAsState()
+    val allScores by viewModel.allScores.collectAsState()
     val topScore = if (allScores.isNotEmpty()) allScores[0].score else 1
     val orientationIsLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -51,6 +51,8 @@ fun MainLayout(
     ) {
         Log.d("MainLayout", "BoxWithConstraints: maxWidth=$maxWidth, maxHeight=$maxHeight")
 
+        val state by viewModel.state.collectAsState()
+        if (state == GameState.GAME_OVER) gameOver()
         val totalAvailableHeight = maxHeight
         val totalAvailableWidth = maxWidth
 
@@ -76,8 +78,8 @@ fun MainLayout(
                     {
                         MuteButton(
                             Modifier.padding(1.dp),
-                            isMuted,
-                            onToggleMute = { changeSoundStatus() }
+                            isMuted = isMuted,
+                            onToggleMute = { viewModel.changeSoundStatus() }
                         )
                     },
                     {
@@ -86,6 +88,7 @@ fun MainLayout(
                                 .width(50.dp)
                                 .padding(1.dp),
                             onClick = {
+                                viewModel.playClickSound()
                                 onSettingsClicked()
                             }
                         )
@@ -96,7 +99,15 @@ fun MainLayout(
                                 .padding(1.dp)
                                 .width(90.dp)
                                 .height(35.dp),
-                            onclick = { restartButtonOnClick() })
+                            buttonText =
+                            stringResource(
+                                if (viewModel.state.value == GameState.GAME_NOT_STARTED) R.string.start_game
+                                else R.string.restart_game
+                            ),
+                            onclick = {
+                                viewModel.restartButtonOnClick()
+                            }
+                        )
                     },
                 ),
                 isLandscape = orientationIsLandscape
@@ -138,14 +149,11 @@ fun MainLayout(
                             .fillMaxWidth()
                             .height(totalAvailableWidth),
                         boardSize = (totalAvailableWidth),
-                        ballList = ballList,
-                        gameSpeed = gameSpeed,
-                        selectedBallIndex = selectedBallIndex,
                         onCellClick = { index ->
-                            onCellClick(index)
+                            viewModel.onCellClick(index)
                         },
                         removeTheBall = { index ->
-                            removeTheBall(index)
+                            viewModel.removeBall(index)
                         }
                     )
                     ScoresTable(
@@ -154,7 +162,7 @@ fun MainLayout(
                             .weight(0.3f),
                         scores = allScores,
                         onDeleteClicked = { id ->
-                            onDeleteClicked(id)
+                            viewModel.deleteScore(id)
                         }
                     )
                 }
@@ -198,14 +206,14 @@ fun MainLayout(
                                 .width(totalAvailableHeight * 0.9f)
                                 .fillMaxHeight(),
                             boardSize = (totalAvailableHeight * 0.9f ),
-                            ballList = ballList,
-                            gameSpeed = gameSpeed,
-                            selectedBallIndex = selectedBallIndex,
+
                             onCellClick = { index ->
-                               onCellClick(index)
+                                viewModel.onCellClick(
+                                    index
+                                )
                             },
                             removeTheBall = { index ->
-                                removeTheBall(index)
+                                viewModel.removeBall(index)
                             }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -224,7 +232,7 @@ fun MainLayout(
                                     .weight(0.7f),
                                 scores = allScores,
                                 onDeleteClicked = {id->
-                                    onDeleteClicked(id)
+                                    viewModel.deleteScore(id)
                                 }
                             )
                         }
