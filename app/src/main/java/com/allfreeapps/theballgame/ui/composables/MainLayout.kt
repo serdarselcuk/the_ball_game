@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.allfreeapps.theballgame.BuildConfig
 import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
@@ -36,6 +37,7 @@ fun MainLayout(
     onSettingsClicked: () -> Unit = {},
     gameOver: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val isMuted by viewModel.isMuted.collectAsState()
     val orientation = LocalContext.current.resources.configuration.orientation
     val score by viewModel.score.collectAsState()
@@ -79,7 +81,7 @@ fun MainLayout(
                         MuteButton(
                             Modifier.padding(1.dp),
                             isMuted = isMuted,
-                            onToggleMute = { viewModel.changeSoundStatus() }
+                            onToggleMute = { if (BuildConfig.DEBUG) viewModel.sendLogs(context) else viewModel.changeSoundStatus() }
                         )
                     },
                     {

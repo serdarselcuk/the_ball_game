@@ -19,7 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -33,6 +35,7 @@ import com.allfreeapps.theballgame.ui.composables.WelcomeScreen
 import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.Black
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
+import com.allfreeapps.theballgame.util.Applogger
 import com.allfreeapps.theballgame.viewModels.WelcomeScreenViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -45,6 +48,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var settingRepository: SettingsRepository
 
+    @Inject
+    lateinit var appLogger: Applogger
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,13 +58,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             InitialView(
-                viewModel = viewModel,
                 settingsRepository = settingRepository,
                 navigateToSettings = { navigateToSettings() }
             )
         }
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
@@ -77,10 +81,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun InitialView(
     settingsRepository: SettingsRepository,
-    viewModel: WelcomeScreenViewModel,
     navigateToSettings: () -> Unit = {}
 ) {
-//    val viewModel: MainViewModel = hiltViewModel()
     val systemTheme by settingsRepository.systemTheme.collectAsState()
     val darkThemeEnabled by settingsRepository.darkTheme.collectAsState()
     val useDarkTheme = if (systemTheme) isSystemInDarkTheme() else darkThemeEnabled
@@ -88,13 +90,13 @@ fun InitialView(
     TheBallGameTheme(
         darkTheme = useDarkTheme
     ) {
-        // 1. Create a NavController
+
         val navController = rememberNavController()
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            // 2. Create a NavHost
+
             NavHost(
                 navController = navController,
-                startDestination = Screen.Welcome.route, // Your initial screen
+                startDestination = Screen.Welcome.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Screen.Welcome.route) {
@@ -173,18 +175,17 @@ fun InitialView(
                     )
 
                 }
-                // Add other destinations (e.g., Settings) here
+
             }
         }
     }
 }
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewGameScreen() {
-////  InitialView(
-////      viewModel = hiltViewModel(),
-////      settingsRepository = hiltViewModel()
-////  )
-//}
-//
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewGameScreen() {
+    InitialView(
+        settingsRepository = hiltViewModel()
+    )
+}
+

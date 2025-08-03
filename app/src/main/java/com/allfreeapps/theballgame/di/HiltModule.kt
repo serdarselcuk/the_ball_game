@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.allfreeapps.theballgame.service.AppDatabase
 import com.allfreeapps.theballgame.service.dao.ScoreDao
+import com.allfreeapps.theballgame.util.AppLoggerImpl
+import com.allfreeapps.theballgame.util.Applogger
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,4 +47,13 @@ class HiltModule {
     fun provideScoreDao(appDatabase: AppDatabase): ScoreDao {
         return appDatabase.scoreDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideReleaseLogger(@ApplicationContext context: Context): Applogger {
+        val logger = AppLoggerImpl()
+        logger.initialize(context)
+        return logger
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -21,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.service.SettingsRepository
+import com.allfreeapps.theballgame.util.AppLoggerImpl
 import com.allfreeapps.theballgame.viewModels.SettingsViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -233,15 +236,17 @@ fun PreviewSettingsScreen() {
     val mockSettingsViewModel = SettingsViewModel(
         settingsRepository = SettingsRepository(
             dataStore = PreferenceDataStoreFactory.create(
-                corruptionHandler = androidx.datastore.core.handlers.ReplaceFileCorruptionHandler(
+                corruptionHandler = ReplaceFileCorruptionHandler(
                     produceNewData = { emptyPreferences() }
                 ),
 //            migrations = listOf(androidx.datastore.migrations.SharedPreferencesMigration(context, YOUR_SHARED_PREFS_NAME_IF_MIGRATING)),
                 scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
                 produceFile = { context.preferencesDataStoreFile("app_settings") }
             )
-        )
+        ),
+        appLogger = AppLoggerImpl()
     )
+
     SettingsScreen(
         modifier = Modifier.padding(16.dp),
         viewModel = mockSettingsViewModel
@@ -250,7 +255,7 @@ fun PreviewSettingsScreen() {
 
 @Preview(
     showBackground = true,
-    uiMode = android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    uiMode = Configuration.ORIENTATION_LANDSCAPE
 )
 @Composable
 fun PreviewSettingsLandScapeScreen() {
@@ -258,14 +263,15 @@ fun PreviewSettingsLandScapeScreen() {
     val mockSettingsViewModel = SettingsViewModel(
         settingsRepository = SettingsRepository(
             dataStore = PreferenceDataStoreFactory.create(
-                corruptionHandler = androidx.datastore.core.handlers.ReplaceFileCorruptionHandler(
+                corruptionHandler = ReplaceFileCorruptionHandler(
                     produceNewData = { emptyPreferences() }
                 ),
 //            migrations = listOf(androidx.datastore.migrations.SharedPreferencesMigration(context, YOUR_SHARED_PREFS_NAME_IF_MIGRATING)),
                 scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
                 produceFile = { context.preferencesDataStoreFile("app_settings") }
             )
-        )
+        ),
+        appLogger = AppLoggerImpl()
     )
     SettingsScreen(
         modifier = Modifier.padding(16.dp),

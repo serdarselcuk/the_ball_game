@@ -49,4 +49,5 @@ abstract class BaseViewModel(
     }
 
     abstract fun logError(tag: String, exception: Exception)
+
 }

@@ -1,9 +1,9 @@
 package com.allfreeapps.theballgame.viewModels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.allfreeapps.theballgame.service.SettingsRepository
+import com.allfreeapps.theballgame.util.Applogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -12,6 +12,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
+    private val appLogger: Applogger
+
 ) : ViewModel() {
 
     companion object {
@@ -30,12 +32,13 @@ class SettingsViewModel @Inject constructor(
     val tappingVolume: StateFlow<Int> = settingsRepository.tappingVolume
     val isVibrationTurnedOn: StateFlow<Boolean> = settingsRepository.isVibrationTurnedOn
 
+
     fun setVibrationTurnedOn(it: Boolean) {
         viewModelScope.launch {
             try {
                 settingsRepository.setVibrationTurnedOn(it)
             } catch (e: Exception) {
-                Log.e(TAG, "isVibrationTurnedOn could not be set")
+                appLogger.e(TAG, "isVibrationTurnedOn could not be set")
             }
         }
     }
@@ -45,7 +48,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 settingsRepository.setVolume(volumeLevel)
             }catch (e: Exception){
-                Log.e(TAG, "volumeLevel could not be set")
+                appLogger.e(TAG, "volumeLevel could not be set")
             }
         }
     }
@@ -55,7 +58,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 settingsRepository.setIsMuteOnStart(isMuteOnStart)
             }catch (e: Exception){
-                Log.e(TAG, "isMuteOnStart could not be set")
+                appLogger.e(TAG, "isMuteOnStart could not be set")
             }
         }
     }
@@ -65,7 +68,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 settingsRepository.setDarkMoeOnStart(darkTheme)
             }catch (e: Exception){
-                Log.e(TAG, "darkTheme could not be set")
+                appLogger.e(TAG, "darkTheme could not be set")
             }
         }
     }
@@ -75,7 +78,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 settingsRepository.setSpeed(gameSpeed)
             }catch (e: Exception){
-                Log.e(TAG, "gameSpeed could not be set")
+                appLogger.e(TAG, "gameSpeed could not be set")
             }
         }
     }
@@ -85,7 +88,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 settingsRepository.setClickVolume(clickVolume)
             }catch (e: Exception){
-                Log.e(TAG, "clickVolume could not be set")
+                appLogger.e(TAG, "clickVolume could not be set")
             }
         }
     }
@@ -95,7 +98,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 settingsRepository.setBubbleSelectVolume(bubbleselectVolume)
             }catch (e: Exception){
-                Log.e(TAG, "bubbleselectVolume could not be set")
+                appLogger.e(TAG, "bubbleselectVolume could not be set")
             }
         }
     }
@@ -106,7 +109,7 @@ class SettingsViewModel @Inject constructor(
                 settingsRepository.setBubbleExplodeVolume(bubbleExplodeVolume)
 
             }catch (e: Exception){
-                Log.e(TAG, "bubbleExplodeVolume could not be set")
+                appLogger.e(TAG, "bubbleExplodeVolume could not be set")
             }
         }
     }
@@ -117,7 +120,7 @@ class SettingsViewModel @Inject constructor(
                 settingsRepository.setTappingVolume(tappingVolume)
 
             }catch (e: Exception){
-                Log.e(TAG, "tappingVolume could not be set")
+                appLogger.e(TAG, "tappingVolume could not be set")
             }
         }
     }
@@ -127,7 +130,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 settingsRepository.setSystemTheme(it)
             }catch (e: Exception){
-                Log.e(TAG, "darkTheme could not be set")
+                appLogger.e(TAG, "darkTheme could not be set")
             }
         }
 
@@ -138,7 +141,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 settingsRepository.setHissVolume(it)
             }catch (e: Exception){
-                Log.e(TAG, "tappingVolume could not be set")
+                appLogger.e(TAG, "tappingVolume could not be set")
             }
         }
     }

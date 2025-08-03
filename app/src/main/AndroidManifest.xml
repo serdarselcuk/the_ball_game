@@ -29,13 +29,16 @@
             android:label="@string/settings_activity"
             android:parentActivityName=".ui.MainActivity"
             android:theme="@style/Theme.TheBallGame"></activity>
-        <activity
-            android:name=".ui.GameActivity"
-            android:exported="false"
-            android:label="@string/game_activity"
-            android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/Theme.TheBallGame"></activity>
 
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.allfreeapps.theballgame.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

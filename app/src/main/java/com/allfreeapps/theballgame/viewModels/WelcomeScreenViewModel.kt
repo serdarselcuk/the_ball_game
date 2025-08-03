@@ -3,6 +3,7 @@ package com.allfreeapps.theballgame.viewModels
 import androidx.lifecycle.viewModelScope
 import com.allfreeapps.theballgame.model.GameState
 import com.allfreeapps.theballgame.service.SettingsRepository
+import com.allfreeapps.theballgame.util.Applogger
 import com.allfreeapps.theballgame.utils.Constants
 import com.allfreeapps.theballgame.utils.Constants.Companion.MAX_BALL_COUNT
 import com.allfreeapps.theballgame.utils.Constants.Companion.WELCOME_SCREEN_GRID_SIZE
@@ -21,6 +22,7 @@ class WelcomeScreenViewModel @Inject constructor(
     private val soundPlayerManager: SoundPlayerManager,
     vibrator: Vibrator,
     settingsRepository: SettingsRepository,
+    private val appLogger: Applogger
 ) : BaseViewModel(soundPlayerManager = soundPlayerManager, vibrator = vibrator) {
     companion object {
         fun randomInitSize(max: Int): Float = (5..max).random().toFloat()
