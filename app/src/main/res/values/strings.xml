@@ -8,4 +8,5 @@
     <string name="score">Score</string>
     <string name="date">Date</string>
     <string name="no_previous_scores_yet">No previous scores yet!</string>
+    <string name="game_activity">Game Activity</string>
 </resources>
