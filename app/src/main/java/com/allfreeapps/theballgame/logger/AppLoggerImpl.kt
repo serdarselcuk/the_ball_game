@@ -52,7 +52,7 @@ class AppLoggerImpl : Applogger {
 
             logWriter = FileWriter(currentLogFile!!, true) // Append mode
             isInitialized = true
-            i("ReleaseLogger initialized. App Version: ${getAppVersion(this.appContext)}")
+            i(TAG, "ReleaseLogger initialized. App Version: ${getAppVersion(this.appContext)}")
         } catch (e: IOException) {
             Log.e(TAG, "Failed to initialize file logger", e)
             isInitialized = false // Ensure it's marked as not initialized
@@ -68,15 +68,15 @@ class AppLoggerImpl : Applogger {
         }
     }
 
-    override fun i(message: String, tag: String) {
+    override fun i(tag: String, message: String) {
         writeToLog("I", tag, message)
     }
 
-    override fun w(message: String, tag: String) {
+    override fun w(tag: String, message: String) {
         writeToLog("W", tag, message)
     }
 
-    override fun e(message: String, tag: String, throwable: Throwable?) {
+    override fun e(tag: String, message: String, throwable: Throwable?) {
         val fullMessage = if (throwable != null) {
             "$message\n${Log.getStackTraceString(throwable)}"
         } else {

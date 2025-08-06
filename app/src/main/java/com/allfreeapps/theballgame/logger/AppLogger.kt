@@ -16,14 +16,14 @@ interface Applogger {
      * @param message The message to log.
      * @param tag Optional tag for the log message (defaults to "AppInfo").
      */
-    fun i(message: String, tag: String = "AppInfo")
+    fun i(tag: String = "AppInfo", message: String)
 
     /**
      * Logs a warning message.
      * @param message The message to log.
      * @param tag Optional tag for the log message (defaults to "AppWarning").
      */
-    fun w(message: String, tag: String = "AppWarning")
+    fun w(tag: String = "AppWarning", message: String)
 
     /**
      * Logs an error message.
@@ -31,7 +31,7 @@ interface Applogger {
      * @param tag Optional tag for the log message (defaults to "AppError").
      * @param throwable Optional throwable to include its stack trace in the log.
      */
-    fun e(message: String, tag: String = "AppError", throwable: Throwable? = null)
+    fun e(tag: String = "AppError", message: String, throwable: Throwable? = null)
 
     /**
      * Retrieves the current log file.

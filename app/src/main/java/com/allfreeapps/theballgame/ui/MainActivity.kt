@@ -27,8 +27,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.allfreeapps.theballgame.navigation.Screen
 import com.allfreeapps.theballgame.service.SettingsRepository
+import com.allfreeapps.theballgame.ui.composables.GameLayout
 import com.allfreeapps.theballgame.ui.composables.GameOverScreen
-import com.allfreeapps.theballgame.ui.composables.MainLayout
 import com.allfreeapps.theballgame.ui.composables.ScoreTableScreen
 import com.allfreeapps.theballgame.ui.composables.SettingsScreen
 import com.allfreeapps.theballgame.ui.composables.WelcomeScreen
@@ -118,7 +118,7 @@ fun InitialView(
 
                 composable(Screen.Game.route) {
 
-                    MainLayout(
+                    GameLayout(
                         modifier = Modifier
                             .padding(4.dp)
                             .background(BackgroundColor)

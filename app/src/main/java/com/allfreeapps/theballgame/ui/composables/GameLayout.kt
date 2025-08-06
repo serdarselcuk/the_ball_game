@@ -31,7 +31,7 @@ import com.allfreeapps.theballgame.ui.theme.LightGray
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 
 @Composable
-fun MainLayout(
+fun GameLayout(
     modifier: Modifier,
     viewModel: BallGameViewModel = hiltViewModel(),
     onSettingsClicked: () -> Unit = {},
@@ -103,7 +103,7 @@ fun MainLayout(
                                 .height(35.dp),
                             buttonText =
                             stringResource(
-                                if (viewModel.state.value == GameState.GAME_NOT_STARTED) R.string.start_game
+                                if (upcomingBalls.isEmpty()) R.string.start_game
                                 else R.string.restart_game
                             ),
                             onclick = {
@@ -244,3 +244,5 @@ fun MainLayout(
         }
     }
 }
+
+
