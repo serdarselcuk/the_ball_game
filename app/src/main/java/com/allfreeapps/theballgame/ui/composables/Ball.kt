@@ -136,7 +136,6 @@ fun Ball(
 fun rememberBallJumpAnimationState(isBallSelected: Boolean): State<Float> {
     val animatedValue = remember { Animatable(0f) } // Initial state is 0f (baseline)
 
-    // This spec is only used when isBallSelected is true
     val jumpAnimationSpec = remember(JUMP_DURATION) {
         infiniteRepeatable<Float>(
             animation = tween(durationMillis = JUMP_DURATION, easing = LinearOutSlowInEasing),
@@ -147,24 +146,19 @@ fun rememberBallJumpAnimationState(isBallSelected: Boolean): State<Float> {
     LaunchedEffect(isBallSelected) {
         if (isBallSelected) {
 
-            // This handles the transition from unselected (at 0f) to selected.
-            if (animatedValue.value != 0f && animatedValue.targetValue != 1f) {
-                animatedValue.snapTo(0f)
+            if (animatedValue.targetValue != 1f || !animatedValue.isRunning) {
+                animatedValue.animateTo(1f, jumpAnimationSpec)
             }
-            // Animate to 1f for the jump
-            animatedValue.animateTo(1f, jumpAnimationSpec)
         } else {
-            // For unselected balls:
-            // If it's currently running (i.e., was jumping), stop the animation.
-            if (animatedValue.isRunning) {
-                animatedValue.stop()
-            }
-            // Ensure it animates or snaps back to 0f (baseline, no jump).
-            // This handles the transition from selected (jumping) to unselected.
-            if (animatedValue.value != 0f) {
-                // You can choose to animate or snap here.
-                // Snapping is simpler if an animation isn't desired for deselection.
-                animatedValue.snapTo(0f)
+
+            if (animatedValue.value != 0f || animatedValue.targetValue != 0f) {
+                animatedValue.animateTo(
+                    targetValue = 0f,
+                    animationSpec = tween(
+                        durationMillis = JUMP_DURATION / 2, // Or some other appropriate duration
+                        easing = LinearOutSlowInEasing
+                    )
+                )
             }
         }
     }
