@@ -34,6 +34,7 @@ fun Board(
     val smallBoxSize = boardSize / boardConstraints[0]
     val ballList by viewModel.ballList.collectAsState()
     val gameSpeed by viewModel.gameSpeed.collectAsState()
+    val selectedBall by viewModel.selectedBall.collectAsState()
 
     Layout(
         modifier = modifier
@@ -44,7 +45,10 @@ fun Board(
         content = {
             ballList.forEachIndexed { index, ballColorValue ->
                 key(index) {
-                    val isSelected = viewModel.isSelectedBall(index)
+                    val isSelected = remember(selectedBall) {
+                        selectedBall == index
+                    }
+
                     val currentSpeed = gameSpeed
 
                     // Remember the onCellClick lambda
