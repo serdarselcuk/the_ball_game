@@ -34,7 +34,7 @@ import com.allfreeapps.theballgame.utils.toBallColor
                 Row(
                     modifier.height(25.dp),
                     horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically // Optional: vertically center balls in the Row
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     CreateFutureBalls(upcomingBalls)
                 }
@@ -44,7 +44,7 @@ import com.allfreeapps.theballgame.utils.toBallColor
                 Column(
                     modifier.width(25.dp),
                     verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.Start // Optional: horizontally start balls in the Column
+                    horizontalAlignment = Alignment.Start
                 ) {
                     CreateFutureBalls(upcomingBalls)
                 }
@@ -55,7 +55,7 @@ import com.allfreeapps.theballgame.utils.toBallColor
     @Composable
     private fun CreateFutureBalls(upcomingBalls: Array<Int>) {
         val ballDisplaySize = 24.dp
-        upcomingBalls.forEachIndexed { index, ballColorInt -> // Use forEachIndexed for keying Spacer
+        upcomingBalls.forEachIndexed { index, ballColorInt ->
             val radialGradientBrush =  remember(ballDisplaySize.value, ballColorInt) {
                 getRadialGradientBrush(
                     ballSizePx = ballDisplaySize.value,
@@ -65,10 +65,10 @@ import com.allfreeapps.theballgame.utils.toBallColor
             Box(
                 Modifier
                     .size(ballDisplaySize)
-                    .clip(CircleShape) // Clip first
+                    .clip(CircleShape)
                     .background(
                         brush = radialGradientBrush,
-                        shape = CircleShape // Apply border to the circle shape
+                        shape = CircleShape
                     )
             )
             if (index < upcomingBalls.size - 1) {
