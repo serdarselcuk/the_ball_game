@@ -43,7 +43,6 @@ fun GameLayout(
     val score by viewModel.score.collectAsState()
     val upcomingBalls by viewModel.upcomingBalls.collectAsState()
     val allScores by viewModel.allScores.collectAsState()
-    val topScore = if (allScores.isNotEmpty()) allScores[0].score else 1
     val orientationIsLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
 
     BoxWithConstraints(
@@ -124,8 +123,6 @@ fun GameLayout(
                             .background(LightGray),
                         maxSizeOfLine = totalAvailableWidth,
                         orientation = orientation,
-                        score = score,
-                        topScore = topScore
                     )
                     // future ball and score board will be in same row
                     Row(
@@ -185,9 +182,7 @@ fun GameLayout(
                                 .fillMaxHeight()
                                 .background(LightGray),
                             maxSizeOfLine = totalAvailableHeight,
-                            orientation = orientation,
-                            score = score,
-                            topScore = topScore
+                            orientation = orientation
                         )
                         Row(
                             Modifier

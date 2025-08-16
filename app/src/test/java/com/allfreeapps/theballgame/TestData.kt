@@ -12,6 +12,4 @@ data class TestData(
     val down_left_leftDownCorner: List<Int> = listOf(31, 39, 47, 55, 63),
     val down_left_rightUpCorner: List<Int> = listOf(8, 16, 24, 32, 40),
     val midCross: List<Int> = listOf( 22, 31, 40, 49, 58, 38, 39, 40, 41, 42)
-){
-
-}
+)
