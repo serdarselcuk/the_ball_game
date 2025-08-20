@@ -3,6 +3,8 @@ package com.allfreeapps.theballgame.ui.composables
 import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -14,11 +16,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -38,12 +48,15 @@ fun GameLayout(
     gameOver: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val isMuted by viewModel.isMuted.collectAsState()
     val orientation = LocalContext.current.resources.configuration.orientation
+    val isMuted by viewModel.isMuted.collectAsState()
     val score by viewModel.score.collectAsState()
     val upcomingBalls by viewModel.upcomingBalls.collectAsState()
     val allScores by viewModel.allScores.collectAsState()
     val orientationIsLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
+    val scoresTableVisible = remember { mutableStateOf(false) }
+    val weighOfScoreColumn = remember { mutableFloatStateOf(0.3f) }
+    val weightOfSpace2 = remember { mutableFloatStateOf(2f) }
 
     BoxWithConstraints(
         modifier = modifier
@@ -100,8 +113,7 @@ fun GameLayout(
                                 .padding(1.dp)
                                 .width(90.dp)
                                 .height(35.dp),
-                            buttonText =
-                            stringResource(
+                            buttonText = stringResource(
                                 if (upcomingBalls.isEmpty()) R.string.start_game
                                 else R.string.restart_game
                             ),
@@ -113,9 +125,10 @@ fun GameLayout(
                 ),
                 isLandscape = orientationIsLandscape
             )
+            Spacer(Modifier.weight(weightOfSpace2.value))
 
-            when (orientationIsLandscape) {
-                false -> {
+            when (orientation) {
+                Configuration.ORIENTATION_PORTRAIT -> {
 
                     ComparableScoreLine(
                         modifier = Modifier
@@ -155,49 +168,41 @@ fun GameLayout(
                             viewModel.removeBall(index)
                         }
                     )
-                    ScoresTable(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(0.3f),
-                        scores = allScores,
-                        onDeleteClicked = { id ->
-                            viewModel.deleteScore(id)
-                        }
-                    )
+
                 }
 
-                true -> {
+                Configuration.ORIENTATION_LANDSCAPE -> {
 
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
+                            .fillMaxSize(),
                         verticalAlignment = Alignment.Top,
                         horizontalArrangement = Arrangement.Start
                     ) {
+                        Spacer(modifier = Modifier.weight(1f))
 
-                        ComparableScoreLine(
-                            modifier = Modifier
-                                .weight(0.01f)
-                                .fillMaxHeight()
-                                .background(LightGray),
-                            maxSizeOfLine = totalAvailableHeight,
-                            orientation = orientation
-                        )
-                        Row(
+                        Column(
                             Modifier
                                 .fillMaxHeight()
-                                .weight(0.025f),
-                            verticalAlignment = Alignment.Bottom,
-                            horizontalArrangement = Arrangement.Center
+                                .weight(0.1f),
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            horizontalAlignment = Alignment.End
                         ) {
+                            ComparableScoreLine(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .background(LightGray),
+                                maxSizeOfLine = totalAvailableHeight,
+                                orientation = orientation
+                            )
                             FutureBalls(
-                                upcomingBalls,
-                                Modifier,
-                                true
+                                modifier = Modifier
+                                    .weight(0.3f),
+                                upcomingBalls = upcomingBalls,
+                                isLandscape = true
                             )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
                         Board(
                             Modifier
                                 .width(totalAvailableHeight * 0.9f)
@@ -213,31 +218,103 @@ fun GameLayout(
                                 viewModel.removeBall(index)
                             }
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column(
-
-                            modifier = Modifier
-                                .weight(0.3f)
-                                .fillMaxHeight(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-
-                            Spacer(Modifier.height(4.dp))
-                            ScoresTable(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(0.7f),
-                                scores = allScores,
-                                onDeleteClicked = {id->
-                                    viewModel.deleteScore(id)
-                                }
-                            )
-                        }
+                        Spacer(modifier = Modifier.weight(1f))
                     }
+
+                }
+
+                else -> {
+                    Log.d("GameLayout", "Unknown orientation")
                 }
             }
+            Spacer(Modifier.weight(weightOfSpace2.value))
+
+            fun openScore(boolean: Boolean) = if (boolean) {
+                scoresTableVisible.value = true
+                weighOfScoreColumn.value = 1.5f
+                weightOfSpace2.value = 0.1f
+            } else {
+                scoresTableVisible.value = false
+                weighOfScoreColumn.value = 0.3f
+                weightOfSpace2.value = 2f
+            }
+            Column(
+                modifier = Modifier
+                    .weight(weighOfScoreColumn.value)
+                    .fillMaxWidth()
+                    .pointerInput(
+                        Unit
+                    ) {
+                        detectVerticalDragGestures { change, dragAmount ->
+                            change.consume()
+                            openScore(dragAmount < -5)
+                        }
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .clickable(
+                            onClick = { openScore(!scoresTableVisible.value) }
+                        )
+                        .align(Alignment.CenterHorizontally),
+                    imageVector = if (scoresTableVisible.value) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                    contentDescription = if (scoresTableVisible.value) "Swipe down to close" else "Pull up for scores",
+                )
+                Spacer(Modifier.height(4.dp))
+                if (scoresTableVisible.value) {
+
+                    ScoresTable(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.7f),
+                        scores = allScores,
+                        onDeleteClicked = { id ->
+                            viewModel.deleteScore(id)
+                        }
+                    )
+                }
+            }
+
+
         }
     }
 }
+
+//@Preview(
+//    showBackground = true,
+//    uiMode = Configuration.ORIENTATION_PORTRAIT
+//)
+//@Composable
+//fun PreviewGameLayoutPortrait() {
+//    val viewModel = BallGameViewModel(
+//        settingsRepository = SettingsRepository(
+//
+//        ),
+//        repository = TODO(),
+//        vibrator = TODO(),
+//        soundPlayerManager = TODO(),
+//        appLogger = TODO()
+//    )
+//
+//    GameLayout(
+//        modifier = Modifier.fillMaxSize(),
+//        viewModel = viewModel
+//    )
+//
+//}
+//
+//@Preview(
+//    showBackground = true,
+//    uiMode = Configuration.ORIENTATION_LANDSCAPE
+//)
+//@Composable
+//fun PreviewGameLayoutLandscape() {
+//    GameLayout(
+//        modifier = Modifier.fillMaxSize()
+//    )
+//
+//}
+
 
 
