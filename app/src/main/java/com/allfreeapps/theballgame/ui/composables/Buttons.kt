@@ -116,6 +116,7 @@ fun DeleteButton(
 @Composable
 fun SettingsButton(
     modifier: Modifier = Modifier,
+    color: Color = Color.Black,
     onClick: () -> Unit
 ) {
     Box(
@@ -130,7 +131,8 @@ fun SettingsButton(
         {
             Icon(
                 painter = painterResource(R.drawable.settigns_icon),
-                contentDescription = "Settings"
+                contentDescription = "Settings",
+                tint = color
             )
         }
     }
@@ -145,7 +147,7 @@ fun SkipButton(
     Box(
         modifier = modifier
             .border(
-                color = Color.Black,
+                color = color,
                 width = 2.dp,
                 shape = CircleShape
             )

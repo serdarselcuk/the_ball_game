@@ -49,6 +49,7 @@ val UserNameFieldColor = GreyPurple
 val HeaderTextColor = PurpleGrey40
 val HeaderBackGround = LightGray
 val ScoreTextColor = PurpleGrey40
+val scoreTextColorOnGameOver = White
 val BackgroundColor = LightGray
 val CellBoarderColor = DarkGray
 val StartButtonBackgroundColor = Purple40
