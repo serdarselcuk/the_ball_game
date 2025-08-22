@@ -1,5 +1,8 @@
 package com.allfreeapps.theballgame.ui.composables
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,7 +21,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,19 +32,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.ui.theme.GameOverBackground
 import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
 import com.allfreeapps.theballgame.ui.theme.UserNameFieldColor
-import com.allfreeapps.theballgame.viewModels.BallGameViewModel
+import com.allfreeapps.theballgame.ui.theme.scoreTextColorOnGameOver
+import com.allfreeapps.theballgame.viewModels.GameOverScreenViewModel
 
 @Composable
 fun GameOverScreen(
+    score: Int,
     onSkipClicked: () -> Unit,
-    viewModel: BallGameViewModel = hiltViewModel(),
+    viewModel: GameOverScreenViewModel = hiltViewModel(),
     onSaveScoreClicked: () -> Unit,
     onSettingsClicked: () -> Unit = {},
 ) {
@@ -48,8 +58,9 @@ fun GameOverScreen(
             .fillMaxSize()
     ) {
         SavingScoreScreen(
+            score,
             onSaveScoreClicked = { username ->
-                viewModel.saveScoreClicked(username)
+                viewModel.saveScoreClicked(username, score)
                 onSaveScoreClicked()
             },
             onSkipClicked = {
@@ -61,18 +72,31 @@ fun GameOverScreen(
                 onSettingsClicked()
             },
         )
-
     }
-
 }
 
 @Composable
 fun SavingScoreScreen(
+    score: Int,
     onSaveScoreClicked: (username: String) -> Unit,
     onSkipClicked: () -> Unit,
     onSettingsClicked: () -> Unit = {}
 ){
     var username by remember { mutableStateOf("") }
+    var displayedScore by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(key1 = score) {
+        val animationSpec = tween<Float>(durationMillis = 1000, easing = LinearEasing)
+        animate(
+            initialValue = 0F,
+            targetValue = score.toFloat(),
+            animationSpec = animationSpec
+        ) { value, /* velocity */ _ ->
+            displayedScore = value.toInt()
+        }
+    }
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -95,6 +119,7 @@ fun SavingScoreScreen(
 
             SettingsButton(
                 onClick = { onSettingsClicked() },
+                color = scoreTextColorOnGameOver,
                 modifier = Modifier
                     .wrapContentHeight()
                     .width(110.dp)
@@ -102,13 +127,14 @@ fun SavingScoreScreen(
                     .padding(16.dp)
                     .border(
                         width = 2.dp,
-                        color = Color.Black,
+                        color = scoreTextColorOnGameOver,
                         shape = ButtonDefaults.shape
                     ),
             )
 
             SkipButton(
                 onClick = onSkipClicked,
+                color = scoreTextColorOnGameOver,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(16.dp)
@@ -122,6 +148,15 @@ fun SavingScoreScreen(
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            Text(
+                text = "Your score: $displayedScore",
+                style = TextStyle(
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = scoreTextColorOnGameOver
+                )
+            )
 
             OutlinedTextField(
                 modifier = Modifier
@@ -162,6 +197,7 @@ fun SavingScoreScreen(
 @Composable
 fun PreviewGameOverScreen(){
     GameOverScreen(
+        score = 100,
         onSaveScoreClicked = {},
         onSkipClicked = {},
         onSettingsClicked = {},

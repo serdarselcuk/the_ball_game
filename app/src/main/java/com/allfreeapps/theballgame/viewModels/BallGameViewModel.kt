@@ -20,13 +20,15 @@ import com.allfreeapps.theballgame.utils.shareLogFile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Date
 import java.util.LinkedList
 import java.util.Queue
 import javax.inject.Inject
@@ -36,11 +38,12 @@ class BallGameViewModel @Inject constructor(
     private val repository: ScoreRepository,
     vibrator: Vibrator,
     soundPlayerManager: SoundPlayerManager,
-    private val settingsRepository: SettingsRepository,
-    val appLogger: Applogger
+    settingsRepository: SettingsRepository,
+    appLogger: Applogger
 ) : BaseViewModel(
     soundPlayerManager,
-    vibrator
+    vibrator,
+    appLogger
 ) {
 
     companion object {
@@ -95,7 +98,7 @@ class BallGameViewModel @Inject constructor(
 
     // order represents the position in the board and the value stands for the color
     private val _ballList = MutableStateFlow(Array(MAX_BALL_COUNT) { 0 })
-    override val ballList: StateFlow<Array<Int>> = _ballList
+    val ballList: StateFlow<Array<Int>> = _ballList
 
     private val _totalBallCount = MutableStateFlow(0)
     private val totalBallCount: StateFlow<Int> = _totalBallCount
@@ -109,8 +112,6 @@ class BallGameViewModel @Inject constructor(
     private var _upcomingBalls = MutableStateFlow((arrayOf<Int>()))
     val upcomingBalls: StateFlow<Array<Int>> = _upcomingBalls
 
-    private val _state = MutableStateFlow<GameState?>(null)
-    override val state: StateFlow<GameState?> = _state
 
     init {
 
@@ -208,11 +209,6 @@ class BallGameViewModel @Inject constructor(
         val score = 5
         val additionalScore = (2 * (ballCount - 5))
         _score.value += (score + additionalScore)
-    }
-
-    private fun setState(gameState: GameState) {
-        appLogger.i(TAG, "setState: $gameState")
-        _state.value = gameState
     }
 
     private fun resetScore() {
@@ -342,7 +338,7 @@ class BallGameViewModel @Inject constructor(
         appLogger.i(TAG, "Ball has already a marker: $ballValue")
     }
 
-    fun isSelectedBall(index: Int): Boolean {
+    private fun isSelectedBall(index: Int): Boolean {
         appLogger.i(TAG, "isSelectedBall: $index")
         return selectedBall.value == index
     }
@@ -670,31 +666,19 @@ class BallGameViewModel @Inject constructor(
             isItEndOfTheGame()
         }
     }
+    private val _gameOverEvent = MutableSharedFlow<Int>() // Use SharedFlow for one-time events
+    val gameOverEvent: SharedFlow<Int> = _gameOverEvent.asSharedFlow()
+
 
     private fun isItEndOfTheGame() {
 
         if (totalBallCount.value == 81) {
+
+            viewModelScope.launch {
+                _gameOverEvent.emit(_score.value) // Emit the final score
+            }
             setState(GameState.GAME_OVER)
             vibrate(GAME_OVER_VIBRATION_DURATION)
-        }
-    }
-
-    private fun resetGame() {
-        setEmptyBoard()
-    }
-
-    private fun saveScore(userName: String) {
-        val score = score.value
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.insertScore(
-                Score(
-                    id = null,
-                    firstName = userName,
-                    lastName = "",
-                    score = score,
-                    date = Date()
-                )
-            )
         }
     }
 
@@ -724,24 +708,6 @@ class BallGameViewModel @Inject constructor(
                 id = id,
             )
         }
-    }
-
-    fun saveScoreClicked(userName: String) {
-        playClickSound()
-        saveScore(userName)
-
-    }
-
-    fun skipClicked() {
-        playClickSound()
-        resetGame()
-        setState(GameState.GAME_NOT_STARTED)
-    }
-
-    fun closeScoresClicked() {
-        playClickSound()
-        resetGame()
-        setState(GameState.GAME_NOT_STARTED)
     }
 
     fun sendLogs(current: Context) {

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -35,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.BuildConfig
 import com.allfreeapps.theballgame.R
-import com.allfreeapps.theballgame.model.GameState
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.LightGray
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
@@ -45,7 +45,7 @@ fun GameLayout(
     modifier: Modifier,
     viewModel: BallGameViewModel = hiltViewModel(),
     onSettingsClicked: () -> Unit = {},
-    gameOver: () -> Unit = {}
+    gameOver: (int: Int) -> Unit = {}
 ) {
     val context = LocalContext.current
     val orientation = LocalContext.current.resources.configuration.orientation
@@ -65,8 +65,11 @@ fun GameLayout(
     ) {
         Log.d("MainLayout", "BoxWithConstraints: maxWidth=$maxWidth, maxHeight=$maxHeight")
 
-        val state by viewModel.state.collectAsState()
-        if (state == GameState.GAME_OVER) gameOver()
+        LaunchedEffect(Unit) {
+            viewModel.gameOverEvent.collect { finalScore ->
+                gameOver(finalScore)
+            }
+        }
         val totalAvailableHeight = maxHeight
         val totalAvailableWidth = maxWidth
 

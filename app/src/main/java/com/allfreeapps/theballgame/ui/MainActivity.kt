@@ -22,9 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.allfreeapps.theballgame.navigation.Screen
 import com.allfreeapps.theballgame.service.SettingsRepository
 import com.allfreeapps.theballgame.ui.composables.GameLayout
@@ -105,8 +107,7 @@ fun InitialView(
                             .fillMaxWidth()
                             .fillMaxHeight()
                             .padding(4.dp)
-                            .background(MaterialTheme.colorScheme.background)
-                            .border(width = 2.dp, color = Black),
+                            .background(MaterialTheme.colorScheme.background),
                         onSettingsClicked = {
                             navigateToSettings()
                         },
@@ -126,8 +127,8 @@ fun InitialView(
                         onSettingsClicked = {
                             navigateToSettings()
                         },
-                        gameOver = {
-                            navController.navigate(Screen.GameOver.route) {
+                        gameOver = { finalScore ->
+                            navController.navigate(Screen.GameOver.createRoute(finalScore)) {
                                 popUpTo(Screen.Game.route) {
                                     inclusive = true
                                 }
@@ -136,8 +137,14 @@ fun InitialView(
                     )
                 }
 
-                composable(Screen.GameOver.route) {
+                composable(
+                    route = Screen.GameOver.route,
+                    arguments = listOf(navArgument("score") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    // Retrieve the score argument
+                    val score = backStackEntry.arguments?.getInt("score") ?: 0
                     GameOverScreen(
+                        score = score, // Pass the score to your GameOverScreen
                         onSaveScoreClicked = {
                             navController.navigate(Screen.Scores.route) {
                                 popUpTo(Screen.GameOver.route) { inclusive = true }
@@ -149,6 +156,7 @@ fun InitialView(
                             }
                         },
                         onSettingsClicked = {
+                            // Consider if Settings needs the score or if it's a separate flow
                             navController.navigate(Screen.Settings.route)
                         }
                     )

@@ -5,10 +5,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.viewModelScope
-import com.allfreeapps.theballgame.model.GameState
 import com.allfreeapps.theballgame.service.SettingsRepository
 import com.allfreeapps.theballgame.util.Applogger
-import com.allfreeapps.theballgame.utils.Constants.Companion.MAX_BALLS_ON_WELCOME_SCREEN
 import com.allfreeapps.theballgame.utils.SoundPlayerManager
 import com.allfreeapps.theballgame.utils.Vibrator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,11 +17,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WelcomeScreenViewModel @Inject constructor(
-    private val soundPlayerManager: SoundPlayerManager,
+    soundPlayerManager: SoundPlayerManager,
     vibrator: Vibrator,
     settingsRepository: SettingsRepository,
-    private val appLogger: Applogger
-) : BaseViewModel(soundPlayerManager = soundPlayerManager, vibrator = vibrator) {
+    appLogger: Applogger
+) : BaseViewModel(
+    soundPlayerManager = soundPlayerManager,
+    vibrator = vibrator,
+    appLogger = appLogger
+) {
     companion object {
         private val screenWidth = Resources.getSystem().displayMetrics.widthPixels
         private val screenHeight = Resources.getSystem().displayMetrics.heightPixels
@@ -41,22 +43,17 @@ class WelcomeScreenViewModel @Inject constructor(
     private val _errorState: MutableStateFlow<Throwable?> = MutableStateFlow(null)
     override val errorState: StateFlow<Throwable?> = _errorState
 
-    private val _state = MutableStateFlow<GameState?>(null)
-    override val state: StateFlow<GameState?> = _state
 
     override fun logError(tag: String, exception: Exception) {
         _errorState.value = RuntimeException(tag, exception)
     }
 
-    val _isMuted = MutableStateFlow(settingsRepository.isMuteOnStart.value)
+    private val _isMuted = MutableStateFlow(settingsRepository.isMuteOnStart.value)
     override val isMuted: StateFlow<Boolean> = _isMuted
 
     private var _vibrationTurnedOn = MutableStateFlow(settingsRepository.isVibrationTurnedOn.value)
     override val vibrationTurnedOn: StateFlow<Boolean> = _vibrationTurnedOn
 
-    // order represents the position in the board and the value stands for the color
-    private var _ballList = MutableStateFlow(Array<BallData?>(MAX_BALLS_ON_WELCOME_SCREEN) { null })
-    override val ballList: StateFlow<Array<Int>> = MutableStateFlow(Array(0) { 0 })
     private val _welcoming_ballList = MutableStateFlow(
         mutableStateListOf(
             BallData(
@@ -111,7 +108,7 @@ class WelcomeScreenViewModel @Inject constructor(
         }
     }
 
-    suspend fun validatedRandomPosition(): Array<Int> {
+    private suspend fun validatedRandomPosition(): Array<Int> {
         var position = randomPosition()
         viewModelScope.launch {
 
@@ -159,9 +156,9 @@ class WelcomeScreenViewModel @Inject constructor(
         }
 
 
-        fun overlapping(array: Array<Int>): Boolean =
+        fun overlapping(position: Array<Int>): Boolean =
             position[0].toFloat() in this.position[0] + this.targetSize..this.position[0] + this.targetSize &&
-                    this.position[1].toFloat() in this.position[1] + this.targetSize..this.position[1] + this.targetSize
+                    position[1].toFloat() in this.position[1] + this.targetSize..this.position[1] + this.targetSize
 
         override fun hashCode(): Int {
             var result = colorValue

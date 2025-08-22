@@ -32,13 +32,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.R
+import com.allfreeapps.theballgame.model.GameState
 import com.allfreeapps.theballgame.ui.theme.StartButtonBackgroundColor
 import com.allfreeapps.theballgame.utils.toBallColor
 import com.allfreeapps.theballgame.viewModels.WelcomeScreenViewModel
@@ -51,6 +51,7 @@ fun WelcomeScreen(
     onSettingsClicked: () -> Unit = {},
     onStartButtonClicked: () -> Unit = {}
 ) {
+    viewModel.setState(GameState.GAME_NOT_STARTED)
     val isMuted by viewModel.isMuted.collectAsState()
 
     Column(
@@ -58,7 +59,6 @@ fun WelcomeScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val orientation = LocalContext.current.resources.configuration.orientation
         var buttonCreated by remember { mutableStateOf(false) }
         Header(
             Modifier

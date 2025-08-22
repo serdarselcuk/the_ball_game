@@ -2,20 +2,24 @@ package com.allfreeapps.theballgame.viewModels
 
 import androidx.lifecycle.ViewModel
 import com.allfreeapps.theballgame.model.GameState
+import com.allfreeapps.theballgame.util.Applogger
 import com.allfreeapps.theballgame.utils.SoundPlayerManager
 import com.allfreeapps.theballgame.utils.Vibrator
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel.Companion.REMOVE_BALLS_VIBRATION_DURATION
+import com.allfreeapps.theballgame.viewModels.BallGameViewModel.Companion.TAG
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 abstract class BaseViewModel(
     private val soundPlayerManager: SoundPlayerManager,
     private val vibrator: Vibrator,
+    protected val appLogger: Applogger
 ) : ViewModel() {
     abstract val isMuted: StateFlow<Boolean>
-    abstract val ballList: StateFlow<Array<Int>>
     abstract val vibrationTurnedOn: StateFlow<Boolean>
     abstract val errorState: StateFlow<Throwable?>
-    abstract val state: StateFlow<GameState?>
+    private val _state = MutableStateFlow<GameState?>(GameState.GAME_NOT_STARTED)
+    val state: StateFlow<GameState?> = _state
 
 
     fun vibrate(duration: Long) {
@@ -49,5 +53,10 @@ abstract class BaseViewModel(
     }
 
     abstract fun logError(tag: String, exception: Exception)
+
+    fun setState(gameState: GameState) {
+        appLogger.i(TAG, "setState: $gameState")
+        _state.value = gameState
+    }
 
 }
