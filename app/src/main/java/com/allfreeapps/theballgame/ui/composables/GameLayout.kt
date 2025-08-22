@@ -70,19 +70,37 @@ fun GameLayout(
         val totalAvailableHeight = maxHeight
         val totalAvailableWidth = maxWidth
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            val headerHeight = totalAvailableHeight * (
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+            val showStartButtonOnTheHeader = remember(orientation, scoresTableVisible.value) {
+                scoresTableVisible.value || orientationIsLandscape
+            }
+
+            val headerHeight = remember(orientation, scoresTableVisible.value) {
+                totalAvailableHeight * (
                     when (orientation) {
                         Configuration.ORIENTATION_LANDSCAPE -> 0.1f
-                        else -> 0.05f
-                    })
+                        else -> {
+                            if (scoresTableVisible.value) 0.05f
+                            else 0.1f
+                        }
+                    }
+                        )
+            }
+
+            val headerFontSize = remember(headerHeight, scoresTableVisible.value) {
+                if (scoresTableVisible.value) headerHeight * 0.45f
+                else headerHeight * 0.30f
+            }
 
             Header(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(headerHeight)
                     .background(HeaderBackGround),
-                fontSize = (headerHeight * 0.45f).value,
+                fontSize = headerFontSize.value,
                 content = listOf(
                     {
                         if (orientationIsLandscape) {
@@ -98,7 +116,7 @@ fun GameLayout(
                     },
                     {
                         SettingsButton(
-                            modifier =Modifier
+                            modifier = Modifier
                                 .width(50.dp)
                                 .padding(1.dp),
                             onClick = {
@@ -107,25 +125,49 @@ fun GameLayout(
                             }
                         )
                     },
+
                     {
-                        ButtonWithText(
-                            modifier = Modifier
-                                .padding(1.dp)
-                                .width(90.dp)
-                                .height(35.dp),
-                            buttonText = stringResource(
-                                if (upcomingBalls.isEmpty()) R.string.start_game
-                                else R.string.restart_game
-                            ),
-                            onclick = {
-                                viewModel.restartButtonOnClick()
-                            }
-                        )
-                    },
+                        if (showStartButtonOnTheHeader) {
+                            ButtonWithText(
+                                modifier = Modifier
+                                    .padding(1.dp)
+                                    .width(90.dp)
+                                    .height(35.dp),
+                                buttonText = stringResource(
+                                    if (upcomingBalls.isEmpty()) R.string.start_game
+                                    else R.string.restart_game
+                                ),
+                                onclick = {
+                                    viewModel.restartButtonOnClick()
+                                }
+                            )
+                        }
+                    }
+
                 ),
                 isLandscape = orientationIsLandscape
             )
-            Spacer(Modifier.weight(weightOfSpace2.value))
+
+            Spacer(Modifier.weight(weightOfSpace2.floatValue * 0.1f))
+
+            if (!showStartButtonOnTheHeader) {
+                ButtonWithText(
+                    modifier = Modifier
+                        .padding(1.dp)
+                        .width(90.dp)
+                        .height(90.dp)
+                        .align(Alignment.CenterHorizontally),
+                    buttonText = stringResource(
+                        if (upcomingBalls.isEmpty()) R.string.start_game
+                        else R.string.restart_game
+                    ),
+                    onclick = {
+                        viewModel.restartButtonOnClick()
+                    }
+                )
+            }
+
+            Spacer(Modifier.weight(weightOfSpace2.floatValue * 0.2f))
 
             when (orientation) {
                 Configuration.ORIENTATION_PORTRAIT -> {
@@ -207,7 +249,7 @@ fun GameLayout(
                             Modifier
                                 .width(totalAvailableHeight * 0.9f)
                                 .fillMaxHeight(),
-                            boardSize = (totalAvailableHeight * 0.9f ),
+                            boardSize = (totalAvailableHeight * 0.9f),
 
                             onCellClick = { index ->
                                 viewModel.onCellClick(
@@ -227,20 +269,22 @@ fun GameLayout(
                     Log.d("GameLayout", "Unknown orientation")
                 }
             }
-            Spacer(Modifier.weight(weightOfSpace2.value))
+
+            Spacer(Modifier.weight(weightOfSpace2.floatValue))
 
             fun openScore(boolean: Boolean) = if (boolean) {
                 scoresTableVisible.value = true
-                weighOfScoreColumn.value = 1.5f
-                weightOfSpace2.value = 0.1f
+                weighOfScoreColumn.floatValue = 1.5f
+                weightOfSpace2.floatValue = 0.1f
             } else {
                 scoresTableVisible.value = false
-                weighOfScoreColumn.value = 0.3f
-                weightOfSpace2.value = 2f
+                weighOfScoreColumn.floatValue = 0.3f
+                weightOfSpace2.floatValue = 2f
             }
+
             Column(
                 modifier = Modifier
-                    .weight(weighOfScoreColumn.value)
+                    .weight(weighOfScoreColumn.floatValue)
                     .fillMaxWidth()
                     .pointerInput(
                         Unit
