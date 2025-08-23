@@ -60,17 +60,12 @@ fun ComparableScoreLine(
     val score by viewModel.score.collectAsState()
     val allScores by viewModel.allScores.collectAsState()
     val topScore = allScores.firstOrNull()?.score ?: 1
-    // Use remember to store the calculated rate.
-    // The calculation itself is simple and doesn't need to be in a remember block
-    // if it's cheap, but here it depends on topScore and score, so remembering it
-    // prevents recalculation on every recomposition unless topScore or score changes.
+
     val rateOfScoreLine = remember(topScore, score) {
-        if (score < topScore) (score / topScore).toFloat()
+        if (score < topScore) score.toFloat() / topScore.toFloat()
         else 1f
     }
 
-    // dynamicColor depends on rateOfScoreLine, so it should be calculated after rateOfScoreLine.
-    // No need for remember here as it's a direct calculation from rateOfScoreLine.
     val dynamicColor =
         lineColorScale[(rateOfScoreLine * 10).toInt().coerceAtMost(lineColorScale.size - 1)]
 
@@ -95,10 +90,6 @@ fun ComparableScoreLine(
         }
     }
 
-    // outerBoxModifier depends on isPortrait, so it can be remembered with isPortrait as a key.
-    // However, modifier itself can change, so if `modifier` parameter is expected to change frequently
-    // and recomposition due to its change is costly, then `modifier` should also be a key.
-    // For simplicity, assuming `modifier` doesn't change frequently or the cost is low.
     val outerBoxModifier = modifier
         .then(
             remember(isPortrait) {
@@ -132,12 +123,8 @@ fun ComparableScoreLine(
                 )
         }
 
-    // No need for LaunchEffect here as there are no side effects that need to be managed
-    // based on lifecycle or state changes that are not directly related to UI recomposition.
-    // All calculations are for UI display and are handled by remember and recomposition.
     Box(
         modifier = outerBoxModifier,
-        // Alignment can be remembered if isPortrait is the key.
         contentAlignment = remember(isPortrait) { if (isPortrait) Alignment.CenterStart else Alignment.BottomStart } // Adjust alignment based on orientation
     ) {
         Box(
@@ -152,12 +139,11 @@ fun ComparableScoreLine(
 @Composable
 fun PreviewOnPortrait() {
     val orientation = Configuration.ORIENTATION_PORTRAIT
-//    ScoreLine(Modifier, 10, 10)
+
     ComparableScoreLine(
         modifier = Modifier.background(BackgroundColor),
         maxSizeOfLine = 500.dp,
         orientation = orientation
-        // Removed unused parameters score and topScore from preview call
     )
 }
 
@@ -175,6 +161,5 @@ fun PreviewOnLandscape() {
         modifier = Modifier.background(BackgroundColor),
         maxSizeOfLine = 500.dp,
         orientation = orientation
-        // Removed unused parameters score and topScore from preview call
     )
 }

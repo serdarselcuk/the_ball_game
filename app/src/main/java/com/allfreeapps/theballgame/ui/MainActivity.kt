@@ -166,7 +166,9 @@ fun InitialView(
                     SettingsScreen(
                         modifier = Modifier
                             .padding(innerPadding)
-                            .padding(16.dp)
+                            .padding(16.dp),
+                        onBackClicked = {
+                        }
 
                     )
                 }

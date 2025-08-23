@@ -38,7 +38,7 @@ class BallGameViewModel @Inject constructor(
     private val repository: ScoreRepository,
     vibrator: Vibrator,
     soundPlayerManager: SoundPlayerManager,
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
     appLogger: Applogger
 ) : BaseViewModel(
     soundPlayerManager,
@@ -92,6 +92,10 @@ class BallGameViewModel @Inject constructor(
 
     private val _errorState: MutableStateFlow<Throwable?> = MutableStateFlow(null)
     override val errorState: StateFlow<Throwable?> = _errorState
+
+    private val _isAnExperiencedUser =
+        MutableStateFlow(settingsRepository.isAnExperiencedUser.value)
+    val isAnExperiencedUser: StateFlow<Boolean> = _isAnExperiencedUser
 
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score
@@ -715,6 +719,10 @@ class BallGameViewModel @Inject constructor(
         shareLogFile(current, logFile)
     }
 
+
+    fun setUserAsExperienced() {
+        viewModelScope.launch { settingsRepository.setIsAnExperiencedUser(true) }
+    }
 
 
 }

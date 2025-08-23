@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -185,6 +187,23 @@ fun SaveScoreButton(
 
 
 @Composable
+fun BackButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    IconButton(
+        modifier = modifier,
+        onClick = {
+            onClick()
+        }
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+            contentDescription = "Back button",
+            tint = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+
+@Composable
 @Preview(showBackground = true)
 fun PreviewButtons() {
     ButtonWithText(
@@ -195,6 +214,11 @@ fun PreviewButtons() {
     )
 }
 
+@Preview
+@Composable
+fun PreviewBackButton() {
+    BackButton(onClick = {})
+}
 
 @Composable
 @Preview(showBackground = true)
