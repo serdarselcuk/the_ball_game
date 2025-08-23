@@ -1,6 +1,5 @@
 package com.allfreeapps.theballgame.service
 
-
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -24,6 +23,16 @@ class SettingsRepository @Inject constructor(
 ){
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+
+    val isAnExperiencedUser: StateFlow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[Settings.IS_AN_EXPERIENCED_USER] ?: false
+        }.stateIn(
+            scope = applicationScope,
+            started = SharingStarted.Lazily,
+            initialValue = false
+        )
 
     val isVibrationTurnedOn: StateFlow<Boolean> = dataStore.data
         .map { preferences ->
@@ -121,6 +130,12 @@ class SettingsRepository @Inject constructor(
             started = SharingStarted.Lazily,
             initialValue = 50
         )
+
+    suspend fun setIsAnExperiencedUser(isAnExperiencedUser: Boolean) {
+        dataStore.edit { settings ->
+            settings[Settings.IS_AN_EXPERIENCED_USER] = isAnExperiencedUser
+        }
+    }
 
 
     suspend fun setVolume(volumeLevel: Float) {

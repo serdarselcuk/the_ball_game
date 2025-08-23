@@ -36,7 +36,11 @@ import kotlinx.coroutines.SupervisorJob
 
 
 @Composable
-fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(
+    modifier: Modifier,
+    viewModel: SettingsViewModel = hiltViewModel(),
+    onBackClicked: () -> Unit
+) {
     val isMuteOnStart by viewModel.isMuteOnStart.collectAsState()
     val darkMode by viewModel.darkTheme.collectAsState()
     val systemTheme by viewModel.systemTheme.collectAsState()
@@ -53,8 +57,22 @@ fun SettingsScreen(modifier: Modifier, viewModel: SettingsViewModel = hiltViewMo
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Game Settings",
-            style = typography.headlineSmall)
+        Row(
+            horizontalArrangement = Arrangement.Start,
+        ) {
+            BackButton(
+                modifier = Modifier,
+                onClick = { onBackClicked() }
+            )
+
+            Text(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .align(Alignment.CenterVertically),
+                text = "Game Settings",
+                style = typography.headlineSmall
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -249,7 +267,9 @@ fun PreviewSettingsScreen() {
 
     SettingsScreen(
         modifier = Modifier.padding(16.dp),
-        viewModel = mockSettingsViewModel
+        viewModel = mockSettingsViewModel,
+        onBackClicked = {
+        }
     )
 }
 
@@ -275,7 +295,9 @@ fun PreviewSettingsLandScapeScreen() {
     )
     SettingsScreen(
         modifier = Modifier.padding(16.dp),
-        viewModel = mockSettingsViewModel
+        viewModel = mockSettingsViewModel,
+        onBackClicked = {
+        }
     )
 }
 

@@ -3,7 +3,6 @@ package com.allfreeapps.theballgame.ui.composables
 import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,10 +24,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -39,7 +41,9 @@ import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.LightGray
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
+import kotlin.math.abs
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GameLayout(
     modifier: Modifier,
@@ -50,6 +54,7 @@ fun GameLayout(
     val context = LocalContext.current
     val orientation = LocalContext.current.resources.configuration.orientation
     val isMuted by viewModel.isMuted.collectAsState()
+    val isExperiencedUser by viewModel.isAnExperiencedUser.collectAsState()
     val score by viewModel.score.collectAsState()
     val upcomingBalls by viewModel.upcomingBalls.collectAsState()
     val allScores by viewModel.allScores.collectAsState()
@@ -57,6 +62,20 @@ fun GameLayout(
     val scoresTableVisible = remember { mutableStateOf(false) }
     val weighOfScoreColumn = remember { mutableFloatStateOf(0.3f) }
     val weightOfSpace2 = remember { mutableFloatStateOf(2f) }
+    val scoreTableIsFullSize = remember { mutableStateOf(false) }
+
+    fun open() = run {
+        scoresTableVisible.value = true
+        weighOfScoreColumn.floatValue = 1.5f
+        weightOfSpace2.floatValue = 0.1f
+    }
+
+    fun close() = run {
+        scoresTableVisible.value = false
+        scoreTableIsFullSize.value = false
+        weighOfScoreColumn.floatValue = 0.3f
+        weightOfSpace2.floatValue = 2f
+    }
 
     BoxWithConstraints(
         modifier = modifier
@@ -114,7 +133,7 @@ fun GameLayout(
                         MuteButton(
                             Modifier.padding(1.dp),
                             isMuted = isMuted,
-                            onToggleMute = { if (BuildConfig.DEBUG) viewModel.sendLogs(context) else viewModel.changeSoundStatus() }
+                            onToggleMute = { viewModel.changeSoundStatus() }
                         )
                     },
                     {
@@ -128,7 +147,6 @@ fun GameLayout(
                             }
                         )
                     },
-
                     {
                         if (showStartButtonOnTheHeader) {
                             ButtonWithText(
@@ -151,159 +169,196 @@ fun GameLayout(
                 isLandscape = orientationIsLandscape
             )
 
-            Spacer(Modifier.weight(weightOfSpace2.floatValue * 0.1f))
+            if (!scoreTableIsFullSize.value) {
 
-            if (!showStartButtonOnTheHeader) {
-                ButtonWithText(
-                    modifier = Modifier
-                        .padding(1.dp)
-                        .width(90.dp)
-                        .height(90.dp)
-                        .align(Alignment.CenterHorizontally),
-                    buttonText = stringResource(
-                        if (upcomingBalls.isEmpty()) R.string.start_game
-                        else R.string.restart_game
-                    ),
-                    onclick = {
-                        viewModel.restartButtonOnClick()
-                    }
-                )
-            }
+                Spacer(Modifier.weight(weightOfSpace2.floatValue * 0.1f))
 
-            Spacer(Modifier.weight(weightOfSpace2.floatValue * 0.2f))
-
-            when (orientation) {
-                Configuration.ORIENTATION_PORTRAIT -> {
-
-                    ComparableScoreLine(
+                if (!showStartButtonOnTheHeader) {
+                    ButtonWithText(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .background(LightGray),
-                        maxSizeOfLine = totalAvailableWidth,
-                        orientation = orientation,
-                    )
-                    // future ball and score board will be in same row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        ScoreBoard(
-                            modifier = Modifier.width(totalAvailableWidth / 3f),
-                            score = score
-                        )
-                        FutureBalls(
-                            upcomingBalls = upcomingBalls,
-                            modifier = Modifier
-                        )
-                    }
-
-                    Board(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(totalAvailableWidth),
-                        boardSize = (totalAvailableWidth),
-                        onCellClick = { index ->
-                            viewModel.onCellClick(index)
-                        },
-                        removeTheBall = { index ->
-                            viewModel.removeBall(index)
+                            .padding(1.dp)
+                            .width(90.dp)
+                            .height(90.dp)
+                            .align(Alignment.CenterHorizontally),
+                        buttonText = stringResource(
+                            if (upcomingBalls.isEmpty()) R.string.start_game
+                            else R.string.restart_game
+                        ),
+                        onclick = {
+                            viewModel.restartButtonOnClick()
                         }
                     )
-
                 }
 
-                Configuration.ORIENTATION_LANDSCAPE -> {
+                Spacer(Modifier.weight(weightOfSpace2.floatValue * 0.2f))
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Spacer(modifier = Modifier.weight(1f))
+                when (orientation) {
+                    Configuration.ORIENTATION_PORTRAIT -> {
 
-                        Column(
-                            Modifier
-                                .fillMaxHeight()
-                                .weight(0.1f),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            horizontalAlignment = Alignment.End
+                        ComparableScoreLine(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(LightGray),
+                            maxSizeOfLine = totalAvailableWidth,
+                            orientation = orientation,
+                        )
+                        // future ball and score board will be in same row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            ComparableScoreLine(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .background(LightGray),
-                                maxSizeOfLine = totalAvailableHeight,
-                                orientation = orientation
+                            ScoreBoard(
+                                modifier = Modifier.width(totalAvailableWidth / 3f),
+                                score = score
                             )
                             FutureBalls(
-                                modifier = Modifier
-                                    .weight(0.3f),
                                 upcomingBalls = upcomingBalls,
-                                isLandscape = true
+                                modifier = Modifier
                             )
                         }
+
                         Board(
                             Modifier
-                                .width(totalAvailableHeight * 0.9f)
-                                .fillMaxHeight(),
-                            boardSize = (totalAvailableHeight * 0.9f),
-
+                                .fillMaxWidth()
+                                .height(totalAvailableWidth),
+                            boardSize = (totalAvailableWidth),
                             onCellClick = { index ->
-                                viewModel.onCellClick(
-                                    index
-                                )
+                                viewModel.onCellClick(index)
                             },
                             removeTheBall = { index ->
                                 viewModel.removeBall(index)
                             }
                         )
-                        Spacer(modifier = Modifier.weight(1f))
+
                     }
 
+                    Configuration.ORIENTATION_LANDSCAPE -> {
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            Column(
+                                Modifier
+                                    .fillMaxHeight()
+                                    .weight(0.1f),
+                                verticalArrangement = Arrangement.SpaceBetween,
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                ComparableScoreLine(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .background(LightGray),
+                                    maxSizeOfLine = totalAvailableHeight,
+                                    orientation = orientation
+                                )
+                                FutureBalls(
+                                    modifier = Modifier
+                                        .weight(0.3f),
+                                    upcomingBalls = upcomingBalls,
+                                    isLandscape = true
+                                )
+                            }
+                            Board(
+                                Modifier
+                                    .width(totalAvailableHeight * 0.9f)
+                                    .fillMaxHeight(),
+                                boardSize = (totalAvailableHeight * 0.9f),
+
+                                onCellClick = { index ->
+                                    viewModel.onCellClick(
+                                        index
+                                    )
+                                },
+                                removeTheBall = { index ->
+                                    viewModel.removeBall(index)
+                                }
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+
+                    }
+
+                    else -> {
+                        Log.d("GameLayout", "Unknown orientation")
+                    }
                 }
 
-                else -> {
-                    Log.d("GameLayout", "Unknown orientation")
+                if (BuildConfig.DEBUG) {
+                    ButtonWithText(
+                        modifier = Modifier.padding(1.dp),
+                        buttonText = "Send Logs",
+                        onclick = { viewModel.sendLogs(context) }
+                    )
                 }
+
+                Spacer(Modifier.weight(weightOfSpace2.floatValue))
+
+
             }
 
-            Spacer(Modifier.weight(weightOfSpace2.floatValue))
-
-            fun openScore(boolean: Boolean) = if (boolean) {
-                scoresTableVisible.value = true
-                weighOfScoreColumn.floatValue = 1.5f
-                weightOfSpace2.floatValue = 0.1f
+            fun openScore(dragAmount: Float) = if (dragAmount < -20) {
+                Log.d("DragDebug", "dragging effective, drag amount = $dragAmount")
+                open()
+                if (dragAmount < -35) scoreTableIsFullSize.value =
+                    true else {
+                }
             } else {
-                scoresTableVisible.value = false
-                weighOfScoreColumn.floatValue = 0.3f
-                weightOfSpace2.floatValue = 2f
+                close()
             }
+
+            val lastGestureInProgressTime = remember { mutableLongStateOf(0L) }
 
             Column(
                 modifier = Modifier
                     .weight(weighOfScoreColumn.floatValue)
                     .fillMaxWidth()
-                    .pointerInput(
-                        Unit
-                    ) {
-                        detectVerticalDragGestures { change, dragAmount ->
-                            change.consume()
-                            openScore(dragAmount < -5)
-                        }
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onDragStart = {
+                                Log.d("DragDebug", "Drag Start")
+                            },
+                            onDragEnd = {
+                                Log.d("DragDebug", "Drag End")
+                                lastGestureInProgressTime.longValue = System.currentTimeMillis()
+                            },
+                            onDragCancel = {
+                                Log.d("DragDebug", "Drag Cancel")
+                                lastGestureInProgressTime.longValue = System.currentTimeMillis()
+                            },
+                            onVerticalDrag = { change: PointerInputChange, dragAmount: Float ->
+                                Log.d("DragDebug", "Drag Amount: $dragAmount")
+                                val currentTime = System.currentTimeMillis()
+                                change.consume()
+                                if (abs(dragAmount) > 20) {
+                                    if (currentTime - lastGestureInProgressTime.longValue < 500) {
+                                        Log.d(
+                                            "DragDebug",
+                                            "Ignoring drag currentTime = $currentTime    " +
+                                                    "lastGestureTime = ${lastGestureInProgressTime.longValue} " +
+                                                    "differance = ${currentTime - lastGestureInProgressTime.longValue}"
+                                        )
+                                        return@detectVerticalDragGestures
+                                    }
+                                    lastGestureInProgressTime.longValue = currentTime
+                                    openScore(dragAmount)
+                                }
+                            }
+                        )
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
                     modifier = Modifier
-                        .clickable(
-                            onClick = { openScore(!scoresTableVisible.value) }
-                        )
                         .align(Alignment.CenterHorizontally),
                     imageVector = if (scoresTableVisible.value) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
                     contentDescription = if (scoresTableVisible.value) "Swipe down to close" else "Pull up for scores",
@@ -327,41 +382,4 @@ fun GameLayout(
         }
     }
 }
-
-//@Preview(
-//    showBackground = true,
-//    uiMode = Configuration.ORIENTATION_PORTRAIT
-//)
-//@Composable
-//fun PreviewGameLayoutPortrait() {
-//    val viewModel = BallGameViewModel(
-//        settingsRepository = SettingsRepository(
-//
-//        ),
-//        repository = TODO(),
-//        vibrator = TODO(),
-//        soundPlayerManager = TODO(),
-//        appLogger = TODO()
-//    )
-//
-//    GameLayout(
-//        modifier = Modifier.fillMaxSize(),
-//        viewModel = viewModel
-//    )
-//
-//}
-//
-//@Preview(
-//    showBackground = true,
-//    uiMode = Configuration.ORIENTATION_LANDSCAPE
-//)
-//@Composable
-//fun PreviewGameLayoutLandscape() {
-//    GameLayout(
-//        modifier = Modifier.fillMaxSize()
-//    )
-//
-//}
-
-
 

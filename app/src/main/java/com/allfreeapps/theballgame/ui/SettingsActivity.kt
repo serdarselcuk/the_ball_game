@@ -31,7 +31,10 @@ class SettingsActivity: ComponentActivity() {
                         modifier = Modifier
                             .padding(innerPadding)
                             .padding(16.dp),
-                        viewModel = settingsViewModel
+                        viewModel = settingsViewModel,
+                        onBackClicked = {
+                            finish()
+                        }
 
                     )
 
