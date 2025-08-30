@@ -27,6 +27,7 @@ class WelcomeScreenViewModel @Inject constructor(
     appLogger = appLogger
 ) {
     companion object {
+        private const val TAG = "WelcomeScreenViewModel"
         private val screenWidth = Resources.getSystem().displayMetrics.widthPixels
         private val screenHeight = Resources.getSystem().displayMetrics.heightPixels
         fun randomTargetSize(max: Int): Float = (25..max).random().toFloat()
@@ -46,6 +47,7 @@ class WelcomeScreenViewModel @Inject constructor(
 
     override fun logError(tag: String, exception: Exception) {
         _errorState.value = RuntimeException(tag, exception)
+        appLogger.e(tag, "Error: ${exception.message}", exception)
     }
 
     private val _isMuted = MutableStateFlow(settingsRepository.isMuteOnStart.value)
@@ -60,31 +62,37 @@ class WelcomeScreenViewModel @Inject constructor(
                 colorValue = 5,
                 targetSize = 100F,
                 gameSpeed = 2000,
-                position = arrayOf(335, 50)
-            ),
-            BallData(
-                colorValue = 1,
+                position = arrayOf(screenWidth - 200, screenHeight - 200)
+            ), BallData(
+                colorValue = 5,
                 targetSize = 100F,
-                gameSpeed = 500,
-                position = arrayOf(0, 585)
-            ),
-            BallData(
-                colorValue = 1,
+                gameSpeed = 2000,
+                position = arrayOf(screenWidth - 200, screenHeight - 200)
+            ), BallData(
+                colorValue = 5,
                 targetSize = 100F,
-                gameSpeed = 500,
-                position = arrayOf(150, 555)
-            ),
-            BallData(
-                colorValue = 1,
+                gameSpeed = 2000,
+                position = arrayOf(screenWidth - 200, screenHeight - 200)
+            ), BallData(
+                colorValue = 5,
                 targetSize = 100F,
-                gameSpeed = 500,
-                position = arrayOf(285, 385)
-            ),
-            BallData(
-                colorValue = 1,
+                gameSpeed = 2000,
+                position = arrayOf(screenWidth - 200, screenHeight - 200)
+            ), BallData(
+                colorValue = 5,
                 targetSize = 100F,
-                gameSpeed = 500,
-                position = arrayOf(50, 1505)
+                gameSpeed = 2000,
+                position = arrayOf(screenWidth - 200, screenHeight - 200)
+            ), BallData(
+                colorValue = 5,
+                targetSize = 100F,
+                gameSpeed = 2000,
+                position = arrayOf(screenWidth - 200, screenHeight - 200)
+            ), BallData(
+                colorValue = 5,
+                targetSize = 100F,
+                gameSpeed = 2000,
+                position = arrayOf(screenWidth - 200, screenHeight - 200)
             )
         )
     )
@@ -93,6 +101,7 @@ class WelcomeScreenViewModel @Inject constructor(
 
     fun changeBall(index: Int) {
         viewModelScope.launch {
+            appLogger.i(TAG, "changeBall called for index: $index")
             val newBall = BallData(
                 targetSize = randomTargetSize(120),
                 colorValue = randomColor(),
@@ -105,12 +114,14 @@ class WelcomeScreenViewModel @Inject constructor(
             newList.add(index, newBall)
 
             _welcoming_ballList.value = newList.toMutableStateList()
+            appLogger.i(TAG, "Ball at index $index changed to: $newBall")
         }
     }
 
     private suspend fun validatedRandomPosition(): Array<Int> {
         var position = randomPosition()
         viewModelScope.launch {
+            appLogger.i(TAG, "validatedRandomPosition started")
 
             var positionOverlapping = true
 
@@ -120,18 +131,25 @@ class WelcomeScreenViewModel @Inject constructor(
                         ball.overlapping(position)
                     )
                         position = randomPosition()
+                    appLogger.i(
+                        TAG,
+                        "Position overlapping, generating new position: ${position.contentToString()}"
+                    )
                     break
                 }
                 positionOverlapping = false
             }
+            appLogger.i(TAG, "Validated position: ${position.contentToString()}")
             return@launch
         }.join()
         return position
     }
 
     fun changeSoundStatus() {
+        appLogger.i(TAG, "changeSoundStatus called")
         playClickSound()
         _isMuted.value = !isMuted.value
+        appLogger.i(TAG, "Sound status changed to: ${if (isMuted.value) "Muted" else "Unmuted"}")
     }
 
     data class BallData(

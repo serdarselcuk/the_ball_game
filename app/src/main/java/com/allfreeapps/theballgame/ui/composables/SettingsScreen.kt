@@ -20,19 +20,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import androidx.datastore.preferences.core.emptyPreferences
-import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.allfreeapps.theballgame.service.SettingsRepository
-import com.allfreeapps.theballgame.util.AppLoggerImpl
+import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.viewModels.SettingsViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 
 
 @Composable
@@ -69,7 +62,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .align(Alignment.CenterVertically),
-                text = "Game Settings",
+                text = stringResource(R.string.game_settings),
                 style = typography.headlineSmall
             )
         }
@@ -94,7 +87,7 @@ fun SettingsScreen(
 
                 Text(
                     modifier = Modifier.padding(8.dp),
-                    text = "Theme",
+                    text = stringResource(R.string.theme),
                     style = typography.bodyLarge
                 )
 
@@ -103,7 +96,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(text = "Use system")
+                    Text(text = stringResource(R.string.use_system))
                     Checkbox(
                         checked = systemTheme,
                         onCheckedChange = { viewModel.setSystemDefaultMode(it) }
@@ -112,7 +105,7 @@ fun SettingsScreen(
             }
 
             SettingsToggle(
-                label = "Dark mode",
+                label = stringResource(id = R.string.settings_dark_mode),
                 checked = darkMode,
                 onCheckedChange = { viewModel.setModeOnStart(it) },
                 enabled = !systemTheme
@@ -125,13 +118,13 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             SettingsToggle(
-                label = "Mute on Start",
+                label = stringResource(R.string.mute_on_start),
                 checked = isMuteOnStart,
                 onCheckedChange = { viewModel.setIsMuteOnStart(it) }
             )
 
             SettingsToggle(
-                label = "Vibration",
+                label = stringResource(R.string.vibration),
                 checked = isVibrationTurnedOn,
                 onCheckedChange = { viewModel.setVibrationTurnedOn(it) }
             )
@@ -139,13 +132,13 @@ fun SettingsScreen(
 
 
         SettingsLevelControl(
-            label = "Game Speed",
+            label = stringResource(R.string.game_speed),
             value = speed,
             onValueChange = { viewModel.setSpeed(it) }
         )
 
         SettingsLevelControl(
-            label = "Master Volume",
+            label = stringResource(R.string.master_volume),
             value = volume,
             onValueChange = {
                 viewModel.setVolume(it)
@@ -153,31 +146,31 @@ fun SettingsScreen(
         )
 
         SettingsLevelControl(
-            label = "Click Volume",
+            label = stringResource(R.string.click_volume),
             value = clickVolume,
             onValueChange = { viewModel.setClickVolume(it) }
         )
 
         SettingsLevelControl(
-            label = "Bubble Select Volume",
+            label = stringResource(R.string.bubble_select_volume),
             value = bubbleSelectVolume,
             onValueChange = { viewModel.setBubbleSelectVolume(it) }
         )
 
         SettingsLevelControl(
-            label = "Bubble Explode Volume",
+            label = stringResource(R.string.bubble_explode_volume),
             value = bubbleExplodeVolume,
             onValueChange = { viewModel.setBubbleExplodeVolume(it) }
         )
 
         SettingsLevelControl(
-            label = "Empty Cell Volume",
+            label = stringResource(R.string.empty_cell_volume),
             value = tappingVolume,
             onValueChange = { viewModel.setTappingVolume(it) }
         )
 
         SettingsLevelControl(
-            label = "Ball Movement Volume",
+            label = stringResource(R.string.ball_movement_volume),
             value = hissVolume,
             onValueChange = { viewModel.setHissVolume(it) }
         )
@@ -251,26 +244,26 @@ fun SettingsLevelControl(
 @Composable
 fun PreviewSettingsScreen() {
     val context = LocalContext.current
-    val mockSettingsViewModel = SettingsViewModel(
-        settingsRepository = SettingsRepository(
-            dataStore = PreferenceDataStoreFactory.create(
-                corruptionHandler = ReplaceFileCorruptionHandler(
-                    produceNewData = { emptyPreferences() }
-                ),
-//            migrations = listOf(androidx.datastore.migrations.SharedPreferencesMigration(context, YOUR_SHARED_PREFS_NAME_IF_MIGRATING)),
-                scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
-                produceFile = { context.preferencesDataStoreFile("app_settings") }
-            )
-        ),
-        appLogger = AppLoggerImpl()
-    )
+//    val mockSettingsViewModel = SettingsViewModel(
+//        settingsRepository = SettingsRepository(
+//            dataStore = PreferenceDataStoreFactory.create(
+//                corruptionHandler = ReplaceFileCorruptionHandler(
+//                    produceNewData = { emptyPreferences() }
+//                ),
+////            migrations = listOf(androidx.datastore.migrations.SharedPreferencesMigration(context, YOUR_SHARED_PREFS_NAME_IF_MIGRATING)),
+//                scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+//                produceFile = { context.preferencesDataStoreFile("app_settings") }
+//            )
+//        ),
+//        appLogger = AppLoggerImpl()
+//    )
 
-    SettingsScreen(
-        modifier = Modifier.padding(16.dp),
-        viewModel = mockSettingsViewModel,
-        onBackClicked = {
-        }
-    )
+//    SettingsScreen(
+//        modifier = Modifier.padding(16.dp),
+//        viewModel = mockSettingsViewModel,
+//        onBackClicked = {
+//        }
+//    )
 }
 
 @Preview(
@@ -280,24 +273,24 @@ fun PreviewSettingsScreen() {
 @Composable
 fun PreviewSettingsLandScapeScreen() {
     val context = LocalContext.current
-    val mockSettingsViewModel = SettingsViewModel(
-        settingsRepository = SettingsRepository(
-            dataStore = PreferenceDataStoreFactory.create(
-                corruptionHandler = ReplaceFileCorruptionHandler(
-                    produceNewData = { emptyPreferences() }
-                ),
-//            migrations = listOf(androidx.datastore.migrations.SharedPreferencesMigration(context, YOUR_SHARED_PREFS_NAME_IF_MIGRATING)),
-                scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
-                produceFile = { context.preferencesDataStoreFile("app_settings") }
-            )
-        ),
-        appLogger = AppLoggerImpl()
-    )
-    SettingsScreen(
-        modifier = Modifier.padding(16.dp),
-        viewModel = mockSettingsViewModel,
-        onBackClicked = {
-        }
-    )
+//    val mockSettingsViewModel = SettingsViewModel(
+//        settingsRepository = SettingsRepository(
+//            dataStore = PreferenceDataStoreFactory.create(
+//                corruptionHandler = ReplaceFileCorruptionHandler(
+//                    produceNewData = { emptyPreferences() }
+//                ),
+////            migrations = listOf(androidx.datastore.migrations.SharedPreferencesMigration(context, YOUR_SHARED_PREFS_NAME_IF_MIGRATING)),
+//                scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+//                produceFile = { context.preferencesDataStoreFile("app_settings") }
+//            )
+//        ),
+//        appLogger = AppLoggerImpl()
+//    )
+//    SettingsScreen(
+//        modifier = Modifier.padding(16.dp),
+//        viewModel = mockSettingsViewModel,
+//        onBackClicked = {
+//        }
+//    )
 }
 

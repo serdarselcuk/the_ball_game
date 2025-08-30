@@ -1,9 +1,11 @@
 package com.allfreeapps.theballgame.viewModels
 
 import android.content.Context
+import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.viewModelScope
 import com.allfreeapps.theballgame.model.Direction
 import com.allfreeapps.theballgame.model.GameState
+import com.allfreeapps.theballgame.model.LearningMessages
 import com.allfreeapps.theballgame.model.entities.Score
 import com.allfreeapps.theballgame.service.ScoreRepository
 import com.allfreeapps.theballgame.service.SettingsRepository
@@ -84,6 +86,10 @@ class BallGameViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    private val _messagePool: MutableStateFlow<MutableMap<Int, IntOffset>> =
+        MutableStateFlow(mutableMapOf())
+    val messagePool = _messagePool
+
     private val _isMuted = MutableStateFlow(settingsRepository.isMuteOnStart.value)
     override val isMuted: StateFlow<Boolean> = _isMuted
 
@@ -93,9 +99,12 @@ class BallGameViewModel @Inject constructor(
     private val _errorState: MutableStateFlow<Throwable?> = MutableStateFlow(null)
     override val errorState: StateFlow<Throwable?> = _errorState
 
-    private val _isAnExperiencedUser =
-        MutableStateFlow(settingsRepository.isAnExperiencedUser.value)
-    val isAnExperiencedUser: StateFlow<Boolean> = _isAnExperiencedUser
+    private val _isAFreshUser: StateFlow<Boolean> = settingsRepository.isAFreshUser.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(1000L),
+        initialValue = true
+    )
+    val isAFreshUser: StateFlow<Boolean> = _isAFreshUser
 
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score
@@ -649,6 +658,8 @@ class BallGameViewModel @Inject constructor(
         return setToRemove.value
     }
 
+    fun getLogger() = appLogger
+
     private fun populateUpcomingBalls() {
         viewModelScope.launch {
             val upcomingBalls = upcomingBalls.value
@@ -670,7 +681,7 @@ class BallGameViewModel @Inject constructor(
             isItEndOfTheGame()
         }
     }
-    private val _gameOverEvent = MutableSharedFlow<Int>() // Use SharedFlow for one-time events
+    private val _gameOverEvent = MutableSharedFlow<Int>()
     val gameOverEvent: SharedFlow<Int> = _gameOverEvent.asSharedFlow()
 
 
@@ -679,7 +690,7 @@ class BallGameViewModel @Inject constructor(
         if (totalBallCount.value == 81) {
 
             viewModelScope.launch {
-                _gameOverEvent.emit(_score.value) // Emit the final score
+                _gameOverEvent.emit(_score.value)
             }
             setState(GameState.GAME_OVER)
             vibrate(GAME_OVER_VIBRATION_DURATION)
@@ -695,8 +706,16 @@ class BallGameViewModel @Inject constructor(
 
     fun restartButtonOnClick() = run {
         playClickSound()
-        if (state.value == GameState.GAME_NOT_STARTED) startGame()
+        if (state.value == GameState.GAME_NOT_STARTED) {
+            startGame()
+            pushLearningMessages(LearningMessages.AFTER_START)
+        }
         else restartGame()
+    }
+
+    fun pushLearningMessages(messages: MutableMap<Int, IntOffset>) {
+        appLogger.i("BallGameViewModel", "pushLearningMessages: $messages")
+        _messagePool.value = messages
     }
 
     fun onCellClick(index: Int) = run {
@@ -720,8 +739,18 @@ class BallGameViewModel @Inject constructor(
     }
 
 
-    fun setUserAsExperienced() {
-        viewModelScope.launch { settingsRepository.setIsAnExperiencedUser(true) }
+    fun setUserAsAFreshUser(boolean: Boolean) {
+        viewModelScope.launch { settingsRepository.setIsAFreshUser(boolean) }
+    }
+
+    fun removeMessages() {
+        val messages = _messagePool.value
+        messages.entries.first().key.let { messages.remove(it) }
+        _messagePool.value = messages
+    }
+
+    fun removeAllMessages() {
+        _messagePool.value = mutableMapOf()
     }
 
 

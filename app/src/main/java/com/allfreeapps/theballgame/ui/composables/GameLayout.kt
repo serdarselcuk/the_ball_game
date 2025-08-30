@@ -1,7 +1,6 @@
 package com.allfreeapps.theballgame.ui.composables
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -28,8 +27,8 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -38,12 +37,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.BuildConfig
 import com.allfreeapps.theballgame.R
+import com.allfreeapps.theballgame.model.LearningMessages
 import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
 import com.allfreeapps.theballgame.ui.theme.LightGray
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 import kotlin.math.abs
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GameLayout(
     modifier: Modifier,
@@ -51,10 +50,10 @@ fun GameLayout(
     onSettingsClicked: () -> Unit = {},
     gameOver: (int: Int) -> Unit = {}
 ) {
+    val appLogger = viewModel.getLogger()
     val context = LocalContext.current
-    val orientation = LocalContext.current.resources.configuration.orientation
+    val orientation = context.resources.configuration.orientation
     val isMuted by viewModel.isMuted.collectAsState()
-    val isExperiencedUser by viewModel.isAnExperiencedUser.collectAsState()
     val score by viewModel.score.collectAsState()
     val upcomingBalls by viewModel.upcomingBalls.collectAsState()
     val allScores by viewModel.allScores.collectAsState()
@@ -64,13 +63,13 @@ fun GameLayout(
     val weightOfSpace2 = remember { mutableFloatStateOf(2f) }
     val scoreTableIsFullSize = remember { mutableStateOf(false) }
 
-    fun open() = run {
+    fun openScoreboard() = run {
         scoresTableVisible.value = true
         weighOfScoreColumn.floatValue = 1.5f
         weightOfSpace2.floatValue = 0.1f
     }
 
-    fun close() = run {
+    fun closeScoreboard() = run {
         scoresTableVisible.value = false
         scoreTableIsFullSize.value = false
         weighOfScoreColumn.floatValue = 0.3f
@@ -82,9 +81,10 @@ fun GameLayout(
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        Log.d("MainLayout", "BoxWithConstraints: maxWidth=$maxWidth, maxHeight=$maxHeight")
+        appLogger.i("MainLayout", "BoxWithConstraints: maxWidth=$maxWidth, maxHeight=$maxHeight")
 
         LaunchedEffect(Unit) {
+            viewModel.pushLearningMessages(LearningMessages.BEFORE_START)
             viewModel.gameOverEvent.collect { finalScore ->
                 gameOver(finalScore)
             }
@@ -155,7 +155,7 @@ fun GameLayout(
                                     .width(90.dp)
                                     .height(35.dp),
                                 buttonText = stringResource(
-                                    if (upcomingBalls.isEmpty()) R.string.start_game
+                                    if (upcomingBalls.isEmpty()) R.string.send_balls
                                     else R.string.restart_game
                                 ),
                                 onclick = {
@@ -181,7 +181,7 @@ fun GameLayout(
                             .height(90.dp)
                             .align(Alignment.CenterHorizontally),
                         buttonText = stringResource(
-                            if (upcomingBalls.isEmpty()) R.string.start_game
+                            if (upcomingBalls.isEmpty()) R.string.send_balls
                             else R.string.restart_game
                         ),
                         onclick = {
@@ -189,6 +189,11 @@ fun GameLayout(
                         }
                     )
                 }
+
+                LearnerPopup(
+                    Modifier,
+                    Color.LightGray
+                )
 
                 Spacer(Modifier.weight(weightOfSpace2.floatValue * 0.2f))
 
@@ -289,17 +294,22 @@ fun GameLayout(
                     }
 
                     else -> {
-                        Log.d("GameLayout", "Unknown orientation")
+                        appLogger.i("GameLayout", "Unknown orientation")
                     }
                 }
 
-                if (BuildConfig.DEBUG) {
-                    ButtonWithText(
-                        modifier = Modifier.padding(1.dp),
-                        buttonText = "Send Logs",
-                        onclick = { viewModel.sendLogs(context) }
-                    )
-                }
+                ButtonWithText(
+                    modifier = Modifier.padding(1.dp),
+                    buttonText = if (BuildConfig.DEBUG) "Send Logs" else "learn",
+                    onclick = {
+                        if (BuildConfig.DEBUG) viewModel.sendLogs(context)
+                        else {
+                            viewModel.pushLearningMessages(LearningMessages.BEFORE_START)
+                            viewModel.setUserAsAFreshUser(true)
+                        }
+                    }
+                )
+
 
                 Spacer(Modifier.weight(weightOfSpace2.floatValue))
 
@@ -307,13 +317,13 @@ fun GameLayout(
             }
 
             fun openScore(dragAmount: Float) = if (dragAmount < -20) {
-                Log.d("DragDebug", "dragging effective, drag amount = $dragAmount")
-                open()
+                appLogger.i("DragDebug", "dragging effective, drag amount = $dragAmount")
+                openScoreboard()
                 if (dragAmount < -35) scoreTableIsFullSize.value =
                     true else {
                 }
             } else {
-                close()
+                closeScoreboard()
             }
 
             val lastGestureInProgressTime = remember { mutableLongStateOf(0L) }
@@ -325,23 +335,23 @@ fun GameLayout(
                     .pointerInput(Unit) {
                         detectVerticalDragGestures(
                             onDragStart = {
-                                Log.d("DragDebug", "Drag Start")
+                                appLogger.i("DragDebug", "Drag Start")
                             },
                             onDragEnd = {
-                                Log.d("DragDebug", "Drag End")
+                                appLogger.i("DragDebug", "Drag End")
                                 lastGestureInProgressTime.longValue = System.currentTimeMillis()
                             },
                             onDragCancel = {
-                                Log.d("DragDebug", "Drag Cancel")
+                                appLogger.i("DragDebug", "Drag Cancel")
                                 lastGestureInProgressTime.longValue = System.currentTimeMillis()
                             },
                             onVerticalDrag = { change: PointerInputChange, dragAmount: Float ->
-                                Log.d("DragDebug", "Drag Amount: $dragAmount")
+                                appLogger.i("DragDebug", "Drag Amount: $dragAmount")
                                 val currentTime = System.currentTimeMillis()
                                 change.consume()
                                 if (abs(dragAmount) > 20) {
                                     if (currentTime - lastGestureInProgressTime.longValue < 500) {
-                                        Log.d(
+                                        appLogger.i(
                                             "DragDebug",
                                             "Ignoring drag currentTime = $currentTime    " +
                                                     "lastGestureTime = ${lastGestureInProgressTime.longValue} " +
@@ -361,7 +371,11 @@ fun GameLayout(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally),
                     imageVector = if (scoresTableVisible.value) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
-                    contentDescription = if (scoresTableVisible.value) "Swipe down to close" else "Pull up for scores",
+                    contentDescription = stringResource(
+                        if (scoresTableVisible.value) R.string.swipe_down_to_close
+                        else R.string.pull_up_for_scores
+                    ),
+
                 )
                 Spacer(Modifier.height(4.dp))
                 if (scoresTableVisible.value) {
