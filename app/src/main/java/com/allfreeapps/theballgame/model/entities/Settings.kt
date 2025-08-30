@@ -4,16 +4,16 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 
 object Settings {
-    val IS_AN_EXPERIENCED_USER = booleanPreferencesKey("isAnExperiencedUser")
-    val IS_VIBRATION_ON = booleanPreferencesKey("vibrationOn")
-    val SYSTEM_THEME= booleanPreferencesKey("systemTheme")
-    val DARK_THEME= booleanPreferencesKey("darkThemeOnStart")
-    val IS_MUTE_ON_START= booleanPreferencesKey("isMuteOnStart")
-    val SPEED = intPreferencesKey("speed")
-    val VOLUME= intPreferencesKey("volume")
-    val CLICK_VOLUME= intPreferencesKey("clickVolume")
-    val HISS_VOLUME= intPreferencesKey("hissVolume")
-    val BUBBLE_SELECT_VOLUME= intPreferencesKey("bubbleSelectVolume")
-    val BUBBLE_EXPLODE_VOLUME= intPreferencesKey("bubbleExplodeVolume")
-    val TAPPING_VOLUME= intPreferencesKey("tappingVolume")
+    val IS_A_FRESH_USER by lazy { booleanPreferencesKey("isAFreshUser") }
+    val IS_VIBRATION_ON by lazy { booleanPreferencesKey("vibrationOn") }
+    val SYSTEM_THEME by lazy { booleanPreferencesKey("systemTheme") }
+    val DARK_THEME by lazy { booleanPreferencesKey("darkThemeOnStart") }
+    val IS_MUTE_ON_START by lazy { booleanPreferencesKey("isMuteOnStart") }
+    val SPEED by lazy { intPreferencesKey("speed") }
+    val VOLUME by lazy { intPreferencesKey("volume") }
+    val CLICK_VOLUME by lazy { intPreferencesKey("clickVolume") }
+    val HISS_VOLUME by lazy { intPreferencesKey("hissVolume") }
+    val BUBBLE_SELECT_VOLUME by lazy { intPreferencesKey("bubbleSelectVolume") }
+    val BUBBLE_EXPLODE_VOLUME by lazy { intPreferencesKey("bubbleExplodeVolume") }
+    val TAPPING_VOLUME by lazy { intPreferencesKey("tappingVolume") }
 }

@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.allfreeapps.theballgame.model.entities.Settings
+import com.allfreeapps.theballgame.util.Applogger
 import com.allfreeapps.theballgame.utils.SoundType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,20 +20,25 @@ import kotlin.math.roundToInt
 
 @Singleton
 class SettingsRepository @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val appLogger: Applogger
 ){
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    init {
+        appLogger.i(TAG, "Initialized")
+    }
 
-    val isAnExperiencedUser: StateFlow<Boolean> = dataStore.data
+
+    val isAFreshUser: StateFlow<Boolean> = dataStore.data
         .map { preferences ->
-            preferences[Settings.IS_AN_EXPERIENCED_USER] ?: false
+            preferences[Settings.IS_A_FRESH_USER] ?: true
         }.stateIn(
             scope = applicationScope,
             started = SharingStarted.Lazily,
-            initialValue = false
-        )
+            initialValue = true
+        ).also { appLogger.i("isAFreshUser", "isAFreshUser: $it") }
 
     val isVibrationTurnedOn: StateFlow<Boolean> = dataStore.data
         .map { preferences ->
@@ -131,22 +137,23 @@ class SettingsRepository @Inject constructor(
             initialValue = 50
         )
 
-    suspend fun setIsAnExperiencedUser(isAnExperiencedUser: Boolean) {
+    suspend fun setIsAFreshUser(isAFreshUser: Boolean) {
+        appLogger.i(TAG, "setIsAFreshUser called with $isAFreshUser")
         dataStore.edit { settings ->
-            settings[Settings.IS_AN_EXPERIENCED_USER] = isAnExperiencedUser
+            settings[Settings.IS_A_FRESH_USER] = isAFreshUser
         }
     }
 
 
     suspend fun setVolume(volumeLevel: Float) {
-
+        appLogger.i(TAG, "setVolume called with $volumeLevel")
         dataStore.edit { settings ->
             settings[Settings.VOLUME] = volumeLevel.roundToInt()
         }
     }
 
     suspend fun setIsMuteOnStart(isMuteOnStart: Boolean) {
-
+        appLogger.i(TAG, "setIsMuteOnStart called with $isMuteOnStart")
         dataStore.edit { settings ->
             settings[Settings.IS_MUTE_ON_START] = isMuteOnStart
         }
@@ -154,7 +161,7 @@ class SettingsRepository @Inject constructor(
     }
 
     suspend fun setDarkMoeOnStart(darkTheme: Boolean) {
-
+        appLogger.i(TAG, "setDarkMoeOnStart called with $darkTheme")
         dataStore.edit { settings ->
             settings[Settings.DARK_THEME] = darkTheme
         }
@@ -162,7 +169,7 @@ class SettingsRepository @Inject constructor(
     }
 
     suspend fun setSpeed(gameSpeed: Float) {
-
+        appLogger.i(TAG, "setSpeed called with $gameSpeed")
         dataStore.edit { settings ->
             settings[Settings.SPEED] = gameSpeed.roundToInt()
         }
@@ -170,7 +177,7 @@ class SettingsRepository @Inject constructor(
     }
 
     suspend fun setClickVolume(clickVolume: Float) {
-
+        appLogger.i(TAG, "setClickVolume called with $clickVolume")
         dataStore.edit { settings ->
             settings[Settings.CLICK_VOLUME] = clickVolume.roundToInt()
         }
@@ -178,7 +185,7 @@ class SettingsRepository @Inject constructor(
     }
 
     suspend fun setBubbleSelectVolume(bubbleselectVolume: Float) {
-
+        appLogger.i(TAG, "setBubbleSelectVolume called with $bubbleselectVolume")
         dataStore.edit { settings ->
             settings[Settings.BUBBLE_SELECT_VOLUME] = bubbleselectVolume.roundToInt()
         }
@@ -186,7 +193,7 @@ class SettingsRepository @Inject constructor(
     }
 
     suspend fun setBubbleExplodeVolume(bubbleexplodeVolume: Float) {
-
+        appLogger.i(TAG, "setBubbleExplodeVolume called with $bubbleexplodeVolume")
         dataStore.edit { settings ->
             settings[Settings.BUBBLE_EXPLODE_VOLUME] = bubbleexplodeVolume.roundToInt()
         }
@@ -194,7 +201,7 @@ class SettingsRepository @Inject constructor(
     }
 
     suspend fun setTappingVolume(tappingVolume: Float) {
-
+        appLogger.i(TAG, "setTappingVolume called with $tappingVolume")
         dataStore.edit { settings ->
             settings[Settings.TAPPING_VOLUME] = tappingVolume.roundToInt()
         }
@@ -202,34 +209,46 @@ class SettingsRepository @Inject constructor(
     }
 
     suspend fun setHissVolume(it: Float) {
+        appLogger.i(TAG, "setHissVolume called with $it")
         dataStore.edit { settings ->
             settings[Settings.HISS_VOLUME] = it.roundToInt()
         }
     }
 
     fun getMasterVolume(): Int {
-        return masterVolume.value
+        val volume = masterVolume.value
+        appLogger.i(TAG, "getMasterVolume returning $volume")
+        return volume
     }
 
     suspend fun setSystemTheme(setSystemTheme: Boolean) {
+        appLogger.i(TAG, "setSystemTheme called with $setSystemTheme")
         dataStore.edit { setting ->
             setting[Settings.SYSTEM_THEME] = setSystemTheme
         }
     }
 
     fun getVolume(it: SoundType): Int {
-        return when (it) {
+        val volume = when (it) {
             SoundType.DEFAULT_TAP -> masterVolume.value
             SoundType.BUBBLE_EXPLODE -> bubbleExplodeVolume.value
             SoundType.EMPTY_TAP -> tappingVolume.value
             SoundType.FILLED_TAP -> bubbleSelectVolume.value
             SoundType.HISS -> hissVolume.value
         }
+
+        appLogger.i(TAG, "getVolume for $it returning $volume")
+        return volume
     }
 
     suspend fun setVibrationTurnedOn(boolean: Boolean) {
+        appLogger.i(TAG, "setVibrationTurnedOn called with $boolean")
         dataStore.edit {
             it[Settings.IS_VIBRATION_ON] = boolean
         }
+    }
+
+    companion object {
+        private const val TAG = "SettingsRepository"
     }
 }
