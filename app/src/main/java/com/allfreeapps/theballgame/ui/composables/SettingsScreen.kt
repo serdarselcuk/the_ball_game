@@ -3,17 +3,20 @@ package com.allfreeapps.theballgame.ui.composables
 import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.R
+import com.allfreeapps.theballgame.ui.composables.coreAppComposables.GameText
 import com.allfreeapps.theballgame.viewModels.SettingsViewModel
 
 
@@ -47,10 +51,13 @@ fun SettingsScreen(
     val isVibrationTurnedOn by viewModel.isVibrationTurnedOn.collectAsState()
 
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = modifier
+            .padding(8.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(
+            // Header
             horizontalArrangement = Arrangement.Start,
         ) {
             BackButton(
@@ -58,62 +65,68 @@ fun SettingsScreen(
                 onClick = { onBackClicked() }
             )
 
-            Text(
+            GameText(
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .align(Alignment.CenterVertically),
                 text = stringResource(R.string.game_settings),
-                style = typography.headlineSmall
+                style = typography.headlineMedium
             )
         }
-        Column(
+
+        Row(// Theme box
             modifier = Modifier
                 .fillMaxWidth()
+//                .weight(2f) // Removed weight to allow scrolling
                 .border(
                     width = 1.dp,
                     color = colorScheme.secondary
                 ),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            GameText( // Theme text
+                modifier = Modifier.padding(8.dp),
+                text = stringResource(R.string.theme),
+                style = typography.headlineSmall
+            )
 
-            Row(
+            Column( // Theme controls
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxHeight()
                     .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.SpaceEvenly,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = stringResource(R.string.theme),
-                    style = typography.bodyLarge
-                )
-
-                Row(
+                Row(  // Use system check box
                     modifier = Modifier.padding(end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(text = stringResource(R.string.use_system))
+                    GameText(text = stringResource(R.string.use_system))
                     Checkbox(
                         checked = systemTheme,
                         onCheckedChange = { viewModel.setSystemDefaultMode(it) }
                     )
                 }
+
+                SettingsToggle( // Light/Dark mode toggle
+                    label = stringResource(R.string.settings_light),
+                    secondaryLabel = stringResource(R.string.settings_dark),
+                    checked = if (systemTheme) isSystemInDarkTheme() else darkMode,
+                    onCheckedChange = { viewModel.setModeOnStart(it) },
+                    enabled = !systemTheme
+                )
             }
 
-            SettingsToggle(
-                label = stringResource(id = R.string.settings_dark_mode),
-                checked = darkMode,
-                onCheckedChange = { viewModel.setModeOnStart(it) },
-                enabled = !systemTheme
-            )
+
         }
 
         Row(
-            Modifier.fillMaxWidth(),
+            Modifier
+                .fillMaxWidth(),
+//                .weight(1f), // Removed weight to allow scrolling
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -132,12 +145,14 @@ fun SettingsScreen(
 
 
         SettingsLevelControl(
+            modifier = Modifier, //.weight(1f), // Removed weight to allow scrolling
             label = stringResource(R.string.game_speed),
             value = speed,
             onValueChange = { viewModel.setSpeed(it) }
         )
 
         SettingsLevelControl(
+            modifier = Modifier, //.weight(1f), // Removed weight to allow scrolling
             label = stringResource(R.string.master_volume),
             value = volume,
             onValueChange = {
@@ -146,30 +161,38 @@ fun SettingsScreen(
         )
 
         SettingsLevelControl(
+            modifier = Modifier, //.weight(1f), // Removed weight to allow scrolling
             label = stringResource(R.string.click_volume),
             value = clickVolume,
             onValueChange = { viewModel.setClickVolume(it) }
         )
 
         SettingsLevelControl(
+            modifier = Modifier, //.weight(1f), // Removed weight to allow scrolling
             label = stringResource(R.string.bubble_select_volume),
             value = bubbleSelectVolume,
             onValueChange = { viewModel.setBubbleSelectVolume(it) }
         )
 
         SettingsLevelControl(
+            modifier = Modifier, //.weight(1f), // Removed weight to allow scrolling
             label = stringResource(R.string.bubble_explode_volume),
             value = bubbleExplodeVolume,
             onValueChange = { viewModel.setBubbleExplodeVolume(it) }
         )
 
         SettingsLevelControl(
+            modifier = Modifier, //.weight(1f), // Removed weight to allow scrolling
             label = stringResource(R.string.empty_cell_volume),
             value = tappingVolume,
             onValueChange = { viewModel.setTappingVolume(it) }
         )
 
         SettingsLevelControl(
+            modifier = Modifier
+                .padding(bottom = 8.dp) // Add some padding at the bottom for better scroll visibility
+                .fillMaxWidth(),
+//                .weight(1f), // Removed weight to allow scrolling
             label = stringResource(R.string.ball_movement_volume),
             value = hissVolume,
             onValueChange = { viewModel.setHissVolume(it) }
@@ -181,62 +204,104 @@ fun SettingsScreen(
 @Composable
 fun SettingsToggle(
     label: String,
+    secondaryLabel: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     enabled: Boolean = true
 ) {
     Row(
-        modifier = Modifier.padding( 8.dp),
+        modifier = Modifier.padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Absolute.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
+        GameText(
             text = label,
             modifier = Modifier
                 .padding(end = 8.dp),
-            color = if (enabled)
-                colorScheme.onSurface
+            color = if (checked)
+                colorScheme.onPrimary.copy(alpha = 0.38f)
             else
-                colorScheme.onSurface.copy(alpha = 0.38f)
+                colorScheme.onPrimary
         )
 
         Switch(
+            modifier = Modifier.padding(
+                start = 8.dp,
+                end = 8.dp
+            ),
             checked = checked,
             onCheckedChange = onCheckedChange,
             enabled = enabled
         )
+
+        if (secondaryLabel != null) {
+            GameText(
+                text = secondaryLabel,
+                modifier = Modifier
+                    .padding(end = 8.dp),
+                color = if (checked)
+                    colorScheme.onPrimary
+                else
+                    colorScheme.onPrimary.copy(alpha = 0.38f)
+            )
+        }
     }
 }
 
 @Composable
 fun SettingsLevelControl(
+    modifier: Modifier,
     label: String,
     value: Int,
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float> = 0F..100F
 ) {
     Log.d("SettingsLevelControl", "$label - Value received: $value")
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start
+
+    Row(
+        modifier = modifier
+            .padding(vertical = 4.dp) // Reduced vertical padding
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label)
+//        BoxWithConstraints(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(8.dp)
+//        ) {
+//            val maxWidth = maxWidth
+//            val maxHeight = maxHeight
+        GameText( //  label before the slider
+            modifier = Modifier
+                .padding(start = 4.dp) // Reduced start padding
+                .weight(1f),
+            text = label
+        )
+
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(3f),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
+            horizontalArrangement = Arrangement.spacedBy(4.dp) // Reduced spacing
         ) {
             Slider(
                 value = value.toFloat(),
-                onValueChange = { value->
+                onValueChange = { value ->
                     Log.d("SettingsLevelControl", "$label - onValueChange: $value")
                     onValueChange(value)
                 },
                 valueRange = valueRange,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(5f)
             )
-            Text(text = "${value}%")
+
+            GameText( // slider value
+                modifier = Modifier.weight(1f),
+                text = "${value}%"
+            )
         }
+//        }
     }
 }
 
