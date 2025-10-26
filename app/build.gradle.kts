@@ -90,6 +90,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)   // For Composable previews in Android Studio
     implementation(libs.androidx.material3)            // Material Design 3 components
+    implementation("androidx.compose.material:material-icons-core:1.6.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
     // Room (Persistence)
     implementation(libs.androidx.room.runtime)

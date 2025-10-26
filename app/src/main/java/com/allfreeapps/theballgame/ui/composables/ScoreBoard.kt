@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,8 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.model.entities.Score
-import com.allfreeapps.theballgame.ui.theme.BackgroundColor
-import com.allfreeapps.theballgame.ui.theme.CellBoarderColor
+import com.allfreeapps.theballgame.ui.composables.coreAppComposables.GameText
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,10 +33,10 @@ fun ScoresTable(
     scores: List<Score>,
     onDeleteClicked: (Int?) -> Unit) {
 
-    Column(modifier.background(BackgroundColor)) {
+    Column(modifier.background(MaterialTheme.colorScheme.background)) {
 
         if (scores.isEmpty()) {
-            Text(
+            GameText(
                 stringResource(R.string.no_previous_scores_yet),
                 modifier = Modifier.padding(16.dp)
             )
@@ -55,7 +53,7 @@ fun ScoresTable(
                 isHeader = true,
                 onDeleteClicked = { onDeleteClicked(null) }
             )
-            HorizontalDivider(color = CellBoarderColor)
+            HorizontalDivider(color = MaterialTheme.colorScheme.onPrimary)
 
             LazyColumn(
                 modifier = Modifier
@@ -69,7 +67,7 @@ fun ScoresTable(
                         date = formatDate(scoreItem.date),
                         onDeleteClicked = { scoreItem.id?.let { onDeleteClicked(it) } }
                     )
-                    HorizontalDivider(color = CellBoarderColor)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         }
@@ -103,7 +101,7 @@ fun ScoreRow(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
+        GameText(
             text = playerName,
             modifier = Modifier
                 .weight(0.8f)
@@ -111,7 +109,7 @@ fun ScoreRow(
             fontWeight = fontWeight,
             style = style
         )
-        Text(
+        GameText(
             text = score,
             modifier = Modifier
                 .weight(0.8f)
@@ -120,7 +118,7 @@ fun ScoreRow(
             fontWeight = fontWeight,
             style = style
         )
-        Text(
+        GameText(
             text = date,
             modifier = Modifier
                 .weight(0.8f)

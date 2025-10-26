@@ -1,6 +1,5 @@
 package com.allfreeapps.theballgame.ui
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,7 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,7 +32,6 @@ import com.allfreeapps.theballgame.ui.composables.GameOverScreen
 import com.allfreeapps.theballgame.ui.composables.ScoreTableScreen
 import com.allfreeapps.theballgame.ui.composables.SettingsScreen
 import com.allfreeapps.theballgame.ui.composables.WelcomeScreen
-import com.allfreeapps.theballgame.ui.theme.BackgroundColor
 import com.allfreeapps.theballgame.ui.theme.Black
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 import com.allfreeapps.theballgame.util.Applogger
@@ -60,8 +57,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             InitialView(
-                settingsRepository = settingRepository,
-                navigateToSettings = { navigateToSettings() }
+                settingsRepository = settingRepository
             )
         }
     }
@@ -72,25 +68,25 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun navigateToSettings() {
-        val intent = Intent(applicationContext, SettingsActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        applicationContext.startActivity(intent)
-    }
+//    private fun navigateToSettings() {
+//        val intent = Intent(applicationContext, SettingsActivity::class.java)
+//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//        applicationContext.startActivity(intent)
+//    }
 
 }
 
 @Composable
 fun InitialView(
     settingsRepository: SettingsRepository,
-    navigateToSettings: () -> Unit = {}
+//    navigateToSettings: () -> Unit = {}
 ) {
     val systemTheme by settingsRepository.systemTheme.collectAsState()
     val darkThemeEnabled by settingsRepository.darkTheme.collectAsState()
-    val useDarkTheme = if (systemTheme) isSystemInDarkTheme() else darkThemeEnabled
 
     TheBallGameTheme(
-        darkTheme = useDarkTheme
+        darkTheme = darkThemeEnabled,
+        dynamicColor = systemTheme
     ) {
 
         val navController = rememberNavController()
@@ -107,9 +103,9 @@ fun InitialView(
                             .fillMaxWidth()
                             .fillMaxHeight()
                             .padding(4.dp)
-                            .background(MaterialTheme.colorScheme.background),
+                            .background(MaterialTheme.colorScheme.primary),
                         onSettingsClicked = {
-                            navigateToSettings()
+                            navController.navigate(Screen.Settings.route)
                         },
                         onStartButtonClicked = {
                             navController.navigate(Screen.Game.route)
@@ -122,10 +118,10 @@ fun InitialView(
                     GameLayout(
                         modifier = Modifier
                             .padding(4.dp)
-                            .background(BackgroundColor)
+                            .background(MaterialTheme.colorScheme.primary)
                             .border(width = 2.dp, color = Black),
                         onSettingsClicked = {
-                            navigateToSettings()
+                            navController.navigate(Screen.Settings.route)
                         },
                         gameOver = { finalScore ->
                             navController.navigate(Screen.GameOver.createRoute(finalScore)) {
@@ -141,10 +137,12 @@ fun InitialView(
                     route = Screen.GameOver.route,
                     arguments = listOf(navArgument("score") { type = NavType.IntType })
                 ) { backStackEntry ->
-                    // Retrieve the score argument
                     val score = backStackEntry.arguments?.getInt("score") ?: 0
                     GameOverScreen(
-                        score = score, // Pass the score to your GameOverScreen
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .background(MaterialTheme.colorScheme.secondary),
+                        score = score,
                         onSaveScoreClicked = {
                             navController.navigate(Screen.Scores.route) {
                                 popUpTo(Screen.GameOver.route) { inclusive = true }
@@ -156,7 +154,6 @@ fun InitialView(
                             }
                         },
                         onSettingsClicked = {
-                            // Consider if Settings needs the score or if it's a separate flow
                             navController.navigate(Screen.Settings.route)
                         }
                     )
@@ -166,8 +163,9 @@ fun InitialView(
                     SettingsScreen(
                         modifier = Modifier
                             .padding(innerPadding)
-                            .padding(16.dp),
+                            .background(MaterialTheme.colorScheme.primary),
                         onBackClicked = {
+                            navController.popBackStack()
                         }
 
                     )

@@ -6,16 +6,19 @@ val Purple80 = Color(0xA6DBCAFD)
 val PurpleGrey80 = Color(0x2ADCCEFF)
 val Pink80 = Color(0xFFA81DC0)
 
-val Purple40 = Color(0x9F6650A4)
+val Purple40 = Color(0x9F390DEC)
+val Purple60 = Color(0x9F574F77)
 val PurpleGrey40 = Color(0xFF27272F)
 val Pink40 = Color(0xFF7D5260)
 
 val Black = Color(0xFF000000)
 val White = Color(0xFFFFFFFF)
-val Gray = Color(0xFF808080)
-val DarkGray = Color(0xFF505050)
-val LightGray = Color(0xFFAFAFAF)
-val GreyPurple = Color(0xDF8A6BD2)
+val LightGray = Color(0xFF808080)
+val DarkGray = Color(0xBE2F2E2E)
+val Gray = Color(0xFF696767)
+val GreyPurple_light = Color(0xDF806AB2)
+val GreyPurple_dark = Color(0xDF544C75)
+
 val Orange = Color(0xFFF44336)
 val L11 = Color(0xFFFF0000)
 val L10 = Color(0xFFFF0032)
@@ -29,14 +32,13 @@ val L3 = Color(0xFF0032FA)
 val L2 = Color(0xFF0064FF)
 val L1 = Color(0xFF0064FA)
 
-
+//Balls
 val Purple = Color(0xFF7955AD)
 val Brown = Color(0xFFE89B42)
 val Red = Color(0xFFF56157)
 val Yellow = Color(0x81FFEB3B)
 val Green = Color(0xFF009688)
 val Blue = Color(0xFF2196F3)
-
 
 val ball1 = Green
 val ball2= Blue
@@ -45,17 +47,29 @@ val ball4 = Purple
 val ball5 = Red
 val ball6 = Brown
 
-val UserNameFieldColor = GreyPurple
-val HeaderTextColor = PurpleGrey40
-val HeaderBackGround = LightGray
-val ScoreTextColor = PurpleGrey40
-val scoreTextColorOnGameOver = White
-val BackgroundColor = LightGray
-val CellBoarderColor = DarkGray
-val StartButtonBackgroundColor = Purple40
-val StartButtonTextColor = White
-val DisabledColor = Gray
-val GameOverBackground = Pink80
+// most common used background and text color
+val GenericBackgroundColor_light = LightGray
+val GenericBackgroundColor_dark = DarkGray
+val GenericTextColor_light = Black
+val GenericTextColor_dark = White
+
+// on game over screen as a secondary common colors
+val SecondaryBackGroundColor_dark = GreyPurple_dark
+val SecondaryTextColor_dark = White
+val SecondaryBackGroundColor_light = GreyPurple_light
+val SecondaryTextColor_light = Black
+
+// for other rarely used color combinations
+val rarelyUserBackgroundColor_light = Purple40
+val rarelyUsedTextColor_light = White
+val rarelyUserBackgroundColor_dark = Purple40
+val rarelyUsedTextColor_dark = White
+val rarelyUsedContainerColor_light = Purple60
+val rarelyUsedContainerTextColor_light = Black
+val rarelyUsedContainerColor_dark = Purple60
+val rarelyUsedContainerTextColor_dark = Black
+val startButtonColor_light = Green
+val startButtonColor_dark = Green
 
 val GameColorScale = arrayOf(
     White,

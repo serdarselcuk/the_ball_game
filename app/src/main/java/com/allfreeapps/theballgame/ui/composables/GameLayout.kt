@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -38,8 +39,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.BuildConfig
 import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.model.LearningMessages
-import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
-import com.allfreeapps.theballgame.ui.theme.LightGray
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 import kotlin.math.abs
 
@@ -121,7 +120,7 @@ fun GameLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(headerHeight)
-                    .background(HeaderBackGround),
+                    .background(MaterialTheme.colorScheme.secondary),
                 fontSize = headerFontSize.value,
                 content = listOf(
                     {
@@ -203,7 +202,7 @@ fun GameLayout(
                         ComparableScoreLine(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(LightGray),
+                                .background(MaterialTheme.colorScheme.tertiary),
                             maxSizeOfLine = totalAvailableWidth,
                             orientation = orientation,
                         )
@@ -262,7 +261,7 @@ fun GameLayout(
                                     modifier = Modifier
                                         .weight(1f)
                                         .fillMaxHeight()
-                                        .background(LightGray),
+                                        .background(MaterialTheme.colorScheme.tertiary),
                                     maxSizeOfLine = totalAvailableHeight,
                                     orientation = orientation
                                 )

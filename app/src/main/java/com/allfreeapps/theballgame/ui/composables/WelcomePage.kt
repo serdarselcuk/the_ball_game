@@ -1,6 +1,5 @@
 package com.allfreeapps.theballgame.ui.composables
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -18,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.model.GameState
-import com.allfreeapps.theballgame.ui.theme.StartButtonBackgroundColor
 import com.allfreeapps.theballgame.utils.toBallColor
 import com.allfreeapps.theballgame.viewModels.WelcomeScreenViewModel
 
@@ -101,7 +101,6 @@ fun WelcomeScreen(
     }
 }
 
-@SuppressLint("UnusedContentLambdaTargetStateParameter")
 @Composable
 fun StartButton(
     modifier: Modifier = Modifier,
@@ -113,8 +112,8 @@ fun StartButton(
 
     AnimatedWelcomingBall(
         modifier = modifier,
-        color = StartButtonBackgroundColor,
         targetSize = targetSize,
+        color = MaterialTheme.colorScheme.surface,
         content = {
             if (showText.value) {
                 ButtonWithText(
@@ -123,6 +122,12 @@ fun StartButton(
                         .width(targetSize)
                         .height(targetSize),
                     buttonText = stringResource(R.string.start_game),
+                    colors = ButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = Color.Blue,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledContentColor = Color.Blue
+                    ),
                     onclick = restartButtonOnClick
                 )
             }
@@ -173,7 +178,7 @@ fun WelcomingBoard(
 @Composable
 fun AnimatedWelcomingBall(
     modifier: Modifier,
-    color: Color,
+    color: Color = MaterialTheme.colorScheme.tertiary,
     initialSize: Dp = 0.dp,
     targetSize: Dp,
     gameSpeed: Int = 1000,
@@ -227,7 +232,7 @@ fun AnimatedWelcomingBall(
 @Preview(
     showBackground = true,
     showSystemUi = true,
-    name = "Welcome Page",
+    name = "Welcome Page Portrait",
     device = "spec:width=1200dp,height=2400dp,orientation=portrait"
 )
 @Composable
@@ -240,11 +245,14 @@ fun PreviewWelcomePagePortrait() {
 @Preview(
     showBackground = true,
     showSystemUi = true,
-    name = "Welcome Page",
-    device = "spec:width=800dp,height=2400dp,orientation=landscape"
+    name = "Welcome Page Start button",
+    device = "spec:width=800dp,height=2400dp,orientation=portrait"
 )
 @Composable
-fun PreviewWelcomePageLandscape() {
-//    WelcomeScreen(isMuted = false, onMuteClicked = {}, onSettingsClicked = {})
-//    StartScreenBackground(Modifier.fillMaxWidth(), Configuration.ORIENTATION_LANDSCAPE)
+fun PreviewWelcomePageStartButton() {
+    StartButton(
+        modifier = Modifier.offset(50.dp, 50.dp),
+        {},
+        {}
+    )
 }

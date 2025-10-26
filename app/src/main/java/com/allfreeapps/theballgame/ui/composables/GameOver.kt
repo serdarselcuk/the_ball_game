@@ -17,9 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,26 +39,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.R
-import com.allfreeapps.theballgame.ui.theme.GameOverBackground
-import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
-import com.allfreeapps.theballgame.ui.theme.UserNameFieldColor
-import com.allfreeapps.theballgame.ui.theme.scoreTextColorOnGameOver
+import com.allfreeapps.theballgame.ui.composables.coreAppComposables.GameText
 import com.allfreeapps.theballgame.viewModels.GameOverScreenViewModel
 
 @Composable
 fun GameOverScreen(
+    viewModel: GameOverScreenViewModel = hiltViewModel(),
+    modifier: Modifier,
     score: Int,
     onSkipClicked: () -> Unit,
-    viewModel: GameOverScreenViewModel = hiltViewModel(),
     onSaveScoreClicked: () -> Unit,
     onSettingsClicked: () -> Unit = {},
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
     ) {
         SavingScoreScreen(
-            score,
+            modifier = modifier,
+            score = score,
             onSaveScoreClicked = { username ->
                 viewModel.saveScoreClicked(username, score)
                 onSaveScoreClicked()
@@ -77,6 +75,7 @@ fun GameOverScreen(
 
 @Composable
 fun SavingScoreScreen(
+    modifier: Modifier,
     score: Int,
     onSaveScoreClicked: (username: String) -> Unit,
     onSkipClicked: () -> Unit,
@@ -96,107 +95,101 @@ fun SavingScoreScreen(
         }
     }
 
+    Image(
+        painter = painterResource(id = R.drawable.game_over_screen),
+        contentDescription = "Background",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxWidth()
+    )
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .background(GameOverBackground)
+            .fillMaxWidth()
+            .height(120.dp)
+            .padding(top = 50.dp)
     ) {
 
-        Image(
-            painter = painterResource(id = R.drawable.game_over_screen),
-            contentDescription = "Background",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth()
+        SettingsButton(
+            onClick = { onSettingsClicked() },
+            modifier = Modifier
+                .wrapContentHeight()
+                .width(110.dp)
+                .align(Alignment.TopStart)
+                .padding(16.dp)
+                .border(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    shape = ButtonDefaults.shape
+                ),
         )
 
-        Box(
+        SkipButton(
+            onClick = onSkipClicked,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .padding(top = 50.dp)
-        ) {
-
-            SettingsButton(
-                onClick = { onSettingsClicked() },
-                color = scoreTextColorOnGameOver,
-                modifier = Modifier
-                    .wrapContentHeight()
-                    .width(110.dp)
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
-                    .border(
-                        width = 2.dp,
-                        color = scoreTextColorOnGameOver,
-                        shape = ButtonDefaults.shape
-                    ),
-            )
-
-            SkipButton(
-                onClick = onSkipClicked,
-                color = scoreTextColorOnGameOver,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp)
-            )
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Text(
-                text = "Your score: $displayedScore",
-                style = TextStyle(
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = scoreTextColorOnGameOver
-                )
-            )
-
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .wrapContentHeight(),
-                value = username,
-                onValueChange = { username = it },
-                label = {
-                    Text("Enter your name")
-                },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = HeaderTextColor,
-                    unfocusedTextColor = HeaderTextColor.copy(alpha = 0.5f),
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.Black,
-                    focusedContainerColor = UserNameFieldColor.copy(alpha = 0.5f),
-                    unfocusedContainerColor = UserNameFieldColor
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            SaveScoreButton(
-                modifier = Modifier.fillMaxWidth(0.5f), // Make Button take 50% of column width,
-                onClick = {
-                    onSaveScoreClicked(username)
-                },
-                username = username
-            )
-
-            Spacer(modifier = Modifier.height(100.dp)) // Increased space
-        }
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+        )
     }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        GameText(
+            text = "Your score: $displayedScore",
+            style = TextStyle(
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        )
+
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .wrapContentHeight(),
+            value = username,
+            onValueChange = { username = it },
+            label = {
+                GameText("Enter your name")
+            },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                unfocusedTextColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.Black,
+                focusedContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SaveScoreButton(
+            modifier = Modifier.fillMaxWidth(0.5f), // Make Button take 50% of column width,
+            onClick = {
+                onSaveScoreClicked(username)
+            },
+            username = username
+        )
+
+        Spacer(modifier = Modifier.height(100.dp)) // Increased space
+    }
+
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewGameOverScreen(){
     GameOverScreen(
+        modifier = Modifier
+            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.onPrimary),
         score = 100,
         onSaveScoreClicked = {},
         onSkipClicked = {},

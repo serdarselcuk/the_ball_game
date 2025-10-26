@@ -11,38 +11,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = HeaderBackGround, // Purple80 - for header background
-    onPrimary = HeaderTextColor, // PurpleGrey40 - for header text
-    primaryContainer = StartButtonBackgroundColor, // Purple40 - for start button background
-    onPrimaryContainer = StartButtonTextColor, // White - for start button text
-    secondary = UserNameFieldColor, // GreyPurple - for username field
-    background = BackgroundColor, // LightGray - for general background
-    surface = CellBoarderColor, // DarkGray - for cell border
-    onSurface = ScoreTextColor, // PurpleGrey40 - for score text
-    error = DisabledColor, // Gray - for disabled elements
-    onError = Pink80 // GameOverBackground - for game over background
+    primary = GenericBackgroundColor_dark, // The primary color is the color displayed most frequently across your app’s * screens and components.
+    onPrimary = GenericTextColor_dark,
+    secondary = SecondaryBackGroundColor_dark, // header
+    onSecondary = SecondaryTextColor_dark,
+    tertiary = rarelyUserBackgroundColor_dark,
+    onTertiary = rarelyUsedTextColor_dark,
+    tertiaryContainer = rarelyUsedContainerColor_dark,
+    onTertiaryContainer = rarelyUsedContainerTextColor_dark,
+    surface = startButtonColor_dark // start button
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = HeaderBackGround, // Purple80 - for header background
-    onPrimary = HeaderTextColor, // PurpleGrey40 - for header text
-    primaryContainer = StartButtonBackgroundColor, // Purple40 - for start button background
-    onPrimaryContainer = StartButtonTextColor, // White - for start button text
-    secondary = UserNameFieldColor, // GreyPurple - for username field
-    background = BackgroundColor, // LightGray - for general background
-    surface = CellBoarderColor, // DarkGray - for cell border
-    onSurface = ScoreTextColor, // PurpleGrey40 - for score text
-    error = DisabledColor, // Gray - for disabled elements
-    onError = Pink80 // GameOverBackground - for game over background
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = GenericBackgroundColor_light,
+    onPrimary = GenericTextColor_light,
+    secondary = SecondaryBackGroundColor_light,
+    onSecondary = SecondaryTextColor_light,
+    tertiary = rarelyUserBackgroundColor_light,
+    onTertiary = rarelyUsedTextColor_light,
+    tertiaryContainer = rarelyUsedContainerColor_light,
+    onTertiaryContainer = rarelyUsedContainerTextColor_light,
+    surface = startButtonColor_light // start button
 )
 
 
@@ -57,7 +46,6 @@ fun TheBallGameTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }

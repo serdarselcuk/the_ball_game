@@ -29,8 +29,8 @@ fun getRadialGradientBrush(
     xRate: Float = 0.8f,
     yRate: Float = 0.8f,
     radius:Float = 2f,
-    baseColor: Color)
-        : Brush {
+    baseColor: Color
+): Brush {
 
     val centerColor = baseColor.copy(
         red = (baseColor.red * 1.3f).coerceAtMost(1f),

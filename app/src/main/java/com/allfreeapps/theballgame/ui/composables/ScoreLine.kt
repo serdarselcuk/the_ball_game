@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,10 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.allfreeapps.theballgame.ui.theme.BackgroundColor
-import com.allfreeapps.theballgame.ui.theme.HeaderBackGround
-import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
-import com.allfreeapps.theballgame.ui.theme.ScoreTextColor
+import com.allfreeapps.theballgame.ui.composables.coreAppComposables.GameText
 import com.allfreeapps.theballgame.ui.theme.lineColorScale
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 
@@ -35,17 +32,17 @@ fun ScoreBoard(modifier: Modifier = Modifier, score: Int) {
     Box(
         modifier = modifier
             .shadow(elevation = 1.dp)
-            .background(HeaderBackGround)
+            .background(MaterialTheme.colorScheme.secondary)
             .border(
                 width = 2.dp,
-                color = HeaderTextColor,
+                color = MaterialTheme.colorScheme.onSecondary,
             )
             .padding(
                 horizontal = 5.dp, vertical = 1.dp
             )
     ) {
-        Text(
-            text = "Score: $score", color = ScoreTextColor
+        GameText(
+            text = "Score: $score", color = MaterialTheme.colorScheme.onSecondary
         )
     }
 }
@@ -141,7 +138,7 @@ fun PreviewOnPortrait() {
     val orientation = Configuration.ORIENTATION_PORTRAIT
 
     ComparableScoreLine(
-        modifier = Modifier.background(BackgroundColor),
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         maxSizeOfLine = 500.dp,
         orientation = orientation
     )
@@ -158,7 +155,7 @@ fun PreviewOnLandscape() {
     val orientation = Configuration.ORIENTATION_LANDSCAPE
 //    ScoreLine(Modifier, 10, 10)
     ComparableScoreLine(
-        modifier = Modifier.background(BackgroundColor),
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         maxSizeOfLine = 500.dp,
         orientation = orientation
     )

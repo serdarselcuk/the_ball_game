@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,6 +33,7 @@ import androidx.compose.ui.window.Popup
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.R
+import com.allfreeapps.theballgame.ui.composables.coreAppComposables.GameText
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
 
 @Composable
@@ -92,7 +92,7 @@ fun LearnerPopup(
                 Column(
                     Modifier.padding(24.dp)
                 ) {
-                    Text(ContextCompat.getString(LocalContext.current, currentMessageText))
+                    GameText(ContextCompat.getString(LocalContext.current, currentMessageText))
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -115,7 +115,7 @@ fun LearnerPopup(
                                 },
                             )
 
-                            Text(
+                            GameText(
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(start = 2.dp),

@@ -24,7 +24,8 @@
     <string name="close">Close</string>
     <string name="next">Next</string>
     <string name="dont_show_again">Don\'t show again</string>
-    <string name="settings_dark_mode">Dark mode</string>
+    <string name="settings_dark">Dark</string>
+    <string name="settings_light">Light</string>
     <string name="master_volume">Master Volume</string>
     <string name="click_volume">Click Volume</string>
     <string name="bubble_select_volume">Bubble Select Volume</string>

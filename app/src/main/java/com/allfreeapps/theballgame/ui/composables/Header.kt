@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.allfreeapps.theballgame.R
-import com.allfreeapps.theballgame.ui.theme.HeaderTextColor
+import com.allfreeapps.theballgame.ui.composables.coreAppComposables.GameText
 
 @Composable
 fun Header(
@@ -36,7 +36,7 @@ fun Header(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Text(
+        GameText(
             modifier = Modifier.padding(
                 start = if (isLandscape) 50.dp
                 else 20.dp
@@ -46,7 +46,7 @@ fun Header(
                 fontStyle = FontStyle.Normal,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.ExtraBold,
-                color = HeaderTextColor,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = fontSize.sp,
                 shadow = androidx.compose.ui.graphics.Shadow(
                     color = androidx.compose.ui.graphics.Color.Black,
