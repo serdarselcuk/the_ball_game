@@ -214,14 +214,13 @@ fun SettingsToggle(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        val fullColor = colorScheme.onPrimary
+        val disabledColor = colorScheme.onPrimary.copy(alpha = 0.38f)
         GameText(
             text = label,
             modifier = Modifier
                 .padding(end = 8.dp),
-            color = if (checked)
-                colorScheme.onPrimary.copy(alpha = 0.38f)
-            else
-                colorScheme.onPrimary
+            color = if (checked == (secondaryLabel == null)) fullColor else disabledColor
         )
 
         Switch(
@@ -239,10 +238,7 @@ fun SettingsToggle(
                 text = secondaryLabel,
                 modifier = Modifier
                     .padding(end = 8.dp),
-                color = if (checked)
-                    colorScheme.onPrimary
-                else
-                    colorScheme.onPrimary.copy(alpha = 0.38f)
+                color = if (checked) fullColor else disabledColor
             )
         }
     }
@@ -265,13 +261,6 @@ fun SettingsLevelControl(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-//        BoxWithConstraints(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(8.dp)
-//        ) {
-//            val maxWidth = maxWidth
-//            val maxHeight = maxHeight
         GameText( //  label before the slider
             modifier = Modifier
                 .padding(start = 4.dp) // Reduced start padding
@@ -308,7 +297,7 @@ fun SettingsLevelControl(
 @Preview(showBackground = true)
 @Composable
 fun PreviewSettingsScreen() {
-    val context = LocalContext.current
+    LocalContext.current
 //    val mockSettingsViewModel = SettingsViewModel(
 //        settingsRepository = SettingsRepository(
 //            dataStore = PreferenceDataStoreFactory.create(
@@ -337,7 +326,7 @@ fun PreviewSettingsScreen() {
 )
 @Composable
 fun PreviewSettingsLandScapeScreen() {
-    val context = LocalContext.current
+    LocalContext.current
 //    val mockSettingsViewModel = SettingsViewModel(
 //        settingsRepository = SettingsRepository(
 //            dataStore = PreferenceDataStoreFactory.create(

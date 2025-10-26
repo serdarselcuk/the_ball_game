@@ -78,15 +78,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun InitialView(
-    settingsRepository: SettingsRepository,
-//    navigateToSettings: () -> Unit = {}
+    settingsRepository: SettingsRepository
 ) {
     val systemTheme by settingsRepository.systemTheme.collectAsState()
     val darkThemeEnabled by settingsRepository.darkTheme.collectAsState()
 
     TheBallGameTheme(
         darkTheme = darkThemeEnabled,
-        dynamicColor = systemTheme
+        followSystem = systemTheme
     ) {
 
         val navController = rememberNavController()
@@ -140,7 +139,7 @@ fun InitialView(
                     val score = backStackEntry.arguments?.getInt("score") ?: 0
                     GameOverScreen(
                         modifier = Modifier
-                            .padding(innerPadding)
+                            .padding(4.dp)
                             .background(MaterialTheme.colorScheme.secondary),
                         score = score,
                         onSaveScoreClicked = {
@@ -162,7 +161,7 @@ fun InitialView(
                 composable(Screen.Settings.route) {
                     SettingsScreen(
                         modifier = Modifier
-                            .padding(innerPadding)
+                            .padding(4.dp)
                             .background(MaterialTheme.colorScheme.primary),
                         onBackClicked = {
                             navController.popBackStack()
@@ -174,7 +173,7 @@ fun InitialView(
                 composable(Screen.Scores.route) {
                     ScoreTableScreen(
                         Modifier
-                            .padding(8.dp),
+                            .padding(4.dp),
                         onCloseScoresClicked = {
                             navController.navigate(Screen.Welcome.route) {
                                 popUpTo(Screen.Scores.route) { inclusive = true }
