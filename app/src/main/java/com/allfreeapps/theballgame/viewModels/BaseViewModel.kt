@@ -59,4 +59,6 @@ abstract class BaseViewModel(
         _state.value = gameState
     }
 
+    fun getState() = state.value
+
 }

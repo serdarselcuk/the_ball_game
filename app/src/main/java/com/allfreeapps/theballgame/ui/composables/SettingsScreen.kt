@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,8 +57,9 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        // Header
         Row(
-            // Header
+
             horizontalArrangement = Arrangement.Start,
         ) {
             BackButton(
@@ -74,7 +76,8 @@ fun SettingsScreen(
             )
         }
 
-        Row(// Theme box
+        // Theme box
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
 //                .weight(2f) // Removed weight to allow scrolling
@@ -85,21 +88,23 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            GameText( // Theme text
+            // Theme text
+            GameText(
                 modifier = Modifier.padding(8.dp),
                 text = stringResource(R.string.theme),
                 style = typography.headlineSmall
             )
 
-            Column( // Theme controls
+            // Theme controls
+            Column(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(8.dp),
                 verticalArrangement = Arrangement.SpaceEvenly,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                Row(  // Use system check box
+                // Use system check box
+                Row(
                     modifier = Modifier.padding(end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -122,7 +127,7 @@ fun SettingsScreen(
 
 
         }
-
+        // Mute on Start and Vibration toggles
         Row(
             Modifier
                 .fillMaxWidth(),
@@ -230,7 +235,17 @@ fun SettingsToggle(
             ),
             checked = checked,
             onCheckedChange = onCheckedChange,
-            enabled = enabled
+            enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = colorScheme.outline,
+                checkedTrackColor = colorScheme.primaryContainer,
+                // You can also define colors for the unchecked state
+                uncheckedThumbColor = colorScheme.primary,
+                uncheckedTrackColor = colorScheme.surfaceVariant,
+                // And for the disabled state
+                disabledCheckedThumbColor = colorScheme.onSurface.copy(alpha = 0.12f),
+                disabledCheckedTrackColor = colorScheme.onSurface.copy(alpha = 0.12f)
+            )
         )
 
         if (secondaryLabel != null) {

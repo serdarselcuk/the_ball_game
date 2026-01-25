@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -19,8 +20,8 @@ fun GameText(
     text: String,
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onPrimary,
-    fontSize: TextUnit = TextUnit.Unspecified,
-    fontStyle: androidx.compose.ui.text.font.FontStyle? = null,
+    fontStyle: FontStyle? = null,
+    fontSize: TextUnit? = null,
     fontWeight: FontWeight? = null,
     fontFamily: androidx.compose.ui.text.font.FontFamily? = null,
     letterSpacing: TextUnit = TextUnit.Unspecified,
@@ -40,10 +41,10 @@ fun GameText(
         color = color,
         maxLines = maxLines,
         style = style,
-        fontSize = fontSize,
-        fontStyle = fontStyle,
-        fontWeight = fontWeight,
-        fontFamily = fontFamily,
+        fontSize = fontSize ?: style.fontSize,
+        fontStyle = fontStyle ?: style.fontStyle,
+        fontWeight = fontWeight ?: style.fontWeight,
+        fontFamily = fontFamily ?: fontFamily,
         letterSpacing = letterSpacing,
         textDecoration = textDecoration,
         textAlign = textAlign,

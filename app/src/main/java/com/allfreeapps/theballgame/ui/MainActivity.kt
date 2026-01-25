@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,7 +31,6 @@ import com.allfreeapps.theballgame.ui.composables.GameOverScreen
 import com.allfreeapps.theballgame.ui.composables.ScoreTableScreen
 import com.allfreeapps.theballgame.ui.composables.SettingsScreen
 import com.allfreeapps.theballgame.ui.composables.WelcomeScreen
-import com.allfreeapps.theballgame.ui.theme.Black
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
 import com.allfreeapps.theballgame.util.Applogger
 import com.allfreeapps.theballgame.viewModels.WelcomeScreenViewModel
@@ -102,7 +100,7 @@ fun InitialView(
                             .fillMaxWidth()
                             .fillMaxHeight()
                             .padding(4.dp)
-                            .background(MaterialTheme.colorScheme.primary),
+                            .background(MaterialTheme.colorScheme.surface),
                         onSettingsClicked = {
                             navController.navigate(Screen.Settings.route)
                         },
@@ -116,9 +114,8 @@ fun InitialView(
 
                     GameLayout(
                         modifier = Modifier
-                            .padding(4.dp)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .border(width = 2.dp, color = Black),
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface),
                         onSettingsClicked = {
                             navController.navigate(Screen.Settings.route)
                         },

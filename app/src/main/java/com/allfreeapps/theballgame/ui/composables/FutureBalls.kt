@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.allfreeapps.theballgame.ui.theme.TheBallGameTheme
@@ -55,13 +55,13 @@ import com.allfreeapps.theballgame.utils.toBallColor
     @Composable
     private fun CreateFutureBalls(upcomingBalls: Array<Int>) {
         val ballDisplaySize = 24.dp
+
         upcomingBalls.forEachIndexed { index, ballColorInt ->
-            val radialGradientBrush =  remember(ballDisplaySize.value, ballColorInt) {
-                getRadialGradientBrush(
-                    ballSizePx = ballDisplaySize.value,
+            val radialGradientBrush = LocalDensity.current.getRadialGradientBrush(
+                animatedSize = ballDisplaySize,
                     baseColor = ballColorInt.toBallColor()
                 )
-            }
+
             Box(
                 Modifier
                     .size(ballDisplaySize)

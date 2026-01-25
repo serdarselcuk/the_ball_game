@@ -38,9 +38,9 @@ import javax.inject.Inject
 @HiltViewModel
 class BallGameViewModel @Inject constructor(
     private val repository: ScoreRepository,
+    private val settingsRepository: SettingsRepository,
     vibrator: Vibrator,
     soundPlayerManager: SoundPlayerManager,
-    private val settingsRepository: SettingsRepository,
     appLogger: Applogger
 ) : BaseViewModel(
     soundPlayerManager,
@@ -88,43 +88,43 @@ class BallGameViewModel @Inject constructor(
 
     private val _messagePool: MutableStateFlow<MutableMap<Int, IntOffset>> =
         MutableStateFlow(mutableMapOf())
+
     val messagePool = _messagePool
-
     private val _isMuted = MutableStateFlow(settingsRepository.isMuteOnStart.value)
+
     override val isMuted: StateFlow<Boolean> = _isMuted
-
     private val _vibrationTurnedOn = MutableStateFlow(settingsRepository.isVibrationTurnedOn.value)
+
     override val vibrationTurnedOn: StateFlow<Boolean> = _vibrationTurnedOn
-
     private val _errorState: MutableStateFlow<Throwable?> = MutableStateFlow(null)
-    override val errorState: StateFlow<Throwable?> = _errorState
 
+    override val errorState: StateFlow<Throwable?> = _errorState
     private val _isAFreshUser: StateFlow<Boolean> = settingsRepository.isAFreshUser.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(1000L),
         initialValue = true
     )
+
     val isAFreshUser: StateFlow<Boolean> = _isAFreshUser
-
     private val _score = MutableStateFlow(0)
-    val score: StateFlow<Int> = _score
 
+    val score: StateFlow<Int> = _score
     // order represents the position in the board and the value stands for the color
     private val _ballList = MutableStateFlow(Array(MAX_BALL_COUNT) { 0 })
+
     val ballList: StateFlow<Array<Int>> = _ballList
-
     private val _totalBallCount = MutableStateFlow(0)
+
     private val totalBallCount: StateFlow<Int> = _totalBallCount
-
     private val _selectedBall = MutableStateFlow<Int?>(null)
+
     val selectedBall: StateFlow<Int?> = _selectedBall
-
     private val _setToRemove = MutableStateFlow<MutableList<MutableSet<Int>>>(mutableListOf())
+
     private val setToRemove: StateFlow<List<Set<Int>>> = _setToRemove
-
     private var _upcomingBalls = MutableStateFlow((arrayOf<Int>()))
-    val upcomingBalls: StateFlow<Array<Int>> = _upcomingBalls
 
+    val upcomingBalls: StateFlow<Array<Int>> = _upcomingBalls
 
     init {
 
@@ -291,7 +291,7 @@ class BallGameViewModel @Inject constructor(
         return selectedBall.value?.let { ballList.value[it] }
     }
 
-    fun removeBall(index: Int) {
+    fun removeBall(index: Int, removingReason: Int) {
 
         viewModelScope.launch {
             val noBallInTheBoard = totalBallCount.value == 0
@@ -302,6 +302,12 @@ class BallGameViewModel @Inject constructor(
                     Exception("ball removal request for index: $index, no ball in the list= $noBallInTheBoard, total ball count $totalBallCount, ball is already removed = $ballIsAlreadyRemoved")
                 )
                 return@launch
+            }
+
+            when (removingReason) { // This access to ballList[index] is tricky for remember
+                Markers.BALL_EXPANSION.value -> playBubbleExplodeSound()
+                Markers.BALL_SHRINKING.value -> playHissSound()
+                else -> {}
             }
 
             val copyOfBallList = _ballList.value.copyOf()

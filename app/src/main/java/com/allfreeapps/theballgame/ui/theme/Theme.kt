@@ -6,28 +6,31 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
+
 private val DarkColorScheme = darkColorScheme(
-    primary = GenericBackgroundColor_dark, // The primary color is the color displayed most frequently across your app’s * screens and components.
-    onPrimary = GenericTextColor_dark,
-    secondary = SecondaryBackGroundColor_dark, // header
-    onSecondary = SecondaryTextColor_dark,
-    tertiary = rarelyUserBackgroundColor_dark,
-    onTertiary = rarelyUsedTextColor_dark,
-    tertiaryContainer = rarelyUsedContainerColor_dark,
-    onTertiaryContainer = rarelyUsedContainerTextColor_dark,
-    surface = startButtonColor_dark // start button
+    primary = primaryBackGround_dark,//header like primary obj
+    onPrimary = textsOnPrimaryBackground_dark,
+    secondary = secondaryBackGround_dark,
+    onSecondary = textsOnSecondary_dark,
+    tertiaryContainer = tertiaryBackGround_dark,
+    tertiary = onTertiary_dark,
+    onTertiary = textsOnTertiary_dark,
+    surface = surfaceBackGround_dark,//main background
+    onSurface = textOnSurface_dark,
+    inverseOnSurface = textShadowOnText_dark
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = GenericBackgroundColor_light,
-    onPrimary = GenericTextColor_light,
-    secondary = SecondaryBackGroundColor_light,
-    onSecondary = SecondaryTextColor_light,
-    tertiary = rarelyUserBackgroundColor_light,
-    onTertiary = rarelyUsedTextColor_light,
-    tertiaryContainer = rarelyUsedContainerColor_light,
-    onTertiaryContainer = rarelyUsedContainerTextColor_light,
-    surface = startButtonColor_light // start button
+    primary = primaryBackGround_light,//header like primary obj
+    onPrimary = textsOnPrimaryBackground_light,
+    secondary = secondaryBackGround_light,
+    onSecondary = textsOnSecondary_light,
+    tertiaryContainer = tertiaryBackGround_light,
+    tertiary = onTertiary_light,
+    onTertiary = textsOnTertiary_light,
+    surface = surfaceBackGround_light,//main background
+    onSurface = textsOnSurface_light,
+    inverseOnSurface = textShadowOnText_light
 )
 
 

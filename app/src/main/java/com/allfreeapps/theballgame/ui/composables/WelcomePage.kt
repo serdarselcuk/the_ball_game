@@ -1,26 +1,14 @@
 package com.allfreeapps.theballgame.ui.composables
 
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -29,18 +17,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.R
 import com.allfreeapps.theballgame.model.GameState
+import com.allfreeapps.theballgame.ui.composables.coreAppComposables.AnimatedBallButton
+import com.allfreeapps.theballgame.ui.composables.coreAppComposables.AnimatedWelcomingBall
 import com.allfreeapps.theballgame.utils.toBallColor
 import com.allfreeapps.theballgame.viewModels.WelcomeScreenViewModel
 
@@ -60,7 +44,7 @@ fun WelcomeScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        var buttonCreated by remember { mutableStateOf(false) }
+        var buttonCreationIsCompleted by remember { mutableStateOf(false) }
         Header(
             Modifier
                 .fillMaxWidth()
@@ -85,21 +69,19 @@ fun WelcomeScreen(
                 }
             )
         )
-        Spacer(modifier = Modifier.width(50.dp))
 
         // to draw a round button with text having same effect on the picture
         StartButton(
-            modifier = Modifier
-                .clickable(
-                    true,
-                    onClick = onStartButtonClicked
-                ),
-            initiateAnimatingForBoard = { buttonCreated = true }
+            modifier = Modifier,
+            initiateAnimatingForBoard = { buttonCreationIsCompleted = true },
+            onStartButtonClicked = {
+                onStartButtonClicked()
+            }
         )
 
         WelcomingBoard(
             modifier = Modifier.fillMaxSize(),
-            initiateAnimatingForBoard = buttonCreated
+            initiateAnimatingForBoard = buttonCreationIsCompleted
         )
 
 
@@ -109,23 +91,18 @@ fun WelcomeScreen(
 @Composable
 fun StartButton(
     modifier: Modifier = Modifier,
-    initiateAnimatingForBoard: () -> Unit = {}
+    initiateAnimatingForBoard: () -> Unit = {},
+    onStartButtonClicked: () -> Unit = {}
 ) {
-    val showText = remember { mutableStateOf(false) }
-    val targetSize = 90.dp
 
-    AnimatedWelcomingBall(
+    AnimatedBallButton(
         modifier = modifier,
-        targetSize = targetSize,
-        color = MaterialTheme.colorScheme.surface,
-        content = {
-            if (showText.value)
-                Text(stringResource(R.string.start_game))
-        },
+        targetSize = 90.dp,
         animationCompleted = {
-            showText.value = true
             initiateAnimatingForBoard()
-        }
+        },
+        textOnTheBall = stringResource(R.string.start_game),
+        onClick = { onStartButtonClicked() }
     )
 }
 
@@ -149,13 +126,12 @@ fun WelcomingBoard(
                                 x = (ballData.position[0] * 0.5f).dp,
                                 y = (ballData.position[1] * 0.5f).dp
                             ),
-                            color = ballData.colorValue.toBallColor(),
+                            ballColor = ballData.colorValue.toBallColor(),
                             gameSpeed = ballData.gameSpeed,
                             targetSize = ballData.targetSize.dp,
                             animationCompleted = {
                                 viewModel.changeBall(index)
-                            },
-                            content = {}
+                            }
                         )
                     }
                 }
@@ -164,75 +140,6 @@ fun WelcomingBoard(
     }
 }
 
-
-@Composable
-fun AnimatedWelcomingBall(
-    modifier: Modifier,
-    color: Color = MaterialTheme.colorScheme.tertiary,
-    initialSize: Dp = 0.dp,
-    targetSize: Dp,
-    gameSpeed: Int = 1000,
-    animationCompleted: () -> Unit = {},
-    content: @Composable () -> Unit
-) {
-    var animateNow by remember { mutableStateOf(false) }
-
-    LaunchedEffect(initialSize, targetSize, gameSpeed) {
-        animateNow = true
-    }
-
-    val animatedSize by animateDpAsState(
-        targetValue = if (animateNow) targetSize else initialSize, // Animate from initialSize to targetSize
-        animationSpec = tween(durationMillis = gameSpeed, easing = LinearOutSlowInEasing),
-        finishedListener = {
-            animationCompleted()
-        }
-    )
-
-
-    val radialGradient = Brush.radialGradient(
-        colors = listOf(Color.White.copy(alpha = 0.05f), color),
-        radius = animatedSize.value * 1.2f, // Use animatedSize for dynamic radius
-        center = Offset(
-            x = animatedSize.value * 0.9f, // Offset center for highlight effect
-            y = animatedSize.value * 0.9f
-        )
-    )
-
-
-
-    Box(
-        modifier
-            .background(
-                brush = radialGradient,
-                shape = CircleShape
-            )
-            .size(animatedSize),
-        contentAlignment = Alignment.Center
-    ) {
-        if (animatedSize > 0.dp) {
-            content()
-            Canvas(
-                modifier = Modifier.matchParentSize()
-            ) {
-                val strokeWidth = (animatedSize / 15).toPx()
-                drawArc(
-                    color = Color.White,
-                    startAngle = 210f,
-                    sweepAngle = 30f,
-                    useCenter = false,
-
-                    topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
-                    size = this.size.copy(
-                        width = this.size.width - strokeWidth,
-                        height = this.size.height - strokeWidth
-                    ),
-                    style = Stroke(width = strokeWidth / 1.5f, cap = StrokeCap.Round)
-                )
-            }
-        }
-    }
-}
 
 //@Preview(
 //    showBackground = true,

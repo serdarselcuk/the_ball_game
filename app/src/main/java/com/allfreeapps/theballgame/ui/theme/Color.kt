@@ -2,24 +2,34 @@ package com.allfreeapps.theballgame.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xA6DBCAFD)
-val PurpleGrey80 = Color(0x2ADCCEFF)
-val Pink80 = Color(0xFFA81DC0)
+val primaryBackGround_light = Color(0xF3B1ACB9)
+val textsOnPrimaryBackground_light = Color(0xFF2F2020)
+val secondaryBackGround_light = Color(0x16656262)
+val textsOnSecondary_light = Color(0x97979A97)
+val tertiaryBackGround_light = Color(0xFF727272)
+val textsOnTertiary_light = Color(0xFF231919)
+val onTertiary_light = Color(0xFF03A9F4)
 
-val Purple40 = Color(0x9F390DEC)
-val Purple60 = Color(0x9F574F77)
-val PurpleGrey40 = Color(0xFF27272F)
-val Pink40 = Color(0xFF7D5260)
+//main background
+val surfaceBackGround_light = Color(0xF3EDE5FA)
+val textsOnSurface_light = Color(0xFF211616)
+val textShadowOnText_light = Color(0xFF5B5B5B)
 
-val Black = Color(0xFF000000)
-val White = Color(0xFFFFFFFF)
-val LightGray = Color(0x7CC9C8C8)
-val DarkGray = Color(0xBE2F2E2E)
-val Gray = Color(0xFF696767)
-val GreyPurple_light = Color(0xDF806AB2)
-val GreyPurple_dark = Color(0xDF544C75)
 
-val Orange = Color(0xFFF44336)
+val primaryBackGround_dark = Color(0xF3151517)
+val textsOnPrimaryBackground_dark = Color(0xFF547796)
+val secondaryBackGround_dark = Color(0xFF649AD0)
+val textsOnSecondary_dark = Color(0xFF7A1235)
+val tertiaryBackGround_dark = Color(0xFF1E0202)
+val onTertiary_dark = Color(0xFF7A0303)
+val textsOnTertiary_dark = Color(0xFF8FCAFF)
+val surfaceBackGround_dark = Color(0xF33C3A3F)
+val textOnSurface_dark = Color(0xFF6690B4)
+val textShadowOnText_dark = Color(0xFF4B518D)
+
+val reflectingSunLightColorOnTheBall = Color(0xFFFFF9DD)
+
+
 val L11 = Color(0xFFFF0000)
 val L10 = Color(0xFFFF0032)
 val L9 = Color(0xFFFF0064)
@@ -33,46 +43,16 @@ val L2 = Color(0xFF0064FF)
 val L1 = Color(0xFF0064FA)
 
 //Balls
-val Purple = Color(0xFF7955AD)
-val Brown = Color(0xFFE89B42)
-val Red = Color(0xFFF56157)
-val Yellow = Color(0x81FFEB3B)
-val Green = Color(0xFF009688)
-val Blue = Color(0xFF2196F3)
+val ball1 = Color(0xFFFF0057)
+val ball2 = Color(0xFFD606FA)
+val ball3 = Color(0xFF0AF313)
+val ball4 = Color(0xFFF6DD03)
+val ball5 = Color(0xFF0022FF)
+val ball6 = Color(0xFF03A9F4)
 
-val ball1 = Green
-val ball2= Blue
-val ball3 = Yellow
-val ball4 = Purple
-val ball5 = Red
-val ball6 = Brown
-
-// most common used background and text color
-val GenericBackgroundColor_light = LightGray
-val GenericBackgroundColor_dark = DarkGray
-val GenericTextColor_light = Black
-val GenericTextColor_dark = White
-
-// on game over screen as a secondary common colors
-val SecondaryBackGroundColor_dark = GreyPurple_dark
-val SecondaryTextColor_dark = White
-val SecondaryBackGroundColor_light = GreyPurple_light
-val SecondaryTextColor_light = Black
-
-// for other rarely used color combinations
-val rarelyUserBackgroundColor_light = Purple40
-val rarelyUsedTextColor_light = White
-val rarelyUserBackgroundColor_dark = Purple40
-val rarelyUsedTextColor_dark = White
-val rarelyUsedContainerColor_light = Purple60
-val rarelyUsedContainerTextColor_light = Black
-val rarelyUsedContainerColor_dark = Purple60
-val rarelyUsedContainerTextColor_dark = Black
-val startButtonColor_light = Green
-val startButtonColor_dark = Green
 
 val GameColorScale = arrayOf(
-    White,
+    primaryBackGround_light,
     ball1,
     ball2,
     ball3,

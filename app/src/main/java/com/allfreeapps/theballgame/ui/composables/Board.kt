@@ -2,99 +2,105 @@ package com.allfreeapps.theballgame.ui.composables
 
 
 import android.util.Log
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.utils.Constants
-import com.allfreeapps.theballgame.utils.Markers
 import com.allfreeapps.theballgame.viewModels.BallGameViewModel
+import kotlin.math.min
 
 
 @Composable
 fun Board(
     modifier: Modifier = Modifier,
-    viewModel: BallGameViewModel = hiltViewModel(),
-    boardSize: Dp,
-    boardConstraints: Array<Int> = arrayOf(Constants.GRID_SIZE, Constants.GRID_SIZE),
-    onCellClick: (Int) -> Unit,
-    removeTheBall: (Int) -> Unit
+    viewModel: BallGameViewModel = hiltViewModel()
 ) {
-
-    val smallBoxSize = boardSize / boardConstraints[0]
     val ballList by viewModel.ballList.collectAsState()
     val gameSpeed by viewModel.gameSpeed.collectAsState()
     val selectedBall by viewModel.selectedBall.collectAsState()
 
+    Board(
+        modifier,
+        ballList,
+        gameSpeed,
+        selectedBall,
+        { index, reason ->
+            viewModel.removeBall(index, reason)
+        },
+        { index -> viewModel.onCellClick(index) }
+    )
+}
+
+
+@Composable
+fun Board(
+    modifier: Modifier = Modifier,
+    ballList: Array<Int> = Array(81) { 0 },
+    gameSpeed: Int = 50,
+    selectedBall: Int? = null,
+    removeTheBall: (Int, Int) -> Unit,
+    onCellClick: (Int) -> Unit
+) {
+    val paddingVal = 2
+    val height = LocalContext.current.resources.displayMetrics.heightPixels
+    val width = LocalContext.current.resources.displayMetrics.widthPixels
+    val boardSize = remember(height, width) {
+        min(width, height) - (2 * paddingVal)
+    }
+    val smallBoxSize = (boardSize / Constants.GRID_SIZE)
+
     Layout(
         modifier = modifier
-            .border(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.onSecondary
-            ),
+            .padding(paddingVal.dp),
         content = {
             ballList.forEachIndexed { index, ballColorValue ->
-                key(index) {
-                    val isSelected = remember(selectedBall) {
-                        selectedBall == index
-                    }
-
-                    val currentSpeed = gameSpeed
-
-                    // Remember the onCellClick lambda
-                    val rememberedOnCellClick =
-                        remember(index) { // Keyed by index, or other relevant keys
-                            { onCellClick(index) }
-                        }
-
-                    // Remember the removeTheBall lambda
-                    val rememberedRemoveTheBall = remember(index, ballColorValue) {
-                        {
-                            when (Markers.get(ballColorValue)) { // This access to ballList[index] is tricky for remember
-                                Markers.BALL_EXPANSION -> viewModel.playBubbleExplodeSound()
-                                Markers.BALL_SHRINKING -> viewModel.playHissSound()
-                                else -> {}
-                            }
-                            removeTheBall(index)
-                        }
-                    }
-
-                    Cell(
-                        Modifier
-                            .size(smallBoxSize)
-                            .background(MaterialTheme.colorScheme.primary),
-                        ballColorValue = ballColorValue,
-                        cellSize = smallBoxSize,
-                        isSelected = isSelected,
-                        onCellClick = rememberedOnCellClick,
-                        gameSpeed = currentSpeed,
-                        removeTheBall = rememberedRemoveTheBall
-                    )
+                val isSelected = remember(selectedBall) {
+                    selectedBall == index
                 }
+
+                val currentSpeed = gameSpeed
+
+                Cell(
+                    Modifier
+                        .fillMaxSize()
+                        .border(
+                            BorderStroke(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        )
+                        .clickable(
+                            onClick = { onCellClick(index) }
+                        ),
+                    ballColorValue = ballColorValue,
+                    isSelected = isSelected,
+                    gameSpeed = currentSpeed,
+                    removeTheBall = { int -> removeTheBall(index, int) }
+                )
             }
         },
         measurePolicy = { measurables, constraints ->
+            val boardConstraints = arrayOf(Constants.GRID_SIZE, Constants.GRID_SIZE)
             Log.d("BoardLayout", "Incoming constraints: $constraints")
             Log.d("BoardLayout", "boardSize (Dp): $boardSize, GRID_SIZE: ${boardConstraints[0]}")
             Log.d("BoardLayout", "smallBoxSize (Dp): $smallBoxSize")
-            // Calculate cell size in pixels once
-            val roundedCellSizePx = smallBoxSize.roundToPx()
-            Log.d("BoardLayout", "roundedCellSizePx: $roundedCellSizePx")
 
             // Define constraints for each cell
-            val cellConstraintsForChildren = Constraints.fixed(roundedCellSizePx, roundedCellSizePx)
+            val cellConstraintsForChildren = Constraints.fixed(smallBoxSize, smallBoxSize)
 
             // Measure each cell (measurable)
             val placeables = measurables.map { measurable ->
@@ -102,8 +108,8 @@ fun Board(
             }
 
             // Calculate the total width and height required by the board based on its content
-            val boardWidthPx = boardConstraints[0] * roundedCellSizePx
-            val boardHeightPx = boardConstraints[1] * roundedCellSizePx
+            val boardWidthPx = Constants.GRID_SIZE * smallBoxSize
+            val boardHeightPx = Constants.GRID_SIZE * smallBoxSize
 
             // Respect incoming constraints:
             // The board can't be larger than what the parent allows,
@@ -118,10 +124,10 @@ fun Board(
                     // Ensure placement is within the finalWidth and finalHeight if necessary,
                     // though with fixed cell sizes and grid logic, it should fit.
                     placeable.placeRelative(currentX, currentY)
-                    currentX += roundedCellSizePx
+                    currentX += smallBoxSize
                     if (((index + 1) % boardConstraints[0]) == 0) { // after last grid of the board move ti other row
                         currentX = 0
-                        currentY += roundedCellSizePx
+                        currentY += smallBoxSize
                     }
                 }
             }
@@ -134,26 +140,26 @@ fun Board(
 @Preview(
     showBackground = true,
     name = "board preview",
-    device = "spec:width=3800dp,height=1800dp,dpi=240,orientation=portrait"
+    device = "id:pixel_9_pro_xl"
 )
 
-fun BoardPreviewForWelcome() {
-//    Board(
-//        modifier=Modifier,
-//        boardSize = 800.dp,
-//        gameSpeed = 50,
-//        ballList = Array(81) { 0 }.apply {
-//            this@apply[2] = 1
-//            this@apply[3] = 2
-//            this@apply[4] = 3
-//            this@apply[5] = 4
-//            this@apply[6] = 5
-//            this@apply[7] = 6
-//        },
-//        boardConstraints = arrayOf(3,5),
-//        selectedBallIndex = 3
-//
-//    )
+fun BoardPreviewONPortrait() {
+
+    Board(
+        modifier = Modifier.fillMaxSize(),
+        ballList = Array(81) { 0 }
+            .apply {
+                this[2] = 1
+                this[21] = 2
+                this[32] = 3
+                this[42] = 4
+            },
+        gameSpeed = 50,
+        selectedBall = 32,
+        onCellClick = {},
+        removeTheBall = {} as (Int, Int) -> Unit
+    )
+
 }
 
 
@@ -161,25 +167,25 @@ fun BoardPreviewForWelcome() {
 @Preview(
     showBackground = true,
     name = "board preview",
-    device = "spec:width=3800dp,height=1800dp,dpi=240,orientation=portrait"
+
+    device = "spec:width=1800dp,height=800dp,dpi=240,orientation=landscape"
 )
 
-fun BoardPreview() {
-//    Board(
-//        modifier=Modifier,
-//        viewModel = MainViewModel()
-//        boardSize = 800.dp,
-//        gameSpeed = 50,
-//        ballList = Array(81) { 0 }.apply {
-//            this@apply[2] = 1
-//            this@apply[3] = 2
-//            this@apply[4] = 3
-//            this@apply[5] = 4
-//            this@apply[6] = 5
-//            this@apply[7] = 6
-//        },
-//        selectedBallIndex = 3,
-//        onCellClick = { },
-//        removeTheBall = { }
-//    )
+fun BoardPreviewOnLandscape() {
+
+    Board(
+        modifier = Modifier.fillMaxSize(),
+        ballList = Array(81) { 0 }
+            .apply {
+                this[2] = 1
+                this[21] = 2
+                this[32] = 3
+                this[42] = 4
+            },
+        gameSpeed = 50,
+        selectedBall = 32,
+        onCellClick = {},
+        removeTheBall = {} as (Int, Int) -> Unit,
+    )
+
 }

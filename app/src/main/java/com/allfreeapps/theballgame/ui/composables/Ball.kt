@@ -1,11 +1,14 @@
 package com.allfreeapps.theballgame.ui.composables
 
 import android.util.Log
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateValue
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -13,12 +16,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -27,143 +29,92 @@ import com.allfreeapps.theballgame.utils.Markers
 import com.allfreeapps.theballgame.utils.getRadialGradientBrush
 import com.allfreeapps.theballgame.utils.toBallColor
 
-private val DEFAULT_SHADOW_ELEVATION = 18.dp
-private val SELECTED_SHADOW_ELEVATION = 25.dp
-private val BALL_JUMP_HEIGHT = (-5).dp
-const val BALL_CREATION_LATENCY: Int = 300
 private const val JUMP_DURATION: Int = 200
-private const val BALL_SIZE_RATIO = 0.8f
-private const val initialBallSize = 5f
-private const val expandingRate = 5f / 4f
+private const val BALL_CREATION_LATENCY: Int = 300
+private const val SMALLER_SIZE = 0.1f
+private const val EXPANDING_RATE = 1.2f
+private val DEFAULT_SHADOW_ELEVATION = 8.dp
+private val BALL_JUMP_HEIGHT = (-5).dp
 
 @Composable
 fun AnimatedBall(
-    cellSize: Dp,
+    cellSize: Int,
     colorValue: Int,
     isBallSelected: Boolean,
-    removeTheBall: () -> Unit,
+    removeTheBall: (Int) -> Unit,
     gameSpeed: Int
 ) {
     val marker = Markers.get(colorValue) // 10 => marked for shrink , 20 => marked for expand
+    fun onAnimationComplete(marker: Markers) =
+        if (marker != Markers.BALL_NOT_MARKED) removeTheBall(marker.value) else null
     val color = colorValue % 10 // last digit is the color code (removing marker)
     val isCurrentlyABall = color != Constants.NO_BALL
     Log.d("AnimatedBall", "isCurrentlyABall: $isCurrentlyABall, color: $color")
     if (isCurrentlyABall) { // New ball
-        when (marker) {
-            Markers.BALL_SHRINKING -> {// Ball removed
-                Log.d("AnimatedBall", "Ball removed")
-                Ball(
-                    colorValue = color, // Should be invisible or a placeholder
-                    initialSize = cellSize.value * BALL_SIZE_RATIO,
-                    targetSize = 1f,
-                    onAnimationComplete = removeTheBall,
-                    gameSpeed = gameSpeed
-                )
-            }
-
-            Markers.BALL_EXPANSION -> { // Ball expanded
-                Log.d("AnimatedBall", "Ball expanded")
-                Ball(
-                    targetSize = cellSize.value * BALL_SIZE_RATIO * expandingRate,
-                    initialSize = cellSize.value * BALL_SIZE_RATIO,
-                    colorValue = color,
-                    onAnimationComplete = removeTheBall,
-                    gameSpeed = gameSpeed
-                )
-            }
-
-            else -> {
-                // New ball
-                Log.d("AnimatedBall", "New ball")
-                Ball(
-                    colorValue = color,
-                    initialSize = initialBallSize,
-                    targetSize = cellSize.value * BALL_SIZE_RATIO,
-                    isBallSelected = isBallSelected,
-                    gameSpeed = gameSpeed
-                )
-            }
-        }
+        Ball(
+            colorValue = color,
+            targetSize = when (marker) {
+                Markers.BALL_SHRINKING -> SMALLER_SIZE
+                Markers.BALL_EXPANSION -> cellSize.toFloat() * EXPANDING_RATE
+                else -> cellSize.toFloat()
+            }.dp,
+            isBallSelected = isBallSelected,
+            gameSpeed = gameSpeed,
+            onAnimationComplete = { onAnimationComplete(marker) }
+        )
     }
 }
 
 @Composable
 fun Ball(
     colorValue: Int,
-    initialSize: Float,
-    targetSize: Float,
+    targetSize: Dp,
     isBallSelected: Boolean = false,
-    onAnimationComplete: () -> Unit = {},
+    onAnimationComplete: () -> Unit? = {},
     gameSpeed: Int = 75
 ){
-    val animatedSize = remember { Animatable(initialSize) }
-    LaunchedEffect(targetSize, gameSpeed) {
-        animatedSize.animateTo(
-            targetValue = targetSize,
-            animationSpec = tween(
-                durationMillis = BALL_CREATION_LATENCY - (gameSpeed * 2),
-                easing = LinearEasing
-            )
-        )
-        onAnimationComplete() // Call after animation finishes
-    }
+    val animatedSize by animateDpAsState(
+        targetValue = targetSize,
+        animationSpec = tween(
+            durationMillis = BALL_CREATION_LATENCY - gameSpeed,
+            easing = LinearEasing
+        ),
+        finishedListener = { onAnimationComplete() }
+    )
 
-    val jumpAnimationState = rememberBallJumpAnimationState(isBallSelected = isBallSelected)
-    val currentJumpOffsetDp: Dp = BALL_JUMP_HEIGHT * jumpAnimationState.value
+    // 1. Create the infinite transition
+    val infiniteTransition = rememberInfiniteTransition(label = "BallJump")
 
-    val radialGradientBrush = remember(targetSize, colorValue) {
-        getRadialGradientBrush(
-            ballSizePx = targetSize,
-            baseColor = colorValue.toBallColor()
-        )
-    }
+    // 2. Define the animated value
+    val jumpAnimationState by infiniteTransition.animateValue(
+        initialValue = 0.dp,
+        targetValue = if (isBallSelected) BALL_JUMP_HEIGHT else 0.dp,
+        typeConverter = Dp.VectorConverter,
+        animationSpec = infiniteRepeatable(
+            animation = tween(JUMP_DURATION, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "JumpHeight"
+    )
+
+    val radialGradientBrush = LocalDensity.current.getRadialGradientBrush(
+        animatedSize = targetSize,
+        baseColor = colorValue.toBallColor()
+    )
 
     Box(
         modifier = Modifier
-            .offset(y = currentJumpOffsetDp)
-            .size(animatedSize.value.dp)
+            .offset(y = jumpAnimationState)
+            .size(animatedSize)
             .shadow(
-                elevation = if (isBallSelected) SELECTED_SHADOW_ELEVATION else DEFAULT_SHADOW_ELEVATION,
+                elevation = DEFAULT_SHADOW_ELEVATION,
                 shape = CircleShape
             )
             .clip(CircleShape)
-            .background(brush = radialGradientBrush)
+            .background(brush = radialGradientBrush, shape = CircleShape)
     )
 }
 
-
-@Composable
-fun rememberBallJumpAnimationState(isBallSelected: Boolean): State<Float> {
-    val animatedValue = remember { Animatable(0f) } // Initial state is 0f (baseline)
-
-    val jumpAnimationSpec = remember(JUMP_DURATION) {
-        infiniteRepeatable<Float>(
-            animation = tween(durationMillis = JUMP_DURATION, easing = LinearOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        )
-    }
-
-    LaunchedEffect(isBallSelected) {
-        if (isBallSelected) {
-
-            if (animatedValue.targetValue != 1f || !animatedValue.isRunning) {
-                animatedValue.animateTo(1f, jumpAnimationSpec)
-            }
-        } else {
-
-            if (animatedValue.value != 0f || animatedValue.targetValue != 0f) {
-                animatedValue.animateTo(
-                    targetValue = 0f,
-                    animationSpec = tween(
-                        durationMillis = JUMP_DURATION / 2, // Or some other appropriate duration
-                        easing = LinearOutSlowInEasing
-                    )
-                )
-            }
-        }
-    }
-    return animatedValue.asState()
-}
 
 @Preview(showBackground = true)
 @Composable
@@ -171,9 +122,8 @@ fun ShrinkingBallPreview() {
 
     Ball(
         colorValue = 22,
-        initialSize = 5f,
         isBallSelected = false,
-        targetSize = 1f,
+        targetSize = 1.dp,
         onAnimationComplete = { },
         gameSpeed = 75
     )
@@ -185,9 +135,8 @@ fun ShrinkingBallPreview() {
 fun ExpandingBallPreview() {
     Ball(
         colorValue = 32,
-        initialSize = 5f,
         isBallSelected = false,
-        targetSize = 8f,
+        targetSize = 80.dp,
         onAnimationComplete = { },
         gameSpeed = 50
     )
@@ -199,9 +148,8 @@ fun NewBallPreview() {
 
     Ball(
         colorValue = 2,
-        initialSize = 1f,
         isBallSelected = true,
-        targetSize = 5f,
+        targetSize = 50.dp,
         onAnimationComplete = { },
         gameSpeed = 50
     )

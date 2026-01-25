@@ -19,8 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.allfreeapps.theballgame.ui.composables.coreAppComposables.GameText
@@ -50,23 +51,34 @@ fun ScoreBoard(modifier: Modifier = Modifier, score: Int) {
 @Composable
 fun ComparableScoreLine(
     modifier: Modifier = Modifier,
-    viewModel: BallGameViewModel = hiltViewModel(),
-    maxSizeOfLine: Dp,
-    orientation: Int
+    viewModel: BallGameViewModel = hiltViewModel()
 ) {
     val score by viewModel.score.collectAsState()
     val allScores by viewModel.allScores.collectAsState()
     val topScore = allScores.firstOrNull()?.score ?: 1
+    ComparableScoreLine(
+        modifier = modifier,
+        score = score,
+        topScore = topScore
+    )
+}
 
+@Composable
+fun ComparableScoreLine(
+    modifier: Modifier = Modifier,
+    score: Int = 1,
+    topScore: Int = 1
+) {
     val rateOfScoreLine = remember(topScore, score) {
-        if (score < topScore) score.toFloat() / topScore.toFloat()
+        if (score < topScore) score / topScore
         else 1f
     }
 
     val dynamicColor =
-        lineColorScale[(rateOfScoreLine * 10).toInt().coerceAtMost(lineColorScale.size - 1)]
+        lineColorScale[(rateOfScoreLine.toInt() * 10).coerceAtMost(lineColorScale.size - 1)]
 
-    val isPortrait = orientation == Configuration.ORIENTATION_PORTRAIT
+    val isPortrait =
+        LocalContext.current.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 
     val listOfGradients = remember(dynamicColor) {
         listOf(
@@ -101,15 +113,24 @@ fun ComparableScoreLine(
         .shadow(elevation = 2.dp, spotColor = Color.Black, ambientColor = Color.Black)
 
     val innerBoxModifier =
-        remember(tubeGradient, isPortrait, rateOfScoreLine, maxSizeOfLine, dynamicColor) {
+        remember(
+            tubeGradient,
+            isPortrait,
+            rateOfScoreLine,
+            dynamicColor
+        ) {
             Modifier
                 .background(tubeGradient)
                 .then(
                     if (isPortrait) Modifier
-                        .width((rateOfScoreLine * maxSizeOfLine.value).dp)
+                        .width(
+                            10.dp
+                        )
                         .fillMaxHeight()
                     else Modifier
-                        .height((rateOfScoreLine * maxSizeOfLine.value).dp)
+                        .height(
+                            10.dp
+                        )
                         .fillMaxWidth()
                 )
                 .border(width = 0.5.dp, color = dynamicColor.copy(alpha = 0.5f))
@@ -131,32 +152,30 @@ fun ComparableScoreLine(
 }
 
 @Preview(
-    showBackground = true
+    showBackground = true,
+    device = Devices.PIXEL_7_PRO
 )
 @Composable
-fun PreviewOnPortrait() {
-    val orientation = Configuration.ORIENTATION_PORTRAIT
-
+fun PreviewOfScorelineOnPortrait() {
     ComparableScoreLine(
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
-        maxSizeOfLine = 500.dp,
-        orientation = orientation
+        Modifier,
+        100,
+        150
     )
 }
+
 
 @Preview(
     showBackground = true,
-    name = "ScoreLinePreview",
-    device = "spec:width=1800dp,height=800dp,dpi=240,orientation=landscape"
+    device = Devices.PIXEL_7_PRO,
 )
-
 @Composable
-fun PreviewOnLandscape() {
-    val orientation = Configuration.ORIENTATION_LANDSCAPE
-//    ScoreLine(Modifier, 10, 10)
+fun PreviewOfScorelineOnLandscape() {
+    LocalContext.current.resources.configuration.orientation = Configuration.ORIENTATION_LANDSCAPE
     ComparableScoreLine(
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
-        maxSizeOfLine = 500.dp,
-        orientation = orientation
+        Modifier,
+        100,
+        150
     )
 }
+
